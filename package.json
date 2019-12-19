@@ -1,0 +1,28 @@
+{
+  "name": "swc-common-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "app": "tsc && node ./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HenrikThoroe/swc-common-client.git"
+  },
+  "author": "Henrik Thoroe",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HenrikThoroe/swc-common-client/issues"
+  },
+  "homepage": "https://github.com/HenrikThoroe/swc-common-client#readme",
+  "devDependencies": {
+    "tsc": "^1.20150623.0",
+    "typescript": "^3.7.3"
+  },
+  "dependencies": {
+    "@henrikthoroe/swc-client": "^1.0.1"
+  }
+}
