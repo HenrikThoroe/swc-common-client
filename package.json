@@ -23,6 +23,6 @@
     "typescript": "^3.7.3"
   },
   "dependencies": {
-    "@henrikthoroe/swc-client": "^1.0.1"
+    "@henrikthoroe/swc-client": "^1.0.2"
   }
 }
