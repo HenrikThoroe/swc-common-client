@@ -5,7 +5,7 @@ import sum from '../utils/sum'
 
 export default function rateMobility(state: State, moves: Move[]): number {
     const points = {
-        setMove: 1,
+        setMove: 1.1,
         dragMove: 1,
         multipleOptionsFactor: 0.8
     }
