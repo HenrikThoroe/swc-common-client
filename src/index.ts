@@ -13,7 +13,7 @@ connect({ host: "localhost", port: 13050 }, (state, undeployed, player, availabl
     for (const move of available) {
         const next = nextState(state, move)
         const rating = rate(next)
-        const conclusion = conclude(rating)
+        const conclusion = -conclude(rating)
 
         if (conclusion > bestMove.rating) {
             bestMove = { move: move, rating: conclusion }
