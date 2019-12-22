@@ -4,9 +4,6 @@ import copy from '../utils/copy'
 
 export default function nextState(currentState: State, move: Move): State {
     const state: State = copy(currentState)
-    // const udpRed = copy(state.undeployed.red)
-    // const udpBlue = copy(state.undeployed.blue)
-
     const addPiece = (x: number, y: number, piece: Piece) => {
         const ref = state.board.fields[x + 5][y + 5].pieces
 
@@ -15,21 +12,46 @@ export default function nextState(currentState: State, move: Move): State {
         }
     }
 
-    // state.undeployed.blue = udpBlue
-    // state.undeployed.red = udpRed
     state.turn += 1
     state.currentPlayer = state.currentPlayer === Color.Red ? Color.Blue : Color.Red
 
     if ((move.start as any).owner !== undefined) {
         const undeployed = state.currentPlayer === Color.Red ? state.undeployed.blue : state.undeployed.red
         const piece = copy(move.start as Piece)
+        let removed = false
 
         addPiece(move.end.x, move.end.y, piece)
         
         if (state.currentPlayer === Color.Red) {
-            state.undeployed.blue = undeployed.filter(p => p.owner !== piece.owner && p.type !== piece.type)
+            state.undeployed.blue = undeployed.filter(p => {
+                if (removed) {
+                    return true
+                }
+
+                const samePiece = p.owner === piece.owner && p.type === piece.type
+
+                if (samePiece) {
+                    removed = true
+                    return false
+                }
+                
+                return true 
+            })
         } else {
-            state.undeployed.red = undeployed.filter(p => p.owner !== piece.owner && p.type !== piece.type)
+            state.undeployed.red = undeployed.filter(p => {
+                if (removed) {
+                    return true
+                }
+
+                const samePiece = p.owner === piece.owner && p.type === piece.type
+
+                if (samePiece) {
+                    removed = true
+                    return false
+                }
+                
+                return true 
+            })
         }
     } else {
         const start = move.start as Position
