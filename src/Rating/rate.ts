@@ -1,15 +1,10 @@
-import { State } from "@henrikthoroe/swc-client";
+import { State, fetchMoves } from "@henrikthoroe/swc-client";
 import Rating from ".";
+import rateMobility from "./rateMobility";
 
 export default function rate(state: State): Rating {
     return {
-        mobility: {
-            me: state.undeployed.red.length,
-            opponent: 0
-        },
-        surrounding: {
-            me: 0,
-            opponent: 0
-        }
+        mobility: rateMobility(state, fetchMoves(state)),
+        surrounding: 0
     }
 }
