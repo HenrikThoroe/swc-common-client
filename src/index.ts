@@ -31,7 +31,9 @@ connect({ host: "localhost", port: 13050 }, (state, undeployed, player, availabl
 
 
 function minmax(state: State, depth: number,  selectedMove: { move?: Move }): number {
+    console.time("Moves")
     const moves = fetchMoves(state)
+    console.timeEnd("Moves")
     let max = -Infinity
 
     if (moves.length === 0 || depth === 0) {
