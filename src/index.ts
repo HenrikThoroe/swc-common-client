@@ -2,6 +2,7 @@ import connect, { Move, Color, fetchMoves, State } from '@henrikthoroe/swc-clien
 import nextState from './LookAhead/nextState'
 import rate from './Rating/rate'
 import conclude from './Rating/conclude'
+import { foreach } from '@henrikthoroe/swc-client/dist/utils'
 
 connect({ host: "localhost", port: 13050 }, (state, undeployed, player, available) => {
     if (available.length === 0) {
@@ -29,11 +30,17 @@ connect({ host: "localhost", port: 13050 }, (state, undeployed, player, availabl
     console.error(error)
 })
 
+function openingMove(moves: Move[]): Move {
+    let min = moves[0]
+
+    for (const move of moves) {
+        
+    }
+}
+
 
 function minmax(state: State, depth: number,  selectedMove: { move?: Move }): number {
-    console.time("Moves")
     const moves = fetchMoves(state)
-    console.timeEnd("Moves")
     let max = -Infinity
 
     if (moves.length === 0 || depth === 0) {
