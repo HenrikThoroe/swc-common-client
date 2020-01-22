@@ -3,8 +3,18 @@ import nextState from './LookAhead/nextState'
 import rate from './Rating/rate'
 import conclude from './Rating/conclude'
 import { foreach } from '@henrikthoroe/swc-client/dist/utils'
+import yargs from 'yargs'
 
-connect({ host: "localhost", port: 13050 }, (state, undeployed, player, available) => {
+const args = yargs
+    .alias("h", "host")
+    .alias("p", "port")
+    .alias("r", "reservation")
+    .string("host")
+    .number("port")
+    .string("reservation")
+    .parse()
+
+connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions: { rc: args.reservation } }, (state, undeployed, player, available) => {
     if (available.length === 0) {
         throw new Error("No available moves")
     }
@@ -30,13 +40,13 @@ connect({ host: "localhost", port: 13050 }, (state, undeployed, player, availabl
     console.error(error)
 })
 
-function openingMove(moves: Move[]): Move {
-    let min = moves[0]
+// function openingMove(moves: Move[]): Move {
+//     let min = moves[0]
 
-    for (const move of moves) {
+//     for (const move of moves) {
         
-    }
-}
+//     }
+// }
 
 
 function minmax(state: State, depth: number,  selectedMove: { move?: Move }): number {
