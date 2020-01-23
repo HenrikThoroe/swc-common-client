@@ -4,6 +4,7 @@ import rate from './Rating/rate'
 import conclude from './Rating/conclude'
 import { foreach } from '@henrikthoroe/swc-client/dist/utils'
 import yargs from 'yargs'
+import Piece, { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 
 const args = yargs
     .alias("h", "host")
@@ -35,6 +36,16 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
 
     // console.timeEnd("Calc")
     // return selected.move!
+
+    if (state.undeployed.red.findIndex(p => p.type === Type.BEE && p.owner === Color.Red) !== -1) {
+        available = available.filter(move => {
+            if ((move.start as Piece).type) {
+                return (move.start as Piece).type === Type.BEE
+            }
+
+            return false
+        })
+    }
 
     let max: Move | null = null
     let maxrating = -Infinity
