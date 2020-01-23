@@ -27,7 +27,7 @@ import { Aspect } from ".";
 
 
 export default function rateSurrounding(state: State): Aspect {
-    const allFields = flat(map(state.board.fields, group => filter(group, field => field !== null)))
+    const allFields = state.board.fields.flatMap(a => Object.values(a).filter(b => b !== null))
     let red: number | null = null
     let blue: number | null = null
 

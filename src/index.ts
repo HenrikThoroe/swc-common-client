@@ -19,23 +19,6 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     if (available.length === 0) {
         throw new Error("No available moves")
     }
-    // console.time("Calc")
-    // let bestMove: { move: Move, rating: number } = { move: available[0], rating: -Infinity }
-
-    // for (const move of available) {
-    //     const next = nextState(state, move)
-    //     const rating = rate(next)
-    //     const conclusion = -conclude(rating)
-
-    //     if (conclusion > bestMove.rating) {
-    //         bestMove = { move: move, rating: conclusion }
-    //     }
-    // }
-    // const selected: { move?: Move } = {}
-    // minmax(state, state.turn === 0 ? 1 : 4, selected)
-
-    // console.timeEnd("Calc")
-    // return selected.move!
 
     if (state.undeployed.red.findIndex(p => p.type === Type.BEE && p.owner === Color.Red) !== -1) {
         available = available.filter(move => {
@@ -49,15 +32,29 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
 
     let max: Move | null = null
     let maxrating = -Infinity
+    const depth = 3
 
-    for (const move of available) {
-        const next = nextState(state, move)
-        const rating = rate(next, Color.Red)
+    const algo = (i: number, currentState: State, moves: Move[]) => {
+        if (i >= depth) {
+            return
+        }
 
-        if (rating > maxrating) {
-            max = move
+        for (const move of moves) {
+            const next = nextState(currentState, move)
+            const rating = rate(next, player.color)
+    
+            if (rating > maxrating) {
+                max = move
+                maxrating = rating
+            }
+
+            algo(++i, next, fetchMoves(next))
         }
     }
+
+    algo(0, state, available)
+
+    console.log(maxrating)
 
     return max!
 })
