@@ -18,7 +18,7 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     if (available.length === 0) {
         throw new Error("No available moves")
     }
-    console.time("Calc")
+    // console.time("Calc")
     // let bestMove: { move: Move, rating: number } = { move: available[0], rating: -Infinity }
 
     // for (const move of available) {
@@ -30,11 +30,25 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     //         bestMove = { move: move, rating: conclusion }
     //     }
     // }
-    const selected: { move?: Move } = {}
-    minmax(state, state.turn === 0 ? 1 : 4, selected)
+    // const selected: { move?: Move } = {}
+    // minmax(state, state.turn === 0 ? 1 : 4, selected)
 
-    console.timeEnd("Calc")
-    return selected.move!
+    // console.timeEnd("Calc")
+    // return selected.move!
+
+    let max: Move | null = null
+    let maxrating = -Infinity
+
+    for (const move of available) {
+        const next = nextState(state, move)
+        const rating = rate(next, Color.Red)
+
+        if (rating > maxrating) {
+            max = move
+        }
+    }
+
+    return max!
 })
 .catch(error => {
     console.error(error)
@@ -49,24 +63,24 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
 // }
 
 
-function minmax(state: State, depth: number,  selectedMove: { move?: Move }): number {
-    const moves = fetchMoves(state)
-    let max = -Infinity
+// function minmax(state: State, depth: number,  selectedMove: { move?: Move }): number {
+//     const moves = fetchMoves(state)
+//     let max = -Infinity
 
-    if (moves.length === 0 || depth === 0) {
-        return conclude(rate(state, moves))
-    }
+//     if (moves.length === 0 || depth === 0) {
+//         return conclude(rate(state, moves))
+//     }
 
-    while (moves.length > 0) {
-        const move =  moves.pop()!
-        const next  = nextState(state, move)
-        const rating = -minmax(next, depth - 1, selectedMove)
+//     while (moves.length > 0) {
+//         const move =  moves.pop()!
+//         const next  = nextState(state, move)
+//         const rating = -minmax(next, depth - 1, selectedMove)
 
-        if (rating > max) {
-            max = rating
-            selectedMove.move = move
-        }
-    }
+//         if (rating > max) {
+//             max = rating
+//             selectedMove.move = move
+//         }
+//     }
 
-    return max
-}
+//     return max
+// }
