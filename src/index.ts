@@ -30,33 +30,41 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
         })
     }
 
-    let max: Move | null = null
-    let maxrating = -Infinity
-    const depth = 3
+    let selectedMove: Move | null = null
+    const horizon = 3
 
-    const algo = (i: number, currentState: State, moves: Move[]) => {
-        if (i >= depth) {
-            return
+    const alphaBeta = (depth: number, state: State, moves: Move[], alpha: number, beta: number): number => {
+        if (depth === 0 || moves.length === 0) {
+            return rate(state)
         }
 
-        for (const move of moves) {
-            const next = nextState(currentState, move)
-            const rating = rate(next, player.color)
-    
-            if (rating > maxrating) {
-                max = move
-                maxrating = rating
+        let maxValue = alpha
+
+
+        for (let i = 0; i < moves.length; ++i) {
+            const next = nextState(state, moves[i])
+            const nextMoves = fetchMoves(next)
+            const value = -alphaBeta(depth - 1, next, nextMoves, -beta, -maxValue)
+
+            if (value > maxValue) {
+                maxValue = value
+                if (depth === horizon) {
+                    selectedMove = moves[i]
+                }
+                if (maxValue >= beta) {
+                    break
+                }
             }
-
-            algo(++i, next, fetchMoves(next))
         }
+
+        return maxValue
     }
 
-    algo(0, state, available)
+    console.time()
+    console.log(alphaBeta(horizon, state, available, -Infinity, Infinity))
+    console.timeEnd()
 
-    console.log(maxrating)
-
-    return max!
+    return selectedMove!
 })
 .catch(error => {
     console.error(error)

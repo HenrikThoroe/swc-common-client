@@ -53,5 +53,5 @@ export default function rateSurrounding(state: State): Aspect {
         }
     }
 
-    return { red: red || -1, blue: blue || -1 }
+    return { red: red || 0, blue: blue || 0 }
 }
