@@ -1,2 +1,2 @@
-#!/bin/sh# 
+#!/bin/sh
 node ./dist/index.js "$@"

@@ -4,20 +4,27 @@ import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
 import rateSurrounding from "./rateSurrounding";
 
-export default function rate(state: State): number {
+export default function rate(state: State, player: Color): number {
     const surrounding = rateSurrounding(state)
 
     // console.log(surrounding, state.undeployed.blue.length, state.undeployed.red.length)
     
-    switch (state.currentPlayer) {
+    switch (player) {
         case Color.Red:
-            // if (surrounding.blue === -1) {
-            //     // console.log(-surrounding.red)
-            //     return -surrounding.red
-            // }
-
-            return surrounding.blue * surrounding.blue - surrounding.red
+            return surrounding.blue
         case Color.Blue:
-            return surrounding.red * surrounding.red - surrounding.blue
+            return surrounding.red
     }
+
+    // switch (state.currentPlayer) {
+    //     case Color.Red:
+    //         // if (surrounding.blue === -1) {
+    //         //     // console.log(-surrounding.red)
+    //         //     return -surrounding.red
+    //         // }
+
+    //         return surrounding.blue * surrounding.blue - surrounding.red
+    //     case Color.Blue:
+    //         return surrounding.red * surrounding.red - surrounding.blue
+    // }
 }

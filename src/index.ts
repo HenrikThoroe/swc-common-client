@@ -7,20 +7,29 @@ import yargs from 'yargs'
 import Piece, { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 
 const args = yargs
-    .alias("h", "host")
-    .alias("p", "port")
-    .alias("r", "reservation")
-    .string("host")
-    .number("port")
-    .string("reservation")
+    .option("host", {
+        alias: "h",
+        type: "string"
+    })
+    .option("port", {
+        alias: "p",
+        type: "number"
+    })
+    .option("reservation", {
+        alias: "r",
+        type: "string"
+    })
     .parse()
+
+    console.log(args)
 
 connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions: { rc: args.reservation } }, (state, undeployed, player, available) => {
     if (available.length === 0) {
-        throw new Error("No available moves")
+        console.log(fetchMoves(state).length)
+        throw new Error("No available moves") // send missmove
     }
 
-    if (state.undeployed.red.findIndex(p => p.type === Type.BEE && p.owner === Color.Red) !== -1) {
+    if (state.undeployed.red.findIndex(p => p.type === Type.BEE && p.owner === player.color) !== -1) {
         available = available.filter(move => {
             if ((move.start as Piece).type) {
                 return (move.start as Piece).type === Type.BEE
@@ -28,14 +37,89 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
 
             return false
         })
+
+        return available[Math.floor(Math.random() * available.length)]
     }
 
     let selectedMove: Move | null = null
-    const horizon = 3
+    const horizon = 5
+    const time = () => Date.now()
+    const start = time()
+    const timeout = 1990
+
+    const name = (color: Color) => {
+        return color === Color.Red ? "Red" : "Blue"
+    }
+
+    const max = (depth: number, state: State, moves: Move[], alpha: number, beta: number) => {
+        if (depth === 0 || moves.length === 0) {
+            // console.log(`Rating max ${name(state.currentPlayer)}`)
+            return rate(state, player.color)
+        }
+
+        let max = alpha
+
+        for (const move of moves) {
+
+            if (time() - start > timeout) {
+                break
+            }
+            
+            const next = nextState(state, move)
+            const value = min(depth - 1, next, fetchMoves(state), max, beta)
+
+            if (value > max) {
+                max = value
+
+                if (depth === horizon) {
+                    selectedMove = move
+                }
+
+                if (max >= beta) {
+                    break
+                }
+            }
+        }
+
+        return max
+    }
+
+    const min = (depth: number, state: State, moves: Move[], alpha: number, beta: number) => {
+        if (depth === 0 || moves.length === 0) {
+            // console.log(`Rating min ${name(state.currentPlayer)}`)
+            return rate(state, player.color)
+        }
+
+        let min = beta
+
+        for (const move of moves) {
+
+            if (time() - start > timeout) {
+                break
+            }
+
+            const next = nextState(state, move)
+            const value = max(depth - 1, next, fetchMoves(state), alpha, min)
+
+            if (value < min) {
+                min = value
+
+                if (depth === horizon) {
+                    selectedMove = move
+                }
+
+                if (min <= alpha) {
+                    break
+                }
+            }
+        }
+
+        return min
+    }
 
     const alphaBeta = (depth: number, state: State, moves: Move[], alpha: number, beta: number): number => {
         if (depth === 0 || moves.length === 0) {
-            return rate(state)
+            return rate(state, player.color)
         }
 
         let maxValue = alpha
@@ -61,10 +145,11 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     }
 
     console.time()
-    console.log(alphaBeta(horizon, state, available, -Infinity, Infinity))
+    // console.log(alphaBeta(horizon, state, available, -Infinity, Infinity))
+    console.log(max(horizon, state, available, -Infinity, Infinity))
     console.timeEnd()
 
-    return selectedMove!
+    return selectedMove || available[Math.floor(Math.random() * available.length)]
 })
 .catch(error => {
     console.error(error)
