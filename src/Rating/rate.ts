@@ -6,25 +6,11 @@ import rateSurrounding from "./rateSurrounding";
 
 export default function rate(state: State, player: Color): number {
     const surrounding = rateSurrounding(state)
-
-    // console.log(surrounding, state.undeployed.blue.length, state.undeployed.red.length)
     
     switch (player) {
         case Color.Red:
-            return surrounding.blue - surrounding.red
+            return Math.pow(2, surrounding.blue) - Math.pow(2, surrounding.red)
         case Color.Blue:
-            return surrounding.red - surrounding.blue
+            return Math.pow(2, surrounding.red) - Math.pow(2, surrounding.blue)
     }
-
-    // switch (state.currentPlayer) {
-    //     case Color.Red:
-    //         // if (surrounding.blue === -1) {
-    //         //     // console.log(-surrounding.red)
-    //         //     return -surrounding.red
-    //         // }
-
-    //         return surrounding.blue * surrounding.blue - surrounding.red
-    //     case Color.Blue:
-    //         return surrounding.red * surrounding.red - surrounding.blue
-    // }
 }
