@@ -11,9 +11,9 @@ export default function rate(state: State, player: Color): number {
     
     switch (player) {
         case Color.Red:
-            return surrounding.blue
+            return surrounding.blue - surrounding.red
         case Color.Blue:
-            return surrounding.red
+            return surrounding.red - surrounding.blue
     }
 
     // switch (state.currentPlayer) {

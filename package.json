@@ -23,7 +23,7 @@
     "typescript": "^3.7.4"
   },
   "dependencies": {
-    "@henrikthoroe/swc-client": "^1.0.3",
+    "@henrikthoroe/swc-client": "^1.0.4",
     "@types/yargs": "^15.0.1",
     "yargs": "^15.1.0"
   }

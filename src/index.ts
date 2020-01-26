@@ -27,29 +27,71 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
         throw new Error("No available moves") // send missmove
     }
 
-    let selected: Move | null = null
-    let max = -Infinity
-    const currentRating = rate(state, player.color)
+    console.log("available moves", available.length)
 
-    for (const move of available) {
-        const next = nextState(state, move)
-        const rating = rate(next, player.color)
-
-        if (rating > max) {
-            max = rating
-            selected = move
-        }
-
-        if (rating === max && Math.random() > 0.8) {
-            selected = move
-        }
-    }
-
-    if (currentRating >= max) {
+    // First move. Lets start random #YAY
+    if (available.length === 968) {
         return available[Math.floor(Math.random() * available.length)]
     }
 
-    return selected || available[Math.floor(Math.random() * available.length)]
+    let selectedMove: Move | null = null
+    const currentRating = rate(state, player.color)
+
+    const findMax = (state: State, moves: Move[]): number => {
+        let max = -Infinity
+
+        for (const move of moves) {
+            const next = nextState(state, move)
+            const rating = rate(next, player.color)
+
+            const value = findMin(next, fetchMoves(next))
+            
+            if (value > max) {
+                max = value
+                selectedMove = move
+            }
+    
+            // Bring some random in to prevent opponent from finding some sort of schema
+            if (value === max && Math.random() > 0.8) {
+                selectedMove = move
+            }
+        }
+
+        return max
+    }
+
+    const findMin = (state: State, moves: Move[]): number => {
+        let min = Infinity
+
+        for (const move of moves) {
+            const next = nextState(state, move)
+            const rating = rate(next, player.color)
+            
+            if (rating < min) {
+                min = rating
+                // minMove = move
+            }
+    
+            // Bring some random in to prevent opponent from finding some sort of schema
+            if (rating === min && Math.random() > 0.8) {
+                // minMove = move
+            }
+        }
+
+        return min
+    }
+
+    console.log(
+        findMax(state, available)
+    )
+
+    // if (currentRating > max) {
+    //     return available[Math.floor(Math.random() * available.length)]
+    // }
+
+    
+
+    return selectedMove || available[Math.floor(Math.random() * available.length)]
 })
 .catch(error => {
     console.error(error)
