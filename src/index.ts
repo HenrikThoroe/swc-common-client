@@ -21,8 +21,6 @@ const args = yargs
     })
     .parse()
 
-    console.log(args)
-
 connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions: { rc: args.reservation } }, (state, undeployed, player, available) => {
     if (available.length === 0) {
         console.log(fetchMoves(state).length)
