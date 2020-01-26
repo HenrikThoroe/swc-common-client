@@ -20,10 +20,11 @@
   "homepage": "https://github.com/HenrikThoroe/swc-common-client#readme",
   "devDependencies": {
     "tsc": "^1.20150623.0",
-    "typescript": "^3.7.4"
+    "typescript": "^3.7.5"
   },
   "dependencies": {
-    "@henrikthoroe/swc-client": "^1.0.4",
+    "@henrikthoroe/swc-client": "^1.0.5",
+    "@types/node": "^13.5.0",
     "@types/yargs": "^15.0.1",
     "yargs": "^15.1.0"
   }

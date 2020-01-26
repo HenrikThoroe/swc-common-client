@@ -9,8 +9,24 @@ export default function rate(state: State, player: Color): number {
     
     switch (player) {
         case Color.Red:
+            if (surrounding.red === 6) {
+                return -3000
+            }
+
+            if (surrounding.blue === 6) {
+                return 3000
+            }
+
             return Math.pow(2, surrounding.blue) - Math.pow(2, surrounding.red)
         case Color.Blue:
+            if (surrounding.red === 6) {
+                return 3000
+            }
+
+            if (surrounding.blue === 6) {
+                return -3000
+            }
+
             return Math.pow(2, surrounding.red) - Math.pow(2, surrounding.blue)
     }
 }

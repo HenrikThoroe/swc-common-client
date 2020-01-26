@@ -1,4 +1,4 @@
-import connect, { Move, Color, fetchMoves, State } from '@henrikthoroe/swc-client'
+import connect, { Move, Color, fetchMoves, State, Position } from '@henrikthoroe/swc-client'
 import nextState from './LookAhead/nextState'
 import rate from './Rating/rate'
 import conclude from './Rating/conclude'
@@ -21,7 +21,20 @@ const args = yargs
     })
     .parse()
 
+process.on("exit", r => {
+    console.log(r)
+})
+
+process.on("uncaughtException", e => {
+    console.log("Uncaught", e)
+})
+
+setTimeout(() => {
+
+}, 5 * 60 * 1000)
+
 connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions: { rc: args.reservation } }, (state, undeployed, player, available) => {
+    console.log(player.color)
     if (available.length === 0) {
         console.log(fetchMoves(state).length)
         throw new Error("No available moves") // send missmove
@@ -29,70 +42,122 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
 
     console.log("available moves", available.length)
 
+    // available.forEach(move => {
+    //     if ((move.start as Position).x !== undefined) {
+    //         console.log(move.start, move.end)
+    //     } else {
+    //         console.log("Set", move.end)
+    //     }
+    // })
+
     // First move. Lets start random #YAY
     if (available.length === 968) {
         return available[Math.floor(Math.random() * available.length)]
     }
 
+    console.time("sort")
+    available = available.sort((a, b) => {
+        return rate(nextState(state, a), player.color) - rate(nextState(state, b), player.color)
+    })
+    console.timeEnd("sort")
+
     let selectedMove: Move | null = null
     const currentRating = rate(state, player.color)
+    let horizon = 3
+    const time = () => Date.now()
+    const start = time()
+    const elapsed = () => time() - start
+    const timeout = () => elapsed() > 1900
 
-    const findMax = (state: State, moves: Move[]): number => {
-        let max = -Infinity
+    const findMax = (state: State, moves: Move[], depth: number, alpha: number, beta: number): number => {
+        let max = alpha
 
         for (const move of moves) {
+            if (timeout()) {
+                break
+            }
+ 
             const next = nextState(state, move)
-            const rating = rate(next, player.color)
-
-            const value = findMin(next, fetchMoves(next))
+            const rating = depth === 0 ? rate(next, player.color) : findMin(next, fetchMoves(next), depth - 1, max, beta)
             
-            if (value > max) {
-                max = value
-                selectedMove = move
+            if (rating > max) {
+                max = rating
+                
+                if (depth === horizon) {
+                    selectedMove = move
+                }
             }
     
             // Bring some random in to prevent opponent from finding some sort of schema
-            if (value === max && Math.random() > 0.8) {
+            if (rating === max && Math.random() > 0.7 && depth === horizon) {
                 selectedMove = move
+            }
+
+            if (max >= beta) {
+                break
             }
         }
 
         return max
     }
 
-    const findMin = (state: State, moves: Move[]): number => {
-        let min = Infinity
+    const findMin = (state: State, moves: Move[], depth: number, alpha: number, beta: number): number => {
+        let min = beta
 
         for (const move of moves) {
+            if (timeout()) {
+                break
+            }
+
             const next = nextState(state, move)
-            const rating = rate(next, player.color)
+            const rating = depth === 0 ? rate(next, player.color) : findMax(next, fetchMoves(next), depth - 1, alpha, min)
             
             if (rating < min) {
                 min = rating
-                // minMove = move
             }
-    
-            // Bring some random in to prevent opponent from finding some sort of schema
-            if (rating === min && Math.random() > 0.8) {
-                // minMove = move
+
+            if (rating <= alpha) {
+                break
             }
         }
 
         return min
     }
 
-    console.log(
-        findMax(state, available)
-    )
+    console.time("Move Finding")
+    let max = -Infinity
+
+    while (!timeout()) {
+        console.log(elapsed(), horizon)
+        const m = findMax(state, available, horizon, -Infinity, Infinity)
+
+        if (m !== -Infinity && m !== Infinity) {
+            max = m
+        }
+
+        horizon += 1
+    }
+
+    console.log(max, `horizon: ${horizon}`)
+    console.timeEnd("Move Finding")
 
     // if (currentRating > max) {
-    //     return available[Math.floor(Math.random() * available.length)]
+    //     throw new Error("It can only become worse...")
     // }
 
-    
+    // if (selectedMove) {
+    //     console.log(selectedMove!, available)
+    // }
 
     return selectedMove || available[Math.floor(Math.random() * available.length)]
 })
 .catch(error => {
+    console.log("Caught Error")
     console.error(error)
+})
+.then(() => {
+
+})
+.finally(() => {
+    console.log("Ending")
 })
