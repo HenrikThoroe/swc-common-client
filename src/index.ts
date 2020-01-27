@@ -93,9 +93,9 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
             }
     
             // Bring some random in to prevent opponent from finding some sort of schema
-            if (rating === max && Math.random() > 0.7 && depth === horizon) {
-                selectedMove = move
-            }
+            // if (rating === max && Math.random() > 0.7 && depth === horizon) {
+            //     selectedMove = move
+            // }
 
             if (max >= beta) {
                 break
@@ -130,7 +130,7 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     }
 
     console.time("Move Finding")
-    let max = findMax(state, available, horizon, -100000000, 100000000)//-Infinity
+    let max = findMax(state, available, horizon, -Infinity, Infinity)//-Infinity
 
     // while (!timeout()) {
     //     console.log(elapsed(), horizon)
