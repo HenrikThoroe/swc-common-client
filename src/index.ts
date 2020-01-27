@@ -49,7 +49,7 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     }
 
     available = available.sort((a, b) => {
-        return rate(nextState(state, a), player.color) - rate(nextState(state, b), player.color)
+        return rate(nextState(state, b), player.color) - rate(nextState(state, a), player.color)
     })
 
     console.log("available moves", available.length)
@@ -64,14 +64,31 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
 
     // First move. Lets start random #YAY
     if (available.length === 968) {
-        return available[Math.floor(Math.random() * available.length)]
+        const moves = available.filter(m => (m.start as Piece).type === Type.BEE)
+        return moves[Math.floor(Math.random() * moves.length)]
     }
+
+    // if (available.length === 11) {
+    //     if (player.color === Color.Red && state.undeployed.blue.findIndex(p => p.type === Type.BEE) === -1) {
+    //         const moves = available.filter(m => (m.start as Piece).type === Type.BEE)
+    //         return moves[Math.floor(Math.random() * moves.length)]
+    //     }
+
+    //     if (player.color === Color.Blue && state.undeployed.red.findIndex(p => p.type === Type.BEE) === -1) {
+    //         const moves = available.filter(m => (m.start as Piece).type === Type.BEE)
+    //         return moves[Math.floor(Math.random() * moves.length)]
+    //     }
+    // }
 
     let selectedMove: Move | null = null
     const currentRating = rate(state, player.color)
-    let horizon = 2
+    let horizon = 4
 
     const findMax = (state: State, moves: Move[], depth: number, alpha: number, beta: number): number => {
+        if (depth === 0) {
+            return rate(state, player.color)
+        }
+
         let max = alpha
 
         for (const move of moves) {
@@ -106,6 +123,10 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     }
 
     const findMin = (state: State, moves: Move[], depth: number, alpha: number, beta: number): number => {
+        if (depth === 0) {
+            return rate(state, player.color)
+        }
+
         let min = beta
 
         for (const move of moves) {
@@ -114,7 +135,7 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
             }
 
             const next = nextState(state, move)
-            const rating = depth === 0 ? rate(next, player.color) : findMax(next, fetchMoves(next), depth - 1, alpha, min)
+            const rating = findMax(next, fetchMoves(next), depth - 1, alpha, min)
             
             if (rating < min) {
                 min = rating
