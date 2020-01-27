@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import connect, { Move, Color, fetchMoves, State, Position } from '@henrikthoroe/swc-client'
 import nextState from './LookAhead/nextState'
 import rate from './Rating/rate'
@@ -34,11 +36,21 @@ setTimeout(() => {
 }, 5 * 60 * 1000)
 
 connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions: { rc: args.reservation } }, (state, undeployed, player, available) => {
+    const time = () => Date.now()
+    const start = time()
+    const elapsed = () => time() - start
+    const timeout = () => elapsed() > 1900
+
+
     console.log(player.color)
     if (available.length === 0) {
         console.log(fetchMoves(state).length)
         throw new Error("No available moves") // send missmove
     }
+
+    available = available.sort((a, b) => {
+        return rate(nextState(state, a), player.color) - rate(nextState(state, b), player.color)
+    })
 
     console.log("available moves", available.length)
 
@@ -55,19 +67,9 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
         return available[Math.floor(Math.random() * available.length)]
     }
 
-    console.time("sort")
-    available = available.sort((a, b) => {
-        return rate(nextState(state, a), player.color) - rate(nextState(state, b), player.color)
-    })
-    console.timeEnd("sort")
-
     let selectedMove: Move | null = null
     const currentRating = rate(state, player.color)
-    let horizon = 3
-    const time = () => Date.now()
-    const start = time()
-    const elapsed = () => time() - start
-    const timeout = () => elapsed() > 1900
+    let horizon = 2
 
     const findMax = (state: State, moves: Move[], depth: number, alpha: number, beta: number): number => {
         let max = alpha
@@ -82,8 +84,10 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
             
             if (rating > max) {
                 max = rating
+                console.log("max", rating)
                 
                 if (depth === horizon) {
+                    console.log("take", rating)
                     selectedMove = move
                 }
             }
@@ -114,6 +118,7 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
             
             if (rating < min) {
                 min = rating
+                console.log("min", rating)
             }
 
             if (rating <= alpha) {
@@ -125,18 +130,18 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     }
 
     console.time("Move Finding")
-    let max = -Infinity
+    let max = findMax(state, available, horizon, -100000000, 100000000)//-Infinity
 
-    while (!timeout()) {
-        console.log(elapsed(), horizon)
-        const m = findMax(state, available, horizon, -Infinity, Infinity)
+    // while (!timeout()) {
+    //     console.log(elapsed(), horizon)
+    //     const m = findMax(state, available, horizon, -Infinity, Infinity)
 
-        if (m !== -Infinity && m !== Infinity) {
-            max = m
-        }
+    //     if (m !== -Infinity && m !== Infinity) {
+    //         max = m
+    //     }
 
-        horizon += 1
-    }
+    //     horizon += 1
+    // }
 
     console.log(max, `horizon: ${horizon}`)
     console.timeEnd("Move Finding")
