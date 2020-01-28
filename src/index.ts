@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import connect, { Move, Color, fetchMoves, State, Position } from '@henrikthoroe/swc-client'
+import connect, { Move, Color, fetchMoves, State, Position, getNeighbours } from '@henrikthoroe/swc-client'
 import nextState from './LookAhead/nextState'
 import rate from './Rating/rate'
 import conclude from './Rating/conclude'
-import { foreach } from '@henrikthoroe/swc-client/dist/utils'
+import { foreach, filter } from '@henrikthoroe/swc-client/dist/utils'
 import yargs from 'yargs'
 import Piece, { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 
@@ -64,8 +64,30 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
 
     // First move. Lets start random #YAY
     if (available.length === 968) {
-        const moves = available.filter(m => (m.start as Piece).type === Type.BEE)
-        return moves[Math.floor(Math.random() * moves.length)]
+        const beeMoves = available.filter(m => (m.start as Piece).type === Type.BEE)
+        // return beeMoves[Math.floor(Math.random() * beeMoves.length)]
+
+        let min = Infinity
+        let selected: Move | null = null
+
+        for (const move of beeMoves) {
+            const pos = Math.abs(move.end.x) + Math.abs(move.end.y) + Math.abs(move.end.z)
+            const neighbourFields = getNeighbours(state.board, move.end)
+            const count = filter(neighbourFields, neigh => neigh.pieces.length > 0 || neigh.isObstructed).length
+            const border = 6 - neighbourFields.length
+            const filled = count + border
+            
+            if (pos < min && filled === 0) {
+                min = pos
+                selected = move
+            }
+        }
+
+        if (selected) {
+            return selected
+        }
+
+        return beeMoves[Math.floor(Math.random() * beeMoves.length)]
     }
 
     // if (available.length === 11) {
@@ -84,6 +106,8 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     const currentRating = rate(state, player.color)
     let horizon = 4
 
+    console.log(available)
+
     const findMax = (state: State, moves: Move[], depth: number, alpha: number, beta: number): number => {
         if (depth === 0) {
             return rate(state, player.color)
@@ -101,10 +125,10 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
             
             if (rating > max) {
                 max = rating
-                console.log("max", rating)
+                // console.log("max", rating)
                 
                 if (depth === horizon) {
-                    console.log("take", rating)
+                    // console.log("take", rating)
                     selectedMove = move
                 }
             }
@@ -139,7 +163,7 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
             
             if (rating < min) {
                 min = rating
-                console.log("min", rating)
+                // console.log("min", rating)
             }
 
             if (rating <= alpha) {
