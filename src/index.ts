@@ -31,15 +31,23 @@ process.on("uncaughtException", e => {
     console.log("Uncaught", e)
 })
 
-setTimeout(() => {
-
-}, 5 * 60 * 1000)
-
-connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions: { rc: args.reservation } }, (state, undeployed, player, available) => {
+connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions: { rc: args.reservation } }, result => {
+    console.log(result)
+}, (state, undeployed, player, available) => {
     const time = () => Date.now()
     const start = time()
     const elapsed = () => time() - start
     const timeout = () => elapsed() > 1900
+
+    const hasPiece = (type: Type, collection: Piece[]): boolean => {
+        for (const piece of collection) {
+            if (piece.type === type) {
+                return true
+            }
+        }
+
+        return false
+    }
 
 
     console.log(player.color)
@@ -90,6 +98,13 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
         return beeMoves[Math.floor(Math.random() * beeMoves.length)]
     }
 
+    if (undeployed.length === 11) {
+        if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
+            const beeMoves = available.filter(m => (m.start as Piece).type === Type.BEE)
+            return beeMoves[0]
+        }
+    }
+
     // if (available.length === 11) {
     //     if (player.color === Color.Red && state.undeployed.blue.findIndex(p => p.type === Type.BEE) === -1) {
     //         const moves = available.filter(m => (m.start as Piece).type === Type.BEE)
@@ -134,9 +149,9 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
             }
     
             // Bring some random in to prevent opponent from finding some sort of schema
-            // if (rating === max && Math.random() > 0.7 && depth === horizon) {
-            //     selectedMove = move
-            // }
+            if (rating === max && Math.random() > 0.5 && depth === horizon) {
+                selectedMove = move
+            }
 
             if (max >= beta) {
                 break
@@ -188,7 +203,7 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
     //     horizon += 1
     // }
 
-    console.log(max, `horizon: ${horizon}`)
+    console.log(max, `horizon: ${horizon}`, selectedMove)
     console.timeEnd("Move Finding")
 
     // if (currentRating > max) {

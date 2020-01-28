@@ -30,14 +30,14 @@ import nextState from '../LookAhead/nextState'
 // }
 
 export default function rateMobility(state: State): Aspect {
-    const ownMoves = fetchMoves(state)
-    const opponentMoves = fetchMoves(nextState(state))
+    const ownMoves = fetchMoves(state).filter(move => (move.start as Position).x !== undefined)
+    const opponentMoves = fetchMoves(nextState(state)).filter(move => (move.start as Position).x !== undefined)
 
     // console.log("Moves", ownMoves.length, opponentMoves.length)
 
     const score = (ownMoves: number, opponentMoves: number) => {
-        if (ownMoves === 0) return -1000
-        if (opponentMoves === 0) return 1000
+        if (ownMoves === 0) return 0
+        if (opponentMoves === 0) return 1
 
         return ownMoves / opponentMoves
     }
