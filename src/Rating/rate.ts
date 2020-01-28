@@ -32,6 +32,6 @@ export default function rate(state: State, player: Color): number {
             //     return -1
             // }
 
-            return - (Math.pow(2, surrounding.red) - (Math.pow(2, surrounding.blue) / 2)) / 64 //* mobility.blue  - (Math.pow(2, surrounding.blue) / 2)
+            return (Math.pow(2, surrounding.red) - (Math.pow(2, surrounding.blue) / 2)) / 64 //* mobility.blue  - (Math.pow(2, surrounding.blue) / 2)
     }
 }
