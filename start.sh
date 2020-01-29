@@ -1,4 +1,3 @@
 #!/bin/sh
-chmod +x ./dist/index.js
-echo "HELLLO"
-npm run app "$@"
+chmod u+rwx ./dist
+node ./dist/index.js "$@"

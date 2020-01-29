@@ -13,28 +13,28 @@ export default function rate(state: State, player: Color): number {
     switch (player) {
         case Color.Red:
             if (surrounding.red === 6) {
-                return -2
+                return -10
             }
 
             if (surrounding.blue === 6) {
-                return 2
+                return 10
             }
 
-            const sRatingRed = (Math.pow(2, surrounding.blue) - (Math.pow(2, surrounding.red) / 2)) / 64
-            const mRatingRed = mobility.red / 2// - (mobility.blue / 2)
+            const sRatingRed = ((Math.pow(2, surrounding.blue) - (Math.pow(2, surrounding.red) / 2)) / 64) * 2
+            const mRatingRed = mobility.red * 0.5// - (mobility.blue / 2)
 
             return sRatingRed + mRatingRed //* mobility.red - (Math.pow(2, surrounding.red) / 2)
         case Color.Blue:
             if (surrounding.red === 6) {
-                return 2
+                return 10
             }
 
             if (surrounding.blue === 6) {
-                return -2
+                return -10
             }
 
-            const sRatingBlue = (Math.pow(2, surrounding.red) - (Math.pow(2, surrounding.blue) / 2)) / 64 
-            const mRatingBlue = mobility.blue / 2 //- (mobility.red / 2)
+            const sRatingBlue = ((Math.pow(2, surrounding.red) - (Math.pow(2, surrounding.blue) / 2)) / 64) * 2 
+            const mRatingBlue = mobility.blue * 0.5//- (mobility.red / 2)
 
             return sRatingBlue + mRatingBlue //* mobility.blue  - (Math.pow(2, surrounding.blue) / 2)
     }
