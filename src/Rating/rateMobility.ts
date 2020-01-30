@@ -7,6 +7,7 @@ import nextState from '../LookAhead/nextState'
 import removeOccurences from '../utils/removeOccurences'
 import { comparePositions } from '@henrikthoroe/swc-client/dist/client/Model/Position'
 import { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
+import mapWithCopies from '../utils/mapWithCopies'
 
 // export default function rateMobility(state: State, moves: Move[]): number {
 //     const points = {
@@ -36,17 +37,36 @@ function isPosition(obj: Piece | Position): obj is Position {
     return (obj as Position).x !== undefined
 }
 
+function rateMove(state: State, move: Move): number {
+    const timeFactor = 1 - (60 / state.turn) // The earlier the move the higher the factor
+
+    // ToDo: Base result also on type of piece and position
+    if (isPosition(move.start)) {
+        const factor = (1 - timeFactor) + 0.8
+        return factor <= 1 ? factor : 1
+    } else {
+        return timeFactor
+    }
+}
+
 export default function rateMobility(state: State): Aspect {
-    const ownMoves = removeOccurences(fetchMoves(state), (a, b) => comparePositions(a.end, b.end))
-    const opponentMoves = removeOccurences(fetchMoves(nextState(state)), (a, b) => comparePositions(a.end, b.end))
+    const ownMoves = fetchMoves(state) //removeOccurences(fetchMoves(state), (a, b) => comparePositions(a.end, b.end))
+    const opponentMoves = fetchMoves(nextState(state)) //removeOccurences(fetchMoves(nextState(state)), (a, b) => comparePositions(a.end, b.end))
+
+    const compareMove = (arg0: Move, arg1: Move) => comparePositions(arg0.end, arg1.end)
 
     const score = (ownMoves: Move[], opponentMoves: Move[]) => {
         if (ownMoves.length === 0) return 0
         if (opponentMoves.length === 0) return 1
 
+        // const score = {
+        //     own: mapWithCopies(ownMoves, compareMove, (move, copy) => rateMove(state, move) * (copy ? 0.2 : 1)).reduce((p, c) => p + c),
+        //     opponent: mapWithCopies(opponentMoves, compareMove, (move, copy) => rateMove(state, move) * (copy ? 0.2 : 1)).reduce((p, c) => p + c)
+        // }
+
         const score = {
-            own: ownMoves.length,
-            opponent: opponentMoves.length
+            own: removeOccurences(ownMoves, compareMove).length,
+            opponent: removeOccurences(opponentMoves, compareMove).length
         }
 
         // for (const move of ownMoves) {
