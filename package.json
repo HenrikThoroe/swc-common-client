@@ -24,8 +24,8 @@
   },
   "dependencies": {
     "@henrikthoroe/swc-client": "^1.0.12",
-    "@types/node": "^13.5.2",
-    "@types/yargs": "^15.0.2",
+    "@types/node": "^13.7.0",
+    "@types/yargs": "^15.0.3",
     "yargs": "^15.1.0"
   }
 }

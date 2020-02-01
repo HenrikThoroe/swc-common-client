@@ -13,11 +13,11 @@ export default function rate(state: State, player: Color): number {
     switch (player) {
         case Color.Red:
             if (surrounding.red === 6) {
-                return -10
+                return -100000
             }
 
             if (surrounding.blue === 6) {
-                return 10
+                return 100000
             }
 
             const sRatingRed = ((Math.pow(2, surrounding.blue) - (Math.pow(2, surrounding.red) / 2)) / 64) * 2
@@ -26,11 +26,11 @@ export default function rate(state: State, player: Color): number {
             return sRatingRed + mRatingRed //* mobility.red - (Math.pow(2, surrounding.red) / 2)
         case Color.Blue:
             if (surrounding.red === 6) {
-                return 10
+                return 100000
             }
 
             if (surrounding.blue === 6) {
-                return -10
+                return -100000
             }
 
             const sRatingBlue = ((Math.pow(2, surrounding.red) - (Math.pow(2, surrounding.blue) / 2)) / 64) * 2 

@@ -49,10 +49,8 @@ connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions:
         return false
     }
 
-
-    console.log(player.color)
     if (available.length === 0) {
-        console.log(fetchMoves(state).length)
+        console.error("no moves")
         throw new Error("No available moves") // send missmove
     }
 
