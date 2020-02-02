@@ -1,38 +1,8 @@
 import { State, Move, Position, fetchMoves, Color, Piece } from '@henrikthoroe/swc-client'
-import { foreach, map } from '@henrikthoroe/swc-client/dist/utils'
-import createSquareArray from '../utils/createSquareArray'
-import sum from '../utils/sum'
 import { Aspect } from '.'
 import nextState from '../LookAhead/nextState'
-import removeOccurences from '../utils/removeOccurences'
 import { comparePositions } from '@henrikthoroe/swc-client/dist/client/Model/Position'
-import { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
-import mapWithCopies from '../utils/mapWithCopies'
 import sig from '../utils/sig'
-
-// export default function rateMobility(state: State, moves: Move[]): number {
-//     const points = {
-//         setMove: 1.1,
-//         dragMove: 1,
-//         multipleOptionsFactor: 0.8
-//     }
-
-//     const routes = createSquareArray(11, 0)
-
-//     foreach(moves, move => {
-//         const idx0 = move.end.x + 5
-//         const idx1 = move.end.y + 5
-//         const basePoints = ((move.start as Position).x !== undefined) ? points.dragMove : points.setMove
-        
-//         if (routes[idx0][idx1] === 0) {
-//             routes[idx0][idx1] = basePoints
-//         } else {
-//             routes[idx0][idx1] += basePoints * points.multipleOptionsFactor
-//         }
-//     })
-
-//     return sum(map(routes, v => sum(v)))
-// }
 
 function isPosition(obj: Piece | Position): obj is Position {
     return (obj as Position).x !== undefined
@@ -43,25 +13,18 @@ function rateMoveSet(state: State, moves: Move[]): number {
     const dragMoveRating = sig(state.turn / 60, -14, 0.8, 0.5)
     const cache = new Array<Array<number>>(11).fill(new Array<number>(11).fill(0)) // 11x11 array filled with 0
 
-    const finalRating = moves.map(move => {
-        const points = isPosition(move.start) ? dragMoveRating : setMoveRating
-        const factor = sig(cache[move.end.x + 5][move.end.y + 5] / 4, 14, 0, 0.5)
-        return points * factor
-    }).reduce((p, c) => p + c)
+    const finalRating = moves
+        .map(move => {
+            const importance = isPosition(move.start) ? dragMoveRating : setMoveRating
+            const countFactor = sig(cache[move.end.x + 5][move.end.y + 5] / 4, 14, 0, 0.5)
+
+            cache[move.end.x + 5][move.end.y + 5] += 1
+
+            return importance * countFactor
+        })
+        .reduce((p, c) => p + c)
 
     return finalRating
-}
-
-function rateMove(state: State, move: Move): number {
-    const timeFactor = 1 - (60 / state.turn) // The earlier the move the higher the factor
-
-    // ToDo: Base result also on type of piece and position
-    if (isPosition(move.start)) {
-        const factor = (1 - timeFactor) + 0.8
-        return factor <= 1 ? factor : 1
-    } else {
-        return timeFactor
-    }
 }
 
 export default function rateMobility(state: State): Aspect {

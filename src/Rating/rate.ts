@@ -7,8 +7,6 @@ import rateSurrounding from "./rateSurrounding";
 export default function rate(state: State, player: Color): number {
     const surrounding = rateSurrounding(state)
     const mobility = rateMobility(state)
-
-    // console.log(mobility, surrounding, player === Color.Red)
     
     switch (player) {
         case Color.Red:
