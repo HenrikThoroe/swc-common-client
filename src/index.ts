@@ -5,6 +5,7 @@ import yargs from 'yargs'
 import Piece from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 import handleSpecialCase from './Logic/handleSpecialCase'
 import Algorithm from './Logic/Algorithm'
+import Timer from './utils/Timer'
 
 const args = yargs
     .option("host", {
@@ -18,6 +19,10 @@ const args = yargs
     .option("reservation", {
         alias: "r",
         type: "string"
+    })
+    .option("stupid", {
+        alias: "s",
+        type: 'boolean'
     })
     .parse()
 
@@ -34,8 +39,14 @@ function handleResult(result: Result) {
 }
 
 function handleMoveResuest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
+    const timer = new Timer()
+
     if (available.length === 0) {
         throw new Error(`No Moves Available`)
+    }
+
+    if (args.stupid) {
+        return available[Math.floor(Math.random() * available.length)]
     }
 
     available = available.sort((a, b) => {
@@ -43,7 +54,7 @@ function handleMoveResuest(state: State, undeployed: Piece[], player: Player, av
     })
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new Algorithm(state, available, player, 4, 1950)
+    const logic = new Algorithm(state, available, player, available.length < 20 ? 5 : 4, 1990 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
@@ -52,8 +63,8 @@ function handleMoveResuest(state: State, undeployed: Piece[], player: Player, av
     }
 
     const result = logic.findBest()
-
     console.log(result)
+    console.log(timer.read(), available.length)
 
     if (result.success) {
         return result.value!

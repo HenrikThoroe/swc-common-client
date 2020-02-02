@@ -42,6 +42,7 @@ export default class Algorithm {
         const beta = Infinity
         const rating = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
 
+        console.log(Date.now() - this.start)
         return {
             rating: rating,
             success: this.selectedMove !== null,
