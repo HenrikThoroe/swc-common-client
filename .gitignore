@@ -105,3 +105,6 @@ dist
 
 # Dist
 .DS_Store
+
+# Other
+archive

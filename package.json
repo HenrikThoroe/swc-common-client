@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "app": "tsc && node ./dist/index.js \"$@\""
+    "app": "tsc && node ./dist/index.js \"$@\"",
+    "bundle": "npm run build && mkdir ./archive && rm -f ./archive/client.zip && zip -9 -y -r -q ./archive/client.zip ./dist ./node_modules start.sh"
   },
   "repository": {
     "type": "git",
