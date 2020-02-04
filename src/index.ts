@@ -40,6 +40,7 @@ function handleResult(result: Result) {
 
 function handleMoveResuest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
     const timer = new Timer()
+    console.log(timer.read())
 
     if (available.length === 0) {
         throw new Error(`No Moves Available`)
@@ -49,12 +50,15 @@ function handleMoveResuest(state: State, undeployed: Piece[], player: Player, av
         return available[Math.floor(Math.random() * available.length)]
     }
 
-    available = available.sort((a, b) => {
-        return rate(nextState(state, b), player.color) - rate(nextState(state, a), player.color)
-    })
+    if (available.length < 900) {
+        available = available.sort((a, b) => {
+            return rate(nextState(state, b), player.color) - rate(nextState(state, a), player.color)
+        })
+    }
 
+    console.log(timer.read(), 1900 - timer.read())
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new Algorithm(state, available, player, available.length < 20 ? 5 : 4, 1990 - timer.read())
+    const logic = new Algorithm(state, available, player, 4, 1900 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
@@ -62,6 +66,7 @@ function handleMoveResuest(state: State, undeployed: Piece[], player: Player, av
         throw new Error(`Failed to Generate Move`)
     }
 
+    console.log(timer.read())
     const result = logic.findBest()
     console.log(result)
     console.log(timer.read(), available.length)

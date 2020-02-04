@@ -28,41 +28,23 @@ function rateMoveSet(state: State, moves: Move[]): number {
 }
 
 export default function rateMobility(state: State): Aspect {
-    const ownMoves = fetchMoves(state) //removeOccurences(fetchMoves(state), (a, b) => comparePositions(a.end, b.end))
-    const opponentMoves = fetchMoves(nextState(state)) //removeOccurences(fetchMoves(nextState(state)), (a, b) => comparePositions(a.end, b.end))
-
-    const compareMove = (arg0: Move, arg1: Move) => comparePositions(arg0.end, arg1.end)
+    const ownMoves = fetchMoves(state) 
+    const opponentMoves = fetchMoves(nextState(state)) 
 
     const score = (ownMoves: Move[], opponentMoves: Move[]) => {
         if (ownMoves.length === 0) return 0
-        if (opponentMoves.length === 0) return 1
+        if (opponentMoves.length === 0) return 2
 
         const score = {
             own: rateMoveSet(state, ownMoves),
             opponent: rateMoveSet(state, opponentMoves)
         }
 
-        // const score = {
-        //     own: removeOccurences(ownMoves, compareMove).length,
-        //     opponent: removeOccurences(opponentMoves, compareMove).length
-        // }
-
-        // for (const move of ownMoves) {
-        //     if (!isPosition(move.start)) {
-        //         switch (move.start.type) {
-        //             case Type.ANT:
-        //                 break
-        //             case Type.BEE:
-        //                 break 
-        //             case Type.BEETLE:
-        //                 break
-        //             case Type.GRASSHOPPER:
-        //                 break
-        //             case Type.SPIDER:
-        //                 break
-        //         }
-        //     }
-        // }
+        if (score.opponent === 0 && score.own !== 0) {
+            return 2
+        } else if (score.opponent === 0) {
+            return 1
+        }
 
         return score.own / score.opponent
     }
