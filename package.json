@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "app": "tsc && node ./dist/index.js \"$@\"",
+    "prebuild": "tsc && node ./dist/Cache/build.js",
     "bundle": "npm run build && mkdir ./archive && rm -f ./archive/client.zip && zip -9 -y -r -q ./archive/client.zip ./dist ./node_modules start.sh"
   },
   "repository": {
@@ -26,7 +27,10 @@
   "dependencies": {
     "@henrikthoroe/swc-client": "^1.0.12",
     "@types/node": "^13.7.0",
+    "@types/node-persist": "^3.0.0",
     "@types/yargs": "^15.0.3",
+    "level": "^6.0.0",
+    "node-persist": "^3.0.5",
     "yargs": "^15.1.0"
   }
 }

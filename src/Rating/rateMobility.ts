@@ -3,14 +3,15 @@ import { Aspect } from '.'
 import nextState from '../LookAhead/nextState'
 import { comparePositions } from '@henrikthoroe/swc-client/dist/client/Model/Position'
 import sig from '../utils/sig'
+import cacheHandler from '../Cache'
 
 function isPosition(obj: Piece | Position): obj is Position {
     return (obj as Position).x !== undefined
 }
 
 function rateMoveSet(state: State, moves: Move[]): number {
-    const setMoveRating = sig(state.turn / 60, 14, 0.8, 0.5)
-    const dragMoveRating = sig(state.turn / 60, -14, 0.8, 0.5)
+    const setMoveRating = cacheHandler.get("set_factor", state.turn)// sig(state.turn / 60, 14, 0.8, 0.5)
+    const dragMoveRating = cacheHandler.get("drag_factor", state.turn)//sig(state.turn / 60, -14, 0.8, 0.5)
     const cache = new Array<Array<number>>(11).fill(new Array<number>(11).fill(0)) // 11x11 array filled with 0
 
     const finalRating = moves

@@ -58,7 +58,7 @@ function handleMoveResuest(state: State, undeployed: Piece[], player: Player, av
 
     console.log(timer.read(), 1900 - timer.read())
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new Algorithm(state, available, player, 4, 1900 - timer.read())
+    const logic = new Algorithm(state, available, player, 2, 1900 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
