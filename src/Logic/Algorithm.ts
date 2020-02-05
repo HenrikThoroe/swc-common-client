@@ -65,10 +65,16 @@ export default class Algorithm {
         }
 
         let max = alpha
+        let c = 0
 
         for (const move of moves) {
+            c += 1
             if (this.hasTimedOut) {
                 this.timedOut = true
+
+                if (depth === this.horizon) {
+                    console.log(`Timed out after searching ${c} of ${moves.length} branches.`)
+                }
                 break
             }
  
