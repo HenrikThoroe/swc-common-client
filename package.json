@@ -7,8 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "app": "tsc && node ./dist/index.js \"$@\"",
-    "prebuild": "tsc && node ./dist/Cache/build.js",
-    "bundle": "npm run build && mkdir ./archive && rm -f ./archive/client.zip && zip -9 -y -r -q ./archive/client.zip ./dist ./node_modules start.sh"
+    "clean": "rm -f -r ./node_modules && npm i",
+    "bundle": "npm run clean && npm run build && mkdir -p ./archive && rm -f ./archive/swc-client.zip && zip -y -r -q ./archive/swc-client.zip ./dist ./node_modules start.sh",
+    "prebuild": "tsc && node ./dist/Cache/build.js"
   },
   "repository": {
     "type": "git",
