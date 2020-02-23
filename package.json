@@ -8,7 +8,7 @@
     "build": "tsc",
     "app": "tsc && node ./dist/index.js \"$@\"",
     "clean": "rm -f -r ./node_modules && npm i",
-    "bundle": "npm run clean && npm run build && mkdir -p ./archive && rm -f ./archive/swc-client.zip && zip -y -r -q ./archive/swc-client.zip ./dist ./node_modules start.sh",
+    "bundle": "npm run clean && npm run build && mkdir -p ./archive && rm -f ./archive/player.zip && zip -y -r -q ./archive/player.zip ./dist ./node_modules start.sh",
     "prebuild": "tsc && node ./dist/Cache/build.js"
   },
   "repository": {
