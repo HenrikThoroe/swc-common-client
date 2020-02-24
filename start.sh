@@ -1,3 +1,3 @@
 #!/bin/sh
 chmod u+rwx ./dist
-node ./dist/index.js "$@"
+node ./dist/bundle.js "$@"

@@ -2,14 +2,14 @@
   "name": "swc-common-client",
   "version": "1.0.0",
   "description": "",
-  "main": "./dist/index.js",
+  "main": "./dist/bundle.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "app": "tsc && node ./dist/index.js \"$@\"",
+    "build": "webpack",
+    "app": "npm run build && node ./dist/bundle.js \"$@\"",
     "clean": "rm -f -r ./node_modules && npm i",
-    "bundle": "npm run clean && npm run build && mkdir -p ./archive && rm -f ./archive/player.zip && zip -y -r -q ./archive/player.zip ./dist ./node_modules start.sh",
-    "prebuild": "tsc && node ./dist/Cache/build.js"
+    "bundle": "npm run clean && npm run build && mkdir -p ./archive && rm -f ./archive/player.zip && zip -y -r -q ./archive/player.zip ./dist/bundle.js start.sh",
+    "buildAssets": "ts-node ./src/Cache/build.ts"
   },
   "repository": {
     "type": "git",
@@ -22,8 +22,12 @@
   },
   "homepage": "https://github.com/HenrikThoroe/swc-common-client#readme",
   "devDependencies": {
+    "ts-loader": "^6.2.1",
+    "ts-node": "^8.6.2",
     "tsc": "^1.20150623.0",
-    "typescript": "^3.7.5"
+    "typescript": "^3.7.5",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11"
   },
   "dependencies": {
     "@henrikthoroe/swc-client": "^1.0.12",
@@ -32,6 +36,7 @@
     "@types/yargs": "^15.0.3",
     "level": "^6.0.0",
     "node-persist": "^3.0.5",
+    "path": "^0.12.7",
     "yargs": "^15.1.0"
   }
 }
