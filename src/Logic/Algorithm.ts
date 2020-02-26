@@ -1,6 +1,7 @@
 import { State, Move, Player, fetchMoves } from '@henrikthoroe/swc-client'
 import rate from '../Rating/rate'
 import nextState from '../LookAhead/nextState'
+import simulateMove from '../LookAhead/simulateMove'
 
 export interface AlgorithmResult {
     rating: number
@@ -9,7 +10,7 @@ export interface AlgorithmResult {
     value: Move | null
 }
 
-export default class Algorithm {
+export default class AlphaBeta {
 
     readonly timout: number
 
@@ -42,7 +43,6 @@ export default class Algorithm {
         const beta = Infinity
         const rating = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
 
-        console.log(Date.now() - this.start)
         return {
             rating: rating,
             success: this.selectedMove !== null,
@@ -78,8 +78,9 @@ export default class Algorithm {
                 break
             }
  
-            const next = nextState(state, move)
-            const rating = depth === 0 ? rate(next, this.player.color) : this.min(next, fetchMoves(next), depth - 1, max, beta)
+            const rating = simulateMove(state, move, next => {
+                return depth === 0 ? rate(next, this.player.color) : this.min(next, fetchMoves(next), depth - 1, max, beta)
+            })
             
             if (rating > max) {
                 max = rating
@@ -89,7 +90,7 @@ export default class Algorithm {
                 }
             }
     
-            // Bring some random in to prevent opponent from finding some sort of schema
+            // Bring some random in to prevent opponent from finding some sort of pattern
             if (rating === max && Math.random() > 0.5 && depth === this.horizon) {
                 this.selectedMove = move
             }
@@ -115,8 +116,9 @@ export default class Algorithm {
                 break
             }
 
-            const next = nextState(state, move)
-            const rating = this.max(next, fetchMoves(next), depth - 1, alpha, min)
+            const rating = simulateMove(state, move, next => {
+                return this.max(next, fetchMoves(next), depth - 1, alpha, min)
+            })
             
             if (rating < min) {
                 min = rating

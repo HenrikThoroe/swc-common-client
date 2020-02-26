@@ -4,14 +4,15 @@ import nextState from '../LookAhead/nextState'
 import { comparePositions } from '@henrikthoroe/swc-client/dist/client/Model/Position'
 import sig from '../utils/sig'
 import cacheHandler from '../Cache'
+import simulateMove from '../LookAhead/simulateMove'
 
 function isPosition(obj: Piece | Position): obj is Position {
     return (obj as Position).x !== undefined
 }
 
 function rateMoveSet(state: State, moves: Move[]): number {
-    const setMoveRating = cacheHandler.get("set_factor", state.turn)// sig(state.turn / 60, 14, 0.8, 0.5)
-    const dragMoveRating = cacheHandler.get("drag_factor", state.turn)//sig(state.turn / 60, -14, 0.8, 0.5)
+    const setMoveRating = sig(state.turn / 10, 14, 0.9, 0.5)
+    const dragMoveRating = sig(state.turn / 10, -14, 0.9, 0.5)
     const cache = new Array<Array<number>>(11).fill(new Array<number>(11).fill(0)) // 11x11 array filled with 0
 
     const finalRating = moves
@@ -30,7 +31,7 @@ function rateMoveSet(state: State, moves: Move[]): number {
 
 export default function rateMobility(state: State): Aspect {
     const ownMoves = fetchMoves(state) 
-    const opponentMoves = fetchMoves(nextState(state)) 
+    const opponentMoves = simulateMove(state, null, next => fetchMoves(next))
 
     const score = (ownMoves: Move[], opponentMoves: Move[]) => {
         if (ownMoves.length === 0) return 0

@@ -4,8 +4,9 @@ import rate from './Rating/rate'
 import yargs from 'yargs'
 import Piece from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 import handleSpecialCase from './Logic/handleSpecialCase'
-import Algorithm from './Logic/Algorithm'
+import AlphaBeta from './Logic/Algorithm'
 import Timer from './utils/Timer'
+import simulateMove from './LookAhead/simulateMove'
 
 const args = yargs
     .option("host", {
@@ -38,10 +39,19 @@ function handleResult(result: Result) {
     console.log(result)
 }
 
-function handleMoveResuest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
-    const timer = new Timer()
-    console.log(timer.read())
+function errorCatcher(state: State, undeployed: Piece[], player: Player, available: Move[]) {
+    try {
+        return handleMoveRequest(state, undeployed, player, available)
+    } catch (error) {
+        console.error(error)
+        throw error
+    }
+}
 
+function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
+    const timer = new Timer()
+
+    console.log(`${available.length} moves are available`)
     if (available.length === 0) {
         throw new Error(`No Moves Available`)
     }
@@ -52,13 +62,15 @@ function handleMoveResuest(state: State, undeployed: Piece[], player: Player, av
 
     if (available.length < 900) {
         available = available.sort((a, b) => {
-            return rate(nextState(state, b), player.color) - rate(nextState(state, a), player.color)
+            const bRating = simulateMove(state, b, next => rate(next, player.color))
+            const aRating = simulateMove(state, a, next => rate(next, player.color))
+
+            return bRating - aRating
         })
     }
 
-    console.log(timer.read(), 1900 - timer.read())
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new Algorithm(state, available, player, 2, 1900 - timer.read())
+    const logic = new AlphaBeta(state, available, player, 3, 1900 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
@@ -66,10 +78,7 @@ function handleMoveResuest(state: State, undeployed: Piece[], player: Player, av
         throw new Error(`Failed to Generate Move`)
     }
 
-    console.log(timer.read())
     const result = logic.findBest()
-    console.log(result)
-    console.log(timer.read(), available.length)
 
     if (result.success) {
         return result.value!
@@ -78,7 +87,7 @@ function handleMoveResuest(state: State, undeployed: Piece[], player: Player, av
     } 
 }
 
-connect(connectOpts, handleResult, handleMoveResuest)
+connect(connectOpts, handleResult, errorCatcher)
     .catch(error => {
         console.error("Failed to connect: ", error)
     })

@@ -3,6 +3,7 @@ import Rating from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
 import rateSurrounding from "./rateSurrounding";
+import Timer from "../utils/Timer";
 
 function guard(x: number, min: number, max: number): number {
     if (x > max) return max

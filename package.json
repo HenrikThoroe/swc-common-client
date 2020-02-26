@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
-    "app": "npm run build && node ./dist/bundle.js \"$@\"",
+    "app": "ts-node ./src/index.ts",
     "clean": "rm -f -r ./node_modules && npm i",
     "bundle": "npm run clean && npm run build && mkdir -p ./archive && rm -f ./archive/player.zip && zip -y -r -q ./archive/player.zip ./dist/bundle.js start.sh",
     "buildAssets": "ts-node ./src/Cache/build.ts"
