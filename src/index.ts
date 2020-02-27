@@ -25,6 +25,10 @@ const args = yargs
         alias: "s",
         type: 'boolean'
     })
+    .option("ai", {
+        alias: "a",
+        type: 'boolean'
+    })
     .parse()
 
 const connectOpts: ConnectOptions = { 
@@ -51,7 +55,6 @@ function errorCatcher(state: State, undeployed: Piece[], player: Player, availab
 function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
     const timer = new Timer()
 
-    console.log(`${available.length} moves are available`)
     if (available.length === 0) {
         throw new Error(`No Moves Available`)
     }
@@ -66,10 +69,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
         available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
     }
 
-    console.log(`Sorted after ${timer.read()}`)
-
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    console.log(`Special case after ${timer.read()}`)
     const logic = new AlphaBeta(state, available, player, 2, 1900 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
@@ -79,8 +79,6 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     const result = logic.findBest()
-
-    console.log(timer.read())
 
     if (result.success) {
         return result.value!
