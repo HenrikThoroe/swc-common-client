@@ -61,16 +61,16 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     if (available.length < 900) {
-        available = available.sort((a, b) => {
-            const bRating = simulateMove(state, b, next => rate(next, player.color))
-            const aRating = simulateMove(state, a, next => rate(next, player.color))
+        const moveMap = available.map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color)) }))
 
-            return bRating - aRating
-        })
+        available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
     }
 
+    console.log(`Sorted after ${timer.read()}`)
+
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new AlphaBeta(state, available, player, 3, 1900 - timer.read())
+    console.log(`Special case after ${timer.read()}`)
+    const logic = new AlphaBeta(state, available, player, 2, 1900 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
@@ -79,6 +79,8 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     const result = logic.findBest()
+
+    console.log(timer.read())
 
     if (result.success) {
         return result.value!

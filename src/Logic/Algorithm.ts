@@ -43,6 +43,8 @@ export default class AlphaBeta {
         const beta = Infinity
         const rating = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
 
+        console.log(`${Date.now() - this.start}`, this.timout)
+
         return {
             rating: rating,
             success: this.selectedMove !== null,

@@ -1,12 +1,24 @@
 import { State, Move, Position, Piece, Color } from "@henrikthoroe/swc-client";
 import copy from "../utils/copy";
 import Timer from "../utils/Timer";
+import nextState from "./nextState";
+import hash from 'object-hash'
 
 export default function simulateMove<T>(state: State, move: Move | null, action: (arg0: State) => T): T {
-        applyMove(state, move || undefined)
-        const res = action(state) 
-        undoMove(state, move || undefined)
-        return res
+    // const a = hash.MD5(state)
+    // const a_t = state.turn
+    // const a_p = state.currentPlayer === Color.Red ? Color.Red : Color.Blue
+    // const c = copy(state)
+    applyMove(state, move || undefined)
+    const res = action(state) 
+    undoMove(state, move || undefined)
+
+    // console.log(a_t, state.turn)
+    // console.log(a_p, state.currentPlayer)
+    // console.log(a === hash.MD5(state), move ? isPosition(move.start) : "No Move", c.undeployed.red.length === state.undeployed.red.length, c.undeployed.blue.length === state.undeployed.blue.length)
+    // console.log(c.undeployed.red.length, c.undeployed.blue.length, state.undeployed.red.length, state.undeployed.blue.length)
+
+    return res
 }
 
 function isPosition(obj: any): obj is Position {
@@ -72,12 +84,18 @@ function applyMove(state: State, move?: Move, positive: boolean = true) {
         } else {
             state.undeployed.red.push(piece)
         }
-    } else if (move) {
+    } else if (move && positive) {
         const start = move.start as Position
         const pieces = state.board.fields[start.x + 5][start.y + 5].pieces
         const piece = copy(pieces.pop())!
         
         addPiece(move.end.x, move.end.y, piece)
+    } else if (move && isPosition(move.start) && !positive) {
+        const start = move.end as Position
+        const pieces = state.board.fields[start.x + 5][start.y + 5].pieces
+        const piece = copy(pieces.pop())!
+        
+        addPiece(move.start.x, move.start.y, piece)
     }
 }
 
