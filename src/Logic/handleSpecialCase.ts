@@ -1,6 +1,8 @@
 import { Move, State, Piece, getNeighbours, Player, Color } from "@henrikthoroe/swc-client";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import { filter } from "@henrikthoroe/swc-client/dist/utils";
+import simulateMove from "../LookAhead/simulateMove";
+import rate from "../Rating/rate";
 
 export interface SpecialCaseResult {
     isSpecialCase: boolean
@@ -10,7 +12,8 @@ export interface SpecialCaseResult {
 
 const Constants = {
     initialMoveCount: 968,
-    maximumUndeployed: 11
+    maximumUndeployed: 11,
+    guaranteedWin: 100000
 }
 
 function hasPiece(type: Type, collection: Piece[]): boolean {
@@ -71,14 +74,22 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
         }
     }
 
-    if (undeployed.length === Constants.maximumUndeployed && moves.length > 0) {
-        if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
-            const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
-            return {
-                isSpecialCase: true,
-                success: true,
-                selectedMove: beeMoves[0]
-            }
+    // if (undeployed.length === Constants.maximumUndeployed && moves.length > 0) {
+    //     if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
+    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
+    //         return {
+    //             isSpecialCase: true,
+    //             success: true,
+    //             selectedMove: beeMoves[0]
+    //         }
+    //     }
+    // }
+
+    if (player.color === Color.Blue && simulateMove(state, moves[0], next => rate(next, player.color)) === Constants.guaranteedWin) {
+        return {
+            isSpecialCase: true,
+            success: true,
+            selectedMove: moves[0]
         }
     }
 

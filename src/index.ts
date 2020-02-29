@@ -60,6 +60,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     if (args.stupid) {
+        console.log("stupid")
         return available[Math.floor(Math.random() * available.length)]
     }
 
@@ -70,7 +71,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new AlphaBeta(state, available, player, 2, 1900 - timer.read())
+    const logic = new AlphaBeta(state, available, player, 2, 1950 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
@@ -79,6 +80,8 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     const result = logic.findBest()
+
+    console.log(timer.read())
 
     if (result.success) {
         return result.value!

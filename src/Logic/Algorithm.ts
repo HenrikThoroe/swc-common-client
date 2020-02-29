@@ -132,4 +132,9 @@ export default class AlphaBeta {
         return min
     }
 
+    private sort(moves: Move[], state: State, descending: boolean): Move[] {
+        const moveMap = moves.map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, this.player.color)) }))
+        return moveMap.sort((a, b) => descending ? b.rating - a.rating : a.rating - b.rating).map(a => a.move)
+    }
+
 }
