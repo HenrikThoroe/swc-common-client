@@ -1,10 +1,12 @@
-import connect, { Move, Color, fetchMoves, State } from '@henrikthoroe/swc-client'
+import connect, { Move, State, Result, Player, ConnectOptions } from '@henrikthoroe/swc-client'
 import nextState from './LookAhead/nextState'
 import rate from './Rating/rate'
-import conclude from './Rating/conclude'
-import { foreach } from '@henrikthoroe/swc-client/dist/utils'
 import yargs from 'yargs'
-import Piece, { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
+import Piece from '@henrikthoroe/swc-client/dist/client/Model/Piece'
+import handleSpecialCase from './Logic/handleSpecialCase'
+import AlphaBeta from './Logic/Algorithm'
+import Timer from './utils/Timer'
+import simulateMove from './LookAhead/simulateMove'
 
 const args = yargs
     .option("host", {
@@ -19,169 +21,73 @@ const args = yargs
         alias: "r",
         type: "string"
     })
+    .option("stupid", {
+        alias: "s",
+        type: 'boolean'
+    })
+    .option("ai", {
+        alias: "a",
+        type: 'boolean'
+    })
     .parse()
 
-    console.log(args)
+const connectOpts: ConnectOptions = { 
+    host: args.host || "localhost", 
+    port: args.port || 13050, 
+    joinOptions: { 
+        rc: args.reservation 
+    } 
+}
 
-connect({ host: args.host || "localhost", port: args.port || 13050, joinOptions: { rc: args.reservation } }, (state, undeployed, player, available) => {
+function handleResult(result: Result) {
+    console.log(result)
+}
+
+function errorCatcher(state: State, undeployed: Piece[], player: Player, available: Move[]) {
+    try {
+        return handleMoveRequest(state, undeployed, player, available)
+    } catch (error) {
+        console.error(error)
+        throw error
+    }
+}
+
+function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
+    const timer = new Timer()
+
     if (available.length === 0) {
-        console.log(fetchMoves(state).length)
-        throw new Error("No available moves") // send missmove
+        throw new Error(`No Moves Available`)
     }
 
-    if (state.undeployed.red.findIndex(p => p.type === Type.BEE && p.owner === player.color) !== -1) {
-        available = available.filter(move => {
-            if ((move.start as Piece).type) {
-                return (move.start as Piece).type === Type.BEE
-            }
-
-            return false
-        })
-
+    if (args.stupid) {
         return available[Math.floor(Math.random() * available.length)]
     }
 
-    let selectedMove: Move | null = null
-    const horizon = 5
-    const time = () => Date.now()
-    const start = time()
-    const timeout = 1990
+    if (available.length < 900) {
+        const moveMap = available.map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color)) }))
 
-    const name = (color: Color) => {
-        return color === Color.Red ? "Red" : "Blue"
+        available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
     }
 
-    const max = (depth: number, state: State, moves: Move[], alpha: number, beta: number) => {
-        if (depth === 0 || moves.length === 0) {
-            // console.log(`Rating max ${name(state.currentPlayer)}`)
-            return rate(state, player.color)
-        }
+    const preRating = handleSpecialCase(state, player, available, undeployed)
+    const logic = new AlphaBeta(state, available, player, 2, 1900 - timer.read())
 
-        let max = alpha
-
-        for (const move of moves) {
-
-            if (time() - start > timeout) {
-                break
-            }
-            
-            const next = nextState(state, move)
-            const value = min(depth - 1, next, fetchMoves(state), max, beta)
-
-            if (value > max) {
-                max = value
-
-                if (depth === horizon) {
-                    selectedMove = move
-                }
-
-                if (max >= beta) {
-                    break
-                }
-            }
-        }
-
-        return max
+    if (preRating.isSpecialCase && preRating.success) {
+        return preRating.selectedMove!
+    } else if (preRating.isSpecialCase) {
+        throw new Error(`Failed to Generate Move`)
     }
 
-    const min = (depth: number, state: State, moves: Move[], alpha: number, beta: number) => {
-        if (depth === 0 || moves.length === 0) {
-            // console.log(`Rating min ${name(state.currentPlayer)}`)
-            return rate(state, player.color)
-        }
+    const result = logic.findBest()
 
-        let min = beta
+    if (result.success) {
+        return result.value!
+    } else {
+        return available[Math.floor(Math.random() * available.length)]
+    } 
+}
 
-        for (const move of moves) {
-
-            if (time() - start > timeout) {
-                break
-            }
-
-            const next = nextState(state, move)
-            const value = max(depth - 1, next, fetchMoves(state), alpha, min)
-
-            if (value < min) {
-                min = value
-
-                if (depth === horizon) {
-                    selectedMove = move
-                }
-
-                if (min <= alpha) {
-                    break
-                }
-            }
-        }
-
-        return min
-    }
-
-    const alphaBeta = (depth: number, state: State, moves: Move[], alpha: number, beta: number): number => {
-        if (depth === 0 || moves.length === 0) {
-            return rate(state, player.color)
-        }
-
-        let maxValue = alpha
-
-
-        for (let i = 0; i < moves.length; ++i) {
-            const next = nextState(state, moves[i])
-            const nextMoves = fetchMoves(next)
-            const value = -alphaBeta(depth - 1, next, nextMoves, -beta, -maxValue)
-
-            if (value > maxValue) {
-                maxValue = value
-                if (depth === horizon) {
-                    selectedMove = moves[i]
-                }
-                if (maxValue >= beta) {
-                    break
-                }
-            }
-        }
-
-        return maxValue
-    }
-
-    console.time()
-    // console.log(alphaBeta(horizon, state, available, -Infinity, Infinity))
-    console.log(max(horizon, state, available, -Infinity, Infinity))
-    console.timeEnd()
-
-    return selectedMove || available[Math.floor(Math.random() * available.length)]
-})
-.catch(error => {
-    console.error(error)
-})
-
-// function openingMove(moves: Move[]): Move {
-//     let min = moves[0]
-
-//     for (const move of moves) {
-        
-//     }
-// }
-
-
-// function minmax(state: State, depth: number,  selectedMove: { move?: Move }): number {
-//     const moves = fetchMoves(state)
-//     let max = -Infinity
-
-//     if (moves.length === 0 || depth === 0) {
-//         return conclude(rate(state, moves))
-//     }
-
-//     while (moves.length > 0) {
-//         const move =  moves.pop()!
-//         const next  = nextState(state, move)
-//         const rating = -minmax(next, depth - 1, selectedMove)
-
-//         if (rating > max) {
-//             max = rating
-//             selectedMove.move = move
-//         }
-//     }
-
-//     return max
-// }
+connect(connectOpts, handleResult, errorCatcher)
+    .catch(error => {
+        console.error("Failed to connect: ", error)
+    })
