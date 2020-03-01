@@ -51,8 +51,11 @@ export default function rateMobility(state: State, moves?: Move[]): Aspect {
         return score.own / score.opponent
     }
 
+    const ownScore = score(ownMoves, opponentMoves)
+    const opponentScore = score(opponentMoves, ownMoves)
+
     return {
-        red: state.currentPlayer === Color.Red ? score(ownMoves, opponentMoves) : score(opponentMoves, ownMoves),
-        blue: state.currentPlayer === Color.Blue ? score(ownMoves, opponentMoves) : score(opponentMoves, ownMoves)
+        red: state.currentPlayer === Color.Red ? ownScore : opponentScore,
+        blue: state.currentPlayer === Color.Blue ? ownScore : opponentScore
     }
 }
