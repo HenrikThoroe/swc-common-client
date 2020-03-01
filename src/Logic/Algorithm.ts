@@ -2,6 +2,7 @@ import { State, Move, Player, fetchMoves } from '@henrikthoroe/swc-client'
 import rate from '../Rating/rate'
 import nextState from '../LookAhead/nextState'
 import simulateMove from '../LookAhead/simulateMove'
+import hash from 'object-hash'
 
 export interface AlgorithmResult {
     rating: number
@@ -10,13 +11,17 @@ export interface AlgorithmResult {
     value: Move | null
 }
 
+interface Map {
+    [key: string]: Move[]
+}
+
 export default class AlphaBeta {
 
     readonly timeout: number
 
     readonly initialState: State
 
-    readonly horizon: number
+    horizon: number
 
     readonly availableMoves: Move[]
 
@@ -34,6 +39,8 @@ export default class AlphaBeta {
 
     private lookupIndex = 0
 
+    static moveTable: Map = {}
+
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number) {
         this.initialState = state
         this.availableMoves = moves
@@ -50,12 +57,24 @@ export default class AlphaBeta {
     findBest(): AlgorithmResult {
         this.start = Date.now()
 
-        const alpha = -Infinity
-        const beta = Infinity
-        const rating = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
+        let alpha: number
+        let beta: number
+        let rating: number = NaN
 
-        // avg 300
-        console.log(`Performed ${this.operations} operations in ${this.timeout} milliseconds [${this.operations / (this.timeout / 1000)} op/s].`)
+        while (!this.timedOut) {
+            alpha = -Infinity
+            beta = Infinity
+
+            const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
+            this.horizon += 1
+            if (!this.timedOut || rating === NaN || res === 100000) {
+                rating = res
+            }
+        }
+
+        
+        const time = Date.now() - this.start
+        console.log(`Performed ${this.operations} operations in ${time} milliseconds [${this.operations / (time / 1000)} op/s][${this.availableMoves.length}][depth: ${this.horizon}].`)
 
         return {
             rating: rating,
@@ -63,6 +82,19 @@ export default class AlphaBeta {
             timedOut: this.timedOut,
             value: this.selectedMove
         }
+    }
+
+    private fetchMoves(state: State): Move[] {
+        const key = hash.MD5(state.board)
+        const cached = AlphaBeta.moveTable[key]
+
+        if (cached) {
+            return cached
+        }
+
+        const moves = fetchMoves(state)
+        AlphaBeta.moveTable[key] = moves
+        return moves
     }
 
     private get hasTimedOut(): boolean {
@@ -75,7 +107,7 @@ export default class AlphaBeta {
 
     private max(state: State, moves: Move[], depth: number, alpha: number, beta: number): number {
         if (depth === 0) {
-            return rate(state, this.player.color)
+            return rate(state, this.player.color, moves)
         }
 
         let max = alpha
@@ -90,14 +122,14 @@ export default class AlphaBeta {
                 this.timedOut = true
 
                 if (depth === this.horizon) {
-                    console.log(`Timed out after searching ${c} of ${moves.length} branches.`)
+                    console.log(`Timed out after searching ${c} of ${moves.length} nodes.`)
                 }
                 break
             }
  
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return depth === 0 ? rate(next, this.player.color) : this.min(next, fetchMoves(next), depth - 1, max, beta)
+                return depth === 0 ? rate(next, this.player.color) : this.min(next, this.fetchMoves(next), depth - 1, max, beta)
             })
             
             if (rating > max) {
@@ -123,7 +155,7 @@ export default class AlphaBeta {
 
     private min(state: State, moves: Move[], depth: number, alpha: number, beta: number): number {
         if (depth === 0) {
-            return rate(state, this.player.color)
+            return rate(state, this.player.color, moves)
         }
 
         let min = beta
@@ -139,7 +171,7 @@ export default class AlphaBeta {
 
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return this.max(next, fetchMoves(next), depth - 1, alpha, min)
+                return this.max(next, this.fetchMoves(next), depth - 1, alpha, min)
             })
             
             if (rating < min) {

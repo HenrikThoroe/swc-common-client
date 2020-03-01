@@ -18,7 +18,7 @@ function rateMoveSet(state: State, moves: Move[]): number {
     const finalRating = moves
         .map(move => {
             const importance = isPosition(move.start) ? dragMoveRating : setMoveRating
-            const countFactor = sig(cache[move.end.x + 5][move.end.y + 5] / 4, 14, 0, 0.5)
+            const countFactor = sig(cache[move.end.x + 5][move.end.y + 5] / 3, 14, 0, 0.5)
 
             cache[move.end.x + 5][move.end.y + 5] += 1
 
@@ -29,8 +29,8 @@ function rateMoveSet(state: State, moves: Move[]): number {
     return finalRating
 }
 
-export default function rateMobility(state: State): Aspect {
-    const ownMoves = fetchMoves(state) 
+export default function rateMobility(state: State, moves?: Move[]): Aspect {
+    const ownMoves = moves ? moves : fetchMoves(state) 
     const opponentMoves = simulateMove(state, null, next => fetchMoves(next))
 
     const score = (ownMoves: Move[], opponentMoves: Move[]) => {

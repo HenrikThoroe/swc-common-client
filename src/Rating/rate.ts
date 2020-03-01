@@ -18,15 +18,15 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
     ownMobility = guard(ownMobility, 0, 2)
     opponentMobility = guard(opponentMobility, 0, 2)
 
-    const ownConclusion = Math.pow(2, ownSurrounding) * ownMobility
-    const opponentConclusion = Math.pow(2, opponentSurrounding - 1) * opponentMobility
+    const ownConclusion = Math.pow(2, opponentSurrounding) * ownMobility
+    const opponentConclusion = Math.pow(2, ownSurrounding) * opponentMobility
 
     return ownConclusion - opponentConclusion
 }
 
-export default function rate(state: State, player: Color): number {
+export default function rate(state: State, player: Color, moves?: Move[]): number {
     const surrounding = rateSurrounding(state)
-    const mobility = rateMobility(state)
+    const mobility = rateMobility(state, moves)
     
     switch (player) {
         case Color.Red:

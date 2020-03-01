@@ -83,6 +83,8 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
 
     const result = logic.findBest()
 
+    console.log(timer.read())
+
     if (result.success) {
         return result.value!
     } else {

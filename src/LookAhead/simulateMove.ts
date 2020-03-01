@@ -5,18 +5,9 @@ import nextState from "./nextState";
 import hash from 'object-hash'
 
 export default function simulateMove<T>(state: State, move: Move | null, action: (arg0: State) => T): T {
-    // const a = hash.MD5(state)
-    // const a_t = state.turn
-    // const a_p = state.currentPlayer === Color.Red ? Color.Red : Color.Blue
-    // const c = copy(state)
     applyMove(state, move || undefined)
     const res = action(state) 
     undoMove(state, move || undefined)
-
-    // console.log(a_t, state.turn)
-    // console.log(a_p, state.currentPlayer)
-    // console.log(a === hash.MD5(state), move ? isPosition(move.start) : "No Move", c.undeployed.red.length === state.undeployed.red.length, c.undeployed.blue.length === state.undeployed.blue.length)
-    // console.log(c.undeployed.red.length, c.undeployed.blue.length, state.undeployed.red.length, state.undeployed.blue.length)
 
     return res
 }
