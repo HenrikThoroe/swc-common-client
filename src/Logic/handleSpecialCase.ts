@@ -74,7 +74,7 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
         }
     }
 
-    if (undeployed.length === Constants.maximumUndeployed && moves.length > 0) {
+    if (undeployed.length === Constants.maximumUndeployed) {
         if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
             const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
             return {
@@ -85,7 +85,7 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
         }
     }
 
-    if (player.color === Color.Blue && simulateMove(state, moves[0], next => rate(next, player.color)) === Constants.guaranteedWin) {
+    if (simulateMove(state, moves[0], next => rate(next, player.color)) === Constants.guaranteedWin) {
         return {
             isSpecialCase: true,
             success: true,

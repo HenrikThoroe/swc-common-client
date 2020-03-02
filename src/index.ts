@@ -72,6 +72,8 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
         available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
     }
 
+    //console.log(simulateMove(state, available[0], state => rate(state, player.color)), available[0])
+
     const preRating = handleSpecialCase(state, player, available, undeployed)
     const logic = new AlphaBeta(state, available, player, 2, 1950 - timer.read())
 

@@ -5,9 +5,19 @@ import nextState from "./nextState";
 import hash from 'object-hash'
 
 export default function simulateMove<T>(state: State, move: Move | null, action: (arg0: State) => T): T {
+    // const a = state.undeployed.red.length
+    // const b = state.undeployed.blue.length
     applyMove(state, move || undefined)
+    // const c = state.undeployed.red.length
+    // const d = state.undeployed.blue.length
     const res = action(state) 
     undoMove(state, move || undefined)
+    // const e = state.undeployed.red.length
+    // const f = state.undeployed.blue.length
+
+    // if (state.turn === 2) {
+    //     console.log(a, c, e, b, d, f)
+    // }
 
     return res
 }
@@ -70,7 +80,7 @@ function applyMove(state: State, move?: Move, positive: boolean = true) {
         const pieces = state.board.fields[move.end.x + 5][move.end.y + 5].pieces
         const piece = copy(pieces.pop())!
 
-        if (state.currentPlayer === Color.Red) {
+        if (state.currentPlayer === Color.Blue) {
             state.undeployed.blue.push(piece)
         } else {
             state.undeployed.red.push(piece)
