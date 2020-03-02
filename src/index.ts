@@ -75,7 +75,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     //console.log(simulateMove(state, available[0], state => rate(state, player.color)), available[0])
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new AlphaBeta(state, available, player, 2, 1950 - timer.read())
+    const logic = new AlphaBeta(state, available, player, 2, 1890 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
