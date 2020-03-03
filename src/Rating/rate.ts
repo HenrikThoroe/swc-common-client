@@ -1,5 +1,5 @@
 import { State, fetchMoves, Move } from "@henrikthoroe/swc-client";
-import Rating from ".";
+import Rating, { Aspect } from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
 import rateSurrounding from "./rateSurrounding";
@@ -25,9 +25,23 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
     return ownConclusion - opponentConclusion
 }
 
+function getMobility(state: State, player: Color, moves?: Move[]): Aspect {
+    if (player === Color.Blue) {
+        if (state.undeployed.blue.length <= 4) {
+            return { red: 1, blue: 1 }
+        }
+        return rateMobility(state, moves)
+    } else {
+        if (state.undeployed.red.length <= 4) {
+            return { red: 1, blue: 1 }
+        }
+        return rateMobility(state, moves)
+    }
+}
+
 export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): number {
     const surrounding = rateSurrounding(state)
-    const mobility = rateMobility(state, moves)
+    const mobility = getMobility(state, player, moves)
     const focus = 1//causingMove ? rateFocus(state, player, causingMove) : 1
     
     switch (player) {
