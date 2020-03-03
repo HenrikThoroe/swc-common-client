@@ -28,7 +28,7 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
 export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): number {
     const surrounding = rateSurrounding(state)
     const mobility = rateMobility(state, moves)
-    const focus = 1 //causingMove ? rateFocus(state, player, causingMove) : 1
+    const focus = causingMove ? rateFocus(state, player, causingMove) : 1
     
     switch (player) {
         case Color.Red:

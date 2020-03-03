@@ -6,14 +6,15 @@ import sig from '../utils/sig'
 import cacheHandler from '../Cache'
 import simulateMove from '../LookAhead/simulateMove'
 import rateFocus from './rateFocus'
+import generateMoves from '../LookAhead/generateMoves'
 
 function isPosition(obj: Piece | Position): obj is Position {
     return (obj as Position).x !== undefined
 }
 
 function rateMoveSet(state: State, moves: Move[], player: Color): number {
-    const setMoveRating = sig(state.turn / 10, 14, 0.7, 0.5)
-    const dragMoveRating = sig(state.turn / 10, -14, 0.7, 0.5)
+    const setMoveRating = sig(state.turn / 10, 14, 0.8, 0.5)
+    const dragMoveRating = sig(state.turn / 10, -14, 0.8, 0.5)
     const cache = new Array<Array<number>>(11).fill(new Array<number>(11).fill(0)) // 11x11 array filled with 0
 
     const finalRating = moves
@@ -31,8 +32,8 @@ function rateMoveSet(state: State, moves: Move[], player: Color): number {
 }
 
 export default function rateMobility(state: State, moves?: Move[]): Aspect {
-    const ownMoves = moves ? moves : fetchMoves(state) 
-    const opponentMoves = simulateMove(state, null, next => fetchMoves(next))
+    const ownMoves = moves ? moves : generateMoves(state) 
+    const opponentMoves = simulateMove(state, null, next => generateMoves(next))
 
     const score = (ownMoves: Move[], opponentMoves: Move[]) => {
         if (ownMoves.length === 0) return 0
