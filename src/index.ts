@@ -39,6 +39,10 @@ const connectOpts: ConnectOptions = {
     } 
 }
 
+process.on("exit", e => {
+    console.log(`Process terminated with error code ${e}`)
+})
+
 function handleResult(result: Result) {
     console.log(result)
 }
