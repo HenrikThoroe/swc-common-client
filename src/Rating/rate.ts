@@ -20,7 +20,7 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
     opponentMobility = guard(opponentMobility, 0, 3)
 
     const ownConclusion = Math.pow(2, opponentSurrounding) * ownMobility
-    const opponentConclusion = guard(Math.pow(2, ownSurrounding > 3 ? ownSurrounding : ownSurrounding - 1), 1, Infinity) * opponentMobility
+    const opponentConclusion = guard(Math.pow(2, ownSurrounding >= 3 ? ownSurrounding : ownSurrounding - 1), 1, Infinity) * opponentMobility
 
     return ownConclusion - opponentConclusion
 }
