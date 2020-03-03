@@ -12,19 +12,18 @@ function isPosition(obj: Piece | Position): obj is Position {
 }
 
 function rateMoveSet(state: State, moves: Move[], player: Color): number {
-    const setMoveRating = sig(state.turn / 60, 14, 0.8, 0.5)
-    const dragMoveRating = sig(state.turn / 60, -14, 0.8, 0.5)
+    const setMoveRating = sig(state.turn / 10, 14, 0.7, 0.5)
+    const dragMoveRating = sig(state.turn / 10, -14, 0.7, 0.5)
     const cache = new Array<Array<number>>(11).fill(new Array<number>(11).fill(0)) // 11x11 array filled with 0
 
     const finalRating = moves
         .map(move => {
-            const focus = rateFocus(state, player, move)
             const importance = isPosition(move.start) ? dragMoveRating : setMoveRating
             const countFactor = sig(cache[move.end.x + 5][move.end.y + 5] / 2, 14, 0, 0.5)
 
             cache[move.end.x + 5][move.end.y + 5] += 1
 
-            return importance * countFactor * focus
+            return importance * countFactor
         }) 
         .reduce((p, c) => p + c)
 

@@ -2,17 +2,12 @@ import { State, Move, Player, fetchMoves } from '@henrikthoroe/swc-client'
 import rate from '../Rating/rate'
 import nextState from '../LookAhead/nextState'
 import simulateMove from '../LookAhead/simulateMove'
-import hash from 'object-hash'
 
 export interface AlgorithmResult {
     rating: number
     success: boolean
     timedOut: boolean
     value: Move | null
-}
-
-interface Map {
-    [key: string]: Move[]
 }
 
 export default class AlphaBeta {
@@ -38,8 +33,6 @@ export default class AlphaBeta {
     private randomTable: number[]
 
     private lookupIndex = 0
-
-    static moveTable: Map = {}
 
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number) {
         this.initialState = state
@@ -84,19 +77,6 @@ export default class AlphaBeta {
         }
     }
 
-    private fetchMoves(state: State): Move[] {
-        const key = hash.MD5(state.board)
-        const cached = AlphaBeta.moveTable[key]
-
-        if (cached) {
-            return cached
-        }
-
-        const moves = fetchMoves(state)
-        AlphaBeta.moveTable[key] = moves
-        return moves
-    }
-
     private get hasTimedOut(): boolean {
         if (this.start < 0) {
             return true
@@ -105,9 +85,9 @@ export default class AlphaBeta {
         return Date.now() - this.start >= this.timeout
     }
 
-    private max(state: State, moves: Move[], depth: number, alpha: number, beta: number): number {
+    private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, causingMove?: Move): number {
         if (depth === 0) {
-            return rate(state, this.player.color, moves)
+            return rate(state, this.player.color, causingMove, moves)
         }
 
         let max = alpha
@@ -129,7 +109,7 @@ export default class AlphaBeta {
  
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return depth === 0 ? rate(next, this.player.color) : this.min(next, this.fetchMoves(next), depth - 1, max, beta)
+                return depth === 0 ? rate(next, this.player.color, move) : this.min(next, fetchMoves(next), depth - 1, max, beta, move)
             })
             
             if (rating > max) {
@@ -153,9 +133,9 @@ export default class AlphaBeta {
         return max
     }
 
-    private min(state: State, moves: Move[], depth: number, alpha: number, beta: number): number {
+    private min(state: State, moves: Move[], depth: number, alpha: number, beta: number, causingMove?: Move): number {
         if (depth === 0) {
-            return rate(state, this.player.color, moves)
+            return rate(state, this.player.color, causingMove, moves)
         }
 
         let min = beta
@@ -171,7 +151,7 @@ export default class AlphaBeta {
 
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return this.max(next, this.fetchMoves(next), depth - 1, alpha, min)
+                return this.max(next, fetchMoves(next), depth - 1, alpha, min, move)
             })
             
             if (rating < min) {

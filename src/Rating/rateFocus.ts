@@ -1,5 +1,5 @@
-import { State, Player, Color, Board, Field, Move } from "@henrikthoroe/swc-client";
-import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
+import { State, Player, Color, Board, Field, Move, Position } from "@henrikthoroe/swc-client";
+import Piece, { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 
 function findOpponentQueen(board: Board, color: Color): Field | null {
     for (let i = 0; i < 11; ++i) {
@@ -14,7 +14,33 @@ function findOpponentQueen(board: Board, color: Color): Field | null {
     return null
 }
 
+function isPosition(obj: Piece | Position): obj is Position {
+    return (obj as Position).x !== undefined
+}
+
+function findPiece(position: Position, board: Board): Piece | null {
+    if (!(board.fields[position.x] && board.fields[position.x][position.y])) {
+        return null
+    }
+
+    const field = board.fields[position.x][position.y]
+
+    if (field && field.pieces.length > 0) {
+        return field.pieces[field.pieces.length - 1]
+    }
+
+    return null
+}
+
 export default function rateFocus(state: State, player: Color, move: Move): number {
+    if (isPosition(move.start)) {
+        const piece = findPiece(move.start, state.board)
+
+        if (piece?.type === Type.BEE || piece?.type === Type.GRASSHOPPER) {
+            return 1
+        }
+    }
+
     const queenPosition = findOpponentQueen(state.board, player)
 
     if (queenPosition) {
