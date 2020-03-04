@@ -2,6 +2,7 @@ import { State, Move, Player, fetchMoves } from '@henrikthoroe/swc-client'
 import rate from '../Rating/rate'
 import nextState from '../LookAhead/nextState'
 import simulateMove from '../LookAhead/simulateMove'
+import generateMoves from '../LookAhead/generateMoves'
 
 export interface AlgorithmResult {
     rating: number
@@ -109,7 +110,7 @@ export default class AlphaBeta {
  
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return depth === 0 ? rate(next, this.player.color, move) : this.min(next, fetchMoves(next), depth - 1, max, beta, move)
+                return depth === 0 ? rate(next, this.player.color, move) : this.min(next, generateMoves(next), depth - 1, max, beta, move)
             })
             
             if (rating > max) {
@@ -151,7 +152,7 @@ export default class AlphaBeta {
 
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return this.max(next, fetchMoves(next), depth - 1, alpha, min, move)
+                return this.max(next, generateMoves(next), depth - 1, alpha, min, move)
             })
             
             if (rating < min) {

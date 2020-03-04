@@ -46,7 +46,11 @@ export default function rateFocus(state: State, player: Color, move: Move): numb
     if (queenPosition) {
         const distance = Math.sqrt(Math.pow(queenPosition.position.x - move.end.x, 2) + Math.pow(queenPosition.position.y - move.end.y, 2) + Math.pow(queenPosition.position.z - move.end.z, 2))
         
-        if (distance > 4.5) {
+        if ((Math.abs(move.end.x) === 5 || Math.abs(move.end.x) === 5 || Math.abs(move.end.x) === 5) && distance < 2) {
+            return 0.1
+        }
+
+        if (distance > 2.5) {
             return 0.5
         }
     }

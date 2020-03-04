@@ -39,6 +39,10 @@ const connectOpts: ConnectOptions = {
     } 
 }
 
+process.on("exit", e => {
+    console.log(`Process terminated with error code ${e}`)
+})
+
 function handleResult(result: Result) {
     console.log(result)
 }
@@ -86,6 +90,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     const result = logic.findBest()
 
     console.log(timer.read())
+    console.log(result.value)
 
     if (result.success) {
         return result.value!
