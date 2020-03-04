@@ -37,7 +37,7 @@ export default function rateMobility(state: State, moves?: Move[]): Aspect {
 
     const score = (ownMoves: Move[], opponentMoves: Move[]) => {
         if (ownMoves.length === 0) return 0
-        if (opponentMoves.length === 0) return 2
+        if (opponentMoves.length === 0) return 1024
 
         const score = {
             own: rateMoveSet(state, ownMoves, state.currentPlayer),
@@ -45,9 +45,9 @@ export default function rateMobility(state: State, moves?: Move[]): Aspect {
         }
 
         if (score.opponent === 0 && score.own !== 0) {
-            return 2
+            return 1024
         } else if (score.opponent === 0) {
-            return 1
+            return 512
         }
 
         return score.own / score.opponent
