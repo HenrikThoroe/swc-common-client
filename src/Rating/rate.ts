@@ -6,7 +6,7 @@ import rateSurrounding from "./rateSurrounding";
 import Timer from "../utils/Timer";
 import rateFocus from "./rateFocus";
 
-const mobilityTable = new Map([[0, 2], [1, 1.5], [2, 1.2], [3, 1], [4, 0.9], [5, 0.9], [6, 0.9]])
+const mobilityTable = new Map([[0, 3], [1, 2], [2, 1.5], [3, 1], [4, 0.9], [5, 0.9], [6, 0.9]])
 
 function guard(x: number, min: number, max: number): number {
     if (x > max) return max
