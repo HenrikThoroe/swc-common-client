@@ -71,7 +71,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     if (available.length < 900) {
         const moveMap = available
             .sort(() => Math.random() - 0.5) // shuffle array 
-            .map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color)) })) // sort array by estimated move order
+            .map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color, move)) })) // sort array by estimated move order
 
         available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
     }

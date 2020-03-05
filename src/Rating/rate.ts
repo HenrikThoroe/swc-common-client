@@ -61,6 +61,10 @@ function getMobility(state: State, player: Color, moves?: Move[]): Aspect {
     // }
 }
 
+function timeRating(state: State, move: Move): number {
+    return 1
+}
+
 export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): number {
     const surrounding = rateSurrounding(state)
     const mobility = getMobility(state, player, moves)
