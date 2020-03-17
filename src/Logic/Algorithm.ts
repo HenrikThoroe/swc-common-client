@@ -51,16 +51,16 @@ export default class AlphaBeta {
     findBest(): AlgorithmResult {
         this.start = Date.now()
 
-        let alpha: number
-        let beta: number
+        let alpha: number = -Infinity
+        let beta: number = Infinity
         let rating: number = NaN
 
         while (!this.timedOut) {
-            alpha = -Infinity
-            beta = Infinity
-
             const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
             this.horizon += 1
+            alpha = res - 10
+            beta = res + 10
+
             if (!this.timedOut || rating === NaN || res === 100000) {
                 rating = res
             }

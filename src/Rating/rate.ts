@@ -18,8 +18,8 @@ function guard(x: number, min: number, max: number): number {
 function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobility: number, opponentMobility: number) {
     ownSurrounding = guard(ownSurrounding, 0, 6)
     opponentSurrounding = guard(opponentSurrounding, 0, 6)
-    ownMobility = guard(ownMobility, 0, 1024)
-    opponentMobility = guard(opponentMobility, 0, 1024)
+    ownMobility = guard(ownMobility, 0, 1)
+    opponentMobility = guard(opponentMobility, 0, 1)
 
     const surroundingConclusion = {
         own: Math.pow(2, opponentSurrounding),
@@ -27,8 +27,8 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
     }
 
     const moveConclusion = {
-        own: surroundingConclusion.own * mobilityTable.get(ownSurrounding)! * (ownMobility / 1024),
-        opp: surroundingConclusion.opp * mobilityTable.get(opponentSurrounding)! * (opponentMobility / 1024)
+        own: surroundingConclusion.own * ownMobility, // mobilityTable.get(ownSurrounding)! * (ownMobility / 1024),
+        opp: surroundingConclusion.opp * opponentMobility, // mobilityTable.get(opponentSurrounding)! * (opponentMobility / 1024)
     }
 
     if (moveConclusion.own === 0) {
@@ -36,7 +36,7 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
     } 
 
     if (moveConclusion.opp === 0) {
-        return Infinity
+        return 100000
     }
 
     const ownConclusion = surroundingConclusion.own + moveConclusion.own
@@ -47,7 +47,7 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
 
 function getMobility(state: State, player: Color, moves?: Move[]): Aspect {
 
-    return rateMobility(state, moves)
+    return rateMobility(state)
     // if (player === Color.Blue) {
     //     if (state.undeployed.blue.length <= 4) {
     //         return { red: 1, blue: 1 }

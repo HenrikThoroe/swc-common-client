@@ -61,7 +61,7 @@ function queenPosition(board: Board, owner: Color): Position | null {
     return null
 }
 
-export default function rateMobility(state: State, moves?: Move[]): Aspect {
+function rateMobility_(state: State, moves?: Move[]): Aspect {
     const ownMoves = moves ? moves : generateMoves(state) 
     const opponentMoves = simulateMove(state, null, next => generateMoves(next))
 
@@ -89,5 +89,42 @@ export default function rateMobility(state: State, moves?: Move[]): Aspect {
     return {
         red: state.currentPlayer === Color.Red ? ownScore : opponentScore,
         blue: state.currentPlayer === Color.Blue ? ownScore : opponentScore
+    }
+}
+
+export default function rateMobility(state: State): Aspect {
+    const rateUndeployed = (pieces: Piece[]) => 1 - (pieces.length / 11)
+    const rateDraggable = (color: Color) => {
+        let draggable = 0
+
+        for (let x = 0; x < 11; ++x) {
+            let group = state.board.fields[x]
+    
+            if (group === undefined || group.length < 11) {
+                continue
+            }
+
+            for (let y = 0; y < 11; ++y) {
+                if (state.board.fields[x][y] === undefined) {
+                    continue
+                }
+
+                if (state.board.fields[x][y].pieces.length > 0) {
+                    const pieces = state.board.fields[x][y].pieces
+                    const piece = pieces[pieces.length - 1]
+
+                    if (piece.owner === color && isDraggable(state, state.board.fields[x][y].position)) {
+                        draggable += 1
+                    }
+                }
+            }
+        }
+
+        return draggable / 11
+    }
+
+    return {
+        red: (rateUndeployed(state.undeployed.red) + rateDraggable(Color.Red)) / 2, 
+        blue: (rateUndeployed(state.undeployed.blue) + rateDraggable(Color.Blue)) / 2
     }
 }
