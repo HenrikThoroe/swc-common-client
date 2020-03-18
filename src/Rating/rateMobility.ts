@@ -9,6 +9,7 @@ import rateFocus from './rateFocus'
 import generateMoves from '../LookAhead/generateMoves'
 import { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 import isDraggable from '@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable'
+import enumerateBoard from '../utils/enumerateBoard'
 
 function isPosition(obj: Piece | Position): obj is Position {
     return (obj as Position).x !== undefined
@@ -97,28 +98,14 @@ export default function rateMobility(state: State): Aspect {
     const rateDraggable = (color: Color) => {
         let draggable = 0
 
-        for (let x = 0; x < 11; ++x) {
-            let group = state.board.fields[x]
-    
-            if (group === undefined || group.length < 11) {
-                continue
+        enumerateBoard(state.board, field => {
+            const pieces = field.pieces
+            const piece = pieces[pieces.length - 1]
+
+            if (pieces.length > 0 && piece.owner === color && isDraggable(state, field.position)) {
+                draggable += 1
             }
-
-            for (let y = 0; y < 11; ++y) {
-                if (state.board.fields[x][y] === undefined) {
-                    continue
-                }
-
-                if (state.board.fields[x][y].pieces.length > 0) {
-                    const pieces = state.board.fields[x][y].pieces
-                    const piece = pieces[pieces.length - 1]
-
-                    if (piece.owner === color && isDraggable(state, state.board.fields[x][y].position)) {
-                        draggable += 1
-                    }
-                }
-            }
-        }
+        })
 
         return draggable / 11
     }

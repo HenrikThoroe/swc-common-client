@@ -45,30 +45,9 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
     return ownConclusion - opponentConclusion
 }
 
-function getMobility(state: State, player: Color, moves?: Move[]): Aspect {
-
-    return rateMobility(state)
-    // if (player === Color.Blue) {
-    //     if (state.undeployed.blue.length <= 4) {
-    //         return { red: 1, blue: 1 }
-    //     }
-    //     return rateMobility(state, moves)
-    // } else {
-    //     if (state.undeployed.red.length <= 4) {
-    //         return { red: 1, blue: 1 }
-    //     }
-    //     return rateMobility(state, moves)
-    // }
-}
-
-function timeRating(state: State, move: Move): number {
-    return 1
-}
-
 export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): number {
     const surrounding = rateSurrounding(state)
-    const mobility = getMobility(state, player, moves)
-    const focus = 1//causingMove ? rateFocus(state, player, causingMove) : 1
+    const mobility = rateMobility(state)
     
     switch (player) {
         case Color.Red:
@@ -80,7 +59,7 @@ export default function rate(state: State, player: Color, causingMove?: Move, mo
                 return 100000
             }
 
-            return conclude(surrounding.red, surrounding.blue, mobility.red, mobility.blue) * focus
+            return conclude(surrounding.red, surrounding.blue, mobility.red, mobility.blue) 
         case Color.Blue:
             if (surrounding.red === 6) {
                 return 100000
@@ -90,6 +69,6 @@ export default function rate(state: State, player: Color, causingMove?: Move, mo
                 return -100000
             }
 
-            return conclude(surrounding.blue, surrounding.red, mobility.blue, mobility.red) * focus
+            return conclude(surrounding.blue, surrounding.red, mobility.blue, mobility.red) 
     }
 }

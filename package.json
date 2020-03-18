@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest",
     "build": "webpack",
-    "app": "ts-node ./src/index.ts",
+    "start": "ts-node ./src/index.ts",
     "clean": "rm -f -r ./node_modules && npm i",
     "bundle": "npm update && npm run build && mkdir -p ./archive && rm -f ./archive/player.zip && zip -y -r -q ./archive/player.zip ./dist/bundle.js start.sh",
     "buildAssets": "ts-node ./src/Cache/build.ts"
