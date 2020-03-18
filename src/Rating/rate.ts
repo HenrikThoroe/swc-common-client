@@ -1,5 +1,5 @@
 import { State, fetchMoves, Move } from "@henrikthoroe/swc-client";
-import Rating, { Aspect, substantiateAspect } from ".";
+import Rating, { Aspect, substantiateAspect, ConcreteAspect } from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
 import rateSurrounding from "./rateSurrounding";
@@ -63,31 +63,39 @@ function chooseGamePhase(player: Color, surrounding: Aspect, mobility: Aspect<Mo
     return "mid"
 }
 
+function rateMidGame(surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<Mobility>): number {
+    
+}   
+
 function calculateValue(state: State, player: Color, surrounding: Aspect, mobility: Aspect<Mobility>): number {
+    const phase = chooseGamePhase(player, surrounding, mobility)
+    const concreteSurrounding = substantiateAspect(player, surrounding)
+    const concreteMobility = substantiateAspect(player, mobility)
 
+    return rateMidGame(concreteSurrounding, concreteMobility)
 
-    switch (player) {
-        case Color.Red:
-            if (surrounding.red === 6) {
-                return -100000
-            }
+    // switch (player) {
+    //     case Color.Red:
+    //         if (surrounding.red === 6) {
+    //             return -100000
+    //         }
 
-            if (surrounding.blue === 6) {
-                return 100000
-            }
+    //         if (surrounding.blue === 6) {
+    //             return 100000
+    //         }
 
-            return conclude(surrounding.red, surrounding.blue, mobility.red, mobility.blue) 
-        case Color.Blue:
-            if (surrounding.red === 6) {
-                return 100000
-            }
+    //         return conclude(surrounding.red, surrounding.blue, mobility.red, mobility.blue) 
+    //     case Color.Blue:
+    //         if (surrounding.red === 6) {
+    //             return 100000
+    //         }
 
-            if (surrounding.blue === 6) {
-                return -100000
-            }
+    //         if (surrounding.blue === 6) {
+    //             return -100000
+    //         }
 
-            return conclude(surrounding.blue, surrounding.red, mobility.blue, mobility.red) 
-    }
+    //         return conclude(surrounding.blue, surrounding.red, mobility.blue, mobility.red) 
+    // }
 }
 
 export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): Rating {
