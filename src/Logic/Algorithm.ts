@@ -110,7 +110,7 @@ export default class AlphaBeta {
  
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return depth === 0 ? rate(next, this.player.color, move).value : this.min(next, generateMoves(next), depth - 1, max, beta, move)
+                return this.min(next, generateMoves(next), depth - 1, max, beta, move)
             })
             
             if (rating > max) {

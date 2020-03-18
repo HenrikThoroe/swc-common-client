@@ -16,6 +16,10 @@ export function emptyPieceCollection(): PieceCollection {
     }
 }
 
+export function sumPieceCollection(collection: PieceCollection): number {
+    return collection.beetle + collection.bee + collection.ant + collection.grasshopper + collection.spider
+}
+
 export default interface Mobility {
     draggable: PieceCollection
     undeployed: PieceCollection

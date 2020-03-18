@@ -1,10 +1,13 @@
 import { State, fetchMoves, Move } from "@henrikthoroe/swc-client";
-import Rating, { Aspect } from ".";
+import Rating, { Aspect, substantiateAspect } from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
 import rateSurrounding from "./rateSurrounding";
 import Timer from "../utils/Timer";
 import rateFocus from "./rateFocus";
+import Mobility, { PieceCollection, sumPieceCollection } from "./Mobility";
+import getMobility from "./getMobility";
+import GamePhase from "./GamePhase";
 
 const mobilityTable = new Map([[0, 3], [1, 2], [2, 1.5], [3, 1], [4, 0.9], [5, 0.9], [6, 0.9]])
 
@@ -45,7 +48,24 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
     return ownConclusion - opponentConclusion
 }
 
-function calculateValue(state: State, player: Color, surrounding: Aspect, mobility: Aspect): number {
+function chooseGamePhase(player: Color, surrounding: Aspect, mobility: Aspect<Mobility>): GamePhase {
+    const concreteSurrounding = substantiateAspect(player, surrounding)
+    const concreteMobility = substantiateAspect(player, mobility)
+
+    if (concreteSurrounding.own < 4 && (11 - sumPieceCollection(concreteMobility.own.undeployed) < 6)) {
+        return "early"
+    }
+
+    if (Math.max(concreteSurrounding.own, concreteSurrounding.opponent) > 4) {
+        return "late"
+    }
+
+    return "mid"
+}
+
+function calculateValue(state: State, player: Color, surrounding: Aspect, mobility: Aspect<Mobility>): number {
+
+
     switch (player) {
         case Color.Red:
             if (surrounding.red === 6) {
@@ -72,7 +92,7 @@ function calculateValue(state: State, player: Color, surrounding: Aspect, mobili
 
 export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): Rating {
     const surrounding = rateSurrounding(state)
-    const mobility = rateMobility(state)
+    const mobility = { red: getMobility(state, Color.Red), blue: getMobility(state, Color.Blue) }
     const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Blue) || state.turn >= 60
 
     return {
