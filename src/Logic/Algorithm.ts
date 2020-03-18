@@ -88,7 +88,7 @@ export default class AlphaBeta {
 
     private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, causingMove?: Move): number {
         if (depth === 0) {
-            return rate(state, this.player.color, causingMove, moves)
+            return rate(state, this.player.color, causingMove, moves).value
         }
 
         let max = alpha
@@ -110,7 +110,7 @@ export default class AlphaBeta {
  
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return depth === 0 ? rate(next, this.player.color, move) : this.min(next, generateMoves(next), depth - 1, max, beta, move)
+                return depth === 0 ? rate(next, this.player.color, move).value : this.min(next, generateMoves(next), depth - 1, max, beta, move)
             })
             
             if (rating > max) {
@@ -136,7 +136,7 @@ export default class AlphaBeta {
 
     private min(state: State, moves: Move[], depth: number, alpha: number, beta: number, causingMove?: Move): number {
         if (depth === 0) {
-            return rate(state, this.player.color, causingMove, moves)
+            return rate(state, this.player.color, causingMove, moves).value
         }
 
         let min = beta
@@ -165,11 +165,6 @@ export default class AlphaBeta {
         }
 
         return min
-    }
-
-    private sort(moves: Move[], state: State, descending: boolean): Move[] {
-        const moveMap = moves.map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, this.player.color, move)) }))
-        return moveMap.sort((a, b) => descending ? b.rating - a.rating : a.rating - b.rating).map(a => a.move)
     }
 
     private random(): number {

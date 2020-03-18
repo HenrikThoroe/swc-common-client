@@ -1,6 +1,6 @@
 export default interface Rating {
-    mobility: number
-    surrounding: number
+    isGameOver: boolean
+    value: number
 }
 
 export interface Aspect {

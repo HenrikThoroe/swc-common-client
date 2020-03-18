@@ -45,10 +45,7 @@ function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobili
     return ownConclusion - opponentConclusion
 }
 
-export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): number {
-    const surrounding = rateSurrounding(state)
-    const mobility = rateMobility(state)
-    
+function calculateValue(state: State, player: Color, surrounding: Aspect, mobility: Aspect): number {
     switch (player) {
         case Color.Red:
             if (surrounding.red === 6) {
@@ -70,5 +67,16 @@ export default function rate(state: State, player: Color, causingMove?: Move, mo
             }
 
             return conclude(surrounding.blue, surrounding.red, mobility.blue, mobility.red) 
+    }
+}
+
+export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): Rating {
+    const surrounding = rateSurrounding(state)
+    const mobility = rateMobility(state)
+    const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Blue) || state.turn >= 60
+
+    return {
+        isGameOver: isLastMove,
+        value: calculateValue(state, player, surrounding, mobility)
     }
 }
