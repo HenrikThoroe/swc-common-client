@@ -1,10 +1,13 @@
 import { State, fetchMoves, Move } from "@henrikthoroe/swc-client";
-import Rating, { Aspect } from ".";
+import Rating, { Aspect, substantiateAspect, ConcreteAspect } from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
 import rateSurrounding from "./rateSurrounding";
 import Timer from "../utils/Timer";
 import rateFocus from "./rateFocus";
+import Mobility, { PieceCollection, sumPieceCollection } from "./Mobility";
+import getMobility from "./getMobility";
+import GamePhase from "./GamePhase";
 
 const mobilityTable = new Map([[0, 3], [1, 2], [2, 1.5], [3, 1], [4, 0.9], [5, 0.9], [6, 0.9]])
 
@@ -15,77 +18,97 @@ function guard(x: number, min: number, max: number): number {
     return x
 }
 
-function conclude(ownSurrounding: number, opponentSurrounding: number, ownMobility: number, opponentMobility: number) {
-    ownSurrounding = guard(ownSurrounding, 0, 6)
-    opponentSurrounding = guard(opponentSurrounding, 0, 6)
-    ownMobility = guard(ownMobility, 0, 1024)
-    opponentMobility = guard(opponentMobility, 0, 1024)
+function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>) {
+    const index = phase === "early" ? 0 : phase === "mid" ? 1 : 2
 
-    const surroundingConclusion = {
-        own: Math.pow(2, opponentSurrounding),
-        opp: Math.pow(2, ownSurrounding)
+    const factors = {
+        surrounding:    [2, 8, 10],
+        mobility:       [8, 2, 0]
     }
 
-    const moveConclusion = {
-        own: surroundingConclusion.own * mobilityTable.get(ownSurrounding)! * (ownMobility / 1024),
-        opp: surroundingConclusion.opp * mobilityTable.get(opponentSurrounding)! * (opponentMobility / 1024)
-    }
-
-    if (moveConclusion.own === 0) {
-        return 0
-    } 
-
-    if (moveConclusion.opp === 0) {
-        return Infinity
-    }
-
-    const ownConclusion = surroundingConclusion.own + moveConclusion.own
-    const opponentConclusion = surroundingConclusion.opp + moveConclusion.opp
-
-    return ownConclusion - opponentConclusion
-}
-
-function getMobility(state: State, player: Color, moves?: Move[]): Aspect {
-
-    return rateMobility(state, moves)
-    // if (player === Color.Blue) {
-    //     if (state.undeployed.blue.length <= 4) {
-    //         return { red: 1, blue: 1 }
-    //     }
-    //     return rateMobility(state, moves)
-    // } else {
-    //     if (state.undeployed.red.length <= 4) {
-    //         return { red: 1, blue: 1 }
-    //     }
-    //     return rateMobility(state, moves)
+    // const surroundingConclusion = {
+    //     own: Math.pow(2, surrounding.opponent),
+    //     opp: Math.pow(2, surrounding.own) / (phase === "mid" ? 2 : 1)
     // }
+
+    if (Math.max(mobility.own, mobility.opponent) > 1 || Math.max(mobility.own, mobility.opponent) < 0) {
+        console.log("something went wrong", mobility)
+    }
+
+    let surroundingValue: number = (surrounding.opponent - surrounding.own) / 6
+    let mobilityValue: number = mobility.own - mobility.opponent 
+
+    switch (phase) {
+        case "early":
+            // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
+            mobilityValue *= 5
+        case "mid":
+            mobilityValue *= 0.7
+            // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
+        case "late":
+            mobilityValue *= 0.5
+            // surroundingValue = surrounding.opponent >= surrounding.own ? 1 : 0
+    }
+
+    return surroundingValue + mobilityValue
+
+    
+
+    // const mobilityConclusion = {
+    //     own: surroundingConclusion.own * mobility.own,
+    //     opp: surroundingConclusion.opp * mobility.opponent,
+    // }
+
+    // return ((surroundingConclusion.own * factors.surrounding[index] + mobilityConclusion.own * factors.mobility[index]) - (surroundingConclusion.opp * factors.surrounding[index] + mobilityConclusion.opp * factors.mobility[index])) / 10
 }
 
-export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): number {
+function chooseGamePhase(player: Color, surrounding: Aspect, mobility: Aspect<Mobility>): GamePhase {
+    const concreteSurrounding = substantiateAspect(player, surrounding)
+    const concreteMobility = substantiateAspect(player, mobility)
+
+    if (concreteSurrounding.own < 5 && (11 - sumPieceCollection(concreteMobility.own.undeployed) < 5)) {
+        return "early"
+    }
+
+    if (Math.max(concreteSurrounding.own, concreteSurrounding.opponent) > 4) {
+        return "late"
+    }
+
+    return "mid"
+}
+
+function calculateValue(state: State, player: Color, surrounding: Aspect, mobility: Aspect<Mobility>): number {
+    const phase = chooseGamePhase(player, surrounding, mobility)
+    const concreteSurrounding = substantiateAspect(player, surrounding)
+    const concreteMobility = substantiateAspect(player, mobility)
+
+    return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility))
+}
+
+export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): Rating {
     const surrounding = rateSurrounding(state)
-    const mobility = getMobility(state, player, moves)
-    const focus = 1//causingMove ? rateFocus(state, player, causingMove) : 1
-    
-    switch (player) {
-        case Color.Red:
-            if (surrounding.red === 6) {
-                return -100000
-            }
+    const mobility = { red: getMobility(state, Color.Red), blue: getMobility(state, Color.Blue) }
+    const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Blue) || state.turn >= 60
+    const concreteSurrounding = substantiateAspect(player, surrounding)
 
-            if (surrounding.blue === 6) {
-                return 100000
-            }
+    if (concreteSurrounding.opponent === 6) {
+        return {
+            isGameOver: isLastMove,
+            value: 200
+        }
+    }
 
-            return conclude(surrounding.red, surrounding.blue, mobility.red, mobility.blue) * focus
-        case Color.Blue:
-            if (surrounding.red === 6) {
-                return 100000
-            }
+    if (concreteSurrounding.own === 6) {
+        return {
+            isGameOver: isLastMove,
+            value: -200
+        }
+    }
 
-            if (surrounding.blue === 6) {
-                return -100000
-            }
+    const value = calculateValue(state, player, surrounding, mobility)
 
-            return conclude(surrounding.blue, surrounding.red, mobility.blue, mobility.red) * focus
+    return {
+        isGameOver: isLastMove,
+        value: value
     }
 }

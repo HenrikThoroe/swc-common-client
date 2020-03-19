@@ -1,63 +1,82 @@
-import { State, Move, Position, fetchMoves, Color, Piece } from '@henrikthoroe/swc-client'
-import { Aspect } from '.'
-import nextState from '../LookAhead/nextState'
-import { comparePositions } from '@henrikthoroe/swc-client/dist/client/Model/Position'
-import sig from '../utils/sig'
-import cacheHandler from '../Cache'
-import simulateMove from '../LookAhead/simulateMove'
-import rateFocus from './rateFocus'
-import generateMoves from '../LookAhead/generateMoves'
+import { State, Move, Position, fetchMoves, Color, Piece, Board } from '@henrikthoroe/swc-client'
+import { Aspect, ConcreteAspect } from '.'
+import isDraggable from '@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable'
+import enumerateBoard from '../utils/enumerateBoard'
+import Mobility, { PieceCollection } from './Mobility'
+import GamePhase from './GamePhase'
+import { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 
 function isPosition(obj: Piece | Position): obj is Position {
     return (obj as Position).x !== undefined
 }
 
-function rateMoveSet(state: State, moves: Move[], player: Color): number {
-    const setMoveRating = sig(state.turn / 8, 14, 0.8, 0.5)
-    const dragMoveRating = sig(state.turn / 8, -14, 0.8, 0.5)
-    const cache = new Array<Array<number>>(11).fill(new Array<number>(11).fill(0)) // 11x11 array filled with 0
-
-    const finalRating = moves
-        .map(move => {
-            const importance = isPosition(move.start) ? dragMoveRating : setMoveRating
-            const countFactor = sig(cache[move.end.x + 5][move.end.y + 5] / 2, 14, 0, 0.5)
-
-            cache[move.end.x + 5][move.end.y + 5] += 1
-
-            return importance * countFactor * rateFocus(state, player, move)
-        }) 
-        .reduce((p, c) => p + c)
-
-    return finalRating
+const pieceTable = {
+    ant:            [0.9,     1,      1],
+    beetle:         [0.9,     0.7,    0.6],
+    bee:            [1,     1,      1],
+    spider:         [0.7,   0.9,    0.6],
+    grasshopper:    [0.4,   0.9,    1]
 }
 
-export default function rateMobility(state: State, moves?: Move[]): Aspect {
-    const ownMoves = moves ? moves : generateMoves(state) 
-    const opponentMoves = simulateMove(state, null, next => generateMoves(next))
+function pieceValue(phase: GamePhase, type: Type) {
+    const index = phase === "early" ? 0 : phase === "mid" ? 1 : 2
 
-    const score = (ownMoves: Move[], opponentMoves: Move[]) => {
-        if (ownMoves.length === 0) return 0
-        if (opponentMoves.length === 0) return 1024
+    switch (type) {
+        case Type.BEETLE:       return pieceTable.beetle[index]
+        case Type.ANT:          return pieceTable.ant[index]
+        case Type.BEE:          return pieceTable.bee[index]
+        case Type.SPIDER:       return pieceTable.spider[index]
+        case Type.GRASSHOPPER:  return pieceTable.grasshopper[index]
+    }
+}
 
-        const score = {
-            own: rateMoveSet(state, ownMoves, state.currentPlayer),
-            opponent: rateMoveSet(state, opponentMoves, state.currentPlayer === Color.Blue ? Color.Red : Color.Blue)
+function queenFactor(phase: GamePhase, isOwnQueen: boolean): number {
+    switch (phase) {
+        case "early": return isOwnQueen ? 1 : 10
+        case "mid": return 10
+        case "late": return 10
+    }
+}
+
+export default function rateMobility(state: State, phase: GamePhase, mobility: ConcreteAspect<Mobility>): ConcreteAspect<number> {
+    const rateDraggable = (pieces: PieceCollection, queenFactor: number) => {
+        const summedDraggable = 
+            1 * pieces.ant + 
+            queenFactor * pieces.bee +
+            1 * pieces.beetle +
+            1 * pieces.spider +
+            1 * pieces.grasshopper
+
+        const value = summedDraggable / (10 + queenFactor)
+
+        switch (phase) {
+            case "early": return value * 2.5
+            case "mid": return value * 6
+            case "late": return value * 5
         }
-
-        if (score.opponent === 0 && score.own !== 0) {
-            return 1024
-        } else if (score.opponent === 0) {
-            return 512
-        }
-
-        return score.own / score.opponent
     }
 
-    const ownScore = score(ownMoves, opponentMoves)
-    const opponentScore = score(opponentMoves, ownMoves)
+    const rateUndeployed = (pieces: PieceCollection) => {
+        // The lower the better
+        const summedUndeployed = 
+            pieceValue(phase, Type.ANT) * pieces.ant + 
+            pieceValue(phase, Type.BEE) * pieces.bee +
+            pieceValue(phase, Type.BEETLE) * pieces.beetle +
+            pieceValue(phase, Type.SPIDER) * pieces.spider +
+            pieceValue(phase, Type.GRASSHOPPER) * pieces.grasshopper
+
+        // Normalized undeployed rating
+        const value =  1 - summedUndeployed / 11
+
+        switch (phase) {
+            case "early": return value * 7.5
+            case "mid": return value * 4
+            case "late": return value * 5
+        }
+    }
 
     return {
-        red: state.currentPlayer === Color.Red ? ownScore : opponentScore,
-        blue: state.currentPlayer === Color.Blue ? ownScore : opponentScore
+        own: (rateUndeployed(mobility.own.undeployed) + rateDraggable(mobility.own.draggable, queenFactor(phase, true))) / 10,
+        opponent: (rateUndeployed(mobility.opponent.undeployed) + rateDraggable(mobility.opponent.draggable, queenFactor(phase, false))) / 10
     }
 }
