@@ -13,7 +13,7 @@ export interface SpecialCaseResult {
 const Constants = {
     initialMoveCount: 968,
     maximumUndeployed: 11,
-    guaranteedWin: 100000
+    guaranteedWin: 200
 }
 
 function hasPiece(type: Type, collection: Piece[]): boolean {
@@ -31,7 +31,7 @@ function handleInitialMove(state: State, moves: Move[]): Move {
         throw new Error(`Invalid Input`)
     }
 
-    const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
+    const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
     let min = Infinity
     let selected: Move | null = null
 
@@ -76,6 +76,17 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
 
     if (undeployed.length === Constants.maximumUndeployed) {
         if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
+            const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
+            return {
+                isSpecialCase: true,
+                success: true,
+                selectedMove: beeMoves[0]
+            }
+        }
+    }
+
+    if (undeployed.length === Constants.maximumUndeployed - 1) {
+        if ((player.color === Color.Red && hasPiece(Type.BEE, state.undeployed.red)) || (player.color === Color.Blue && hasPiece(Type.BEE, state.undeployed.blue))) {
             const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
             return {
                 isSpecialCase: true,

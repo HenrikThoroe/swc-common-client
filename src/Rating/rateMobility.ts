@@ -32,9 +32,9 @@ function pieceValue(phase: GamePhase, type: Type) {
 
 function queenFactor(phase: GamePhase, isOwnQueen: boolean): number {
     switch (phase) {
-        case "early": return isOwnQueen ? 1 : 4
-        case "mid": return 3
-        case "late": return 3
+        case "early": return isOwnQueen ? 1 : 10
+        case "mid": return 10
+        case "late": return 10
     }
 }
 

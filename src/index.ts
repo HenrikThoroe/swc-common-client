@@ -7,6 +7,8 @@ import handleSpecialCase from './Logic/handleSpecialCase'
 import AlphaBeta from './Logic/Algorithm'
 import Timer from './utils/Timer'
 import simulateMove from './LookAhead/simulateMove'
+import enumerateBoard from './utils/enumerateBoard'
+import isDraggable from '@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable'
 
 const args = yargs
     .option("host", {
@@ -45,6 +47,7 @@ process.on("exit", e => {
 
 function handleResult(result: Result) {
     console.log(result)
+    process.kill(process.pid, 0)
 }
 
 function errorCatcher(state: State, undeployed: Piece[], player: Player, available: Move[]) {
@@ -76,6 +79,12 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
         available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
     }
 
+    // enumerateBoard(state.board, field => {
+    //     if (field.pieces.length > 0) {
+    //         console.log(field.position, isDraggable(state, field.position))
+    //     }
+    // })
+
     //console.log(simulateMove(state, available[0], state => rate(state, player.color)), available[0])
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
@@ -90,7 +99,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     const result = logic.findBest()
 
     console.log(timer.read())
-    console.log(result.value)
+    console.log(result.rating, result.value)
 
     if (result.success) {
         return result.value!
