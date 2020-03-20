@@ -34,22 +34,28 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
     //     opp: Math.pow(2, surrounding.own) / (phase === "mid" ? 2 : 1)
     // }
 
+
+
     if (Math.max(mobility.own, mobility.opponent) > 1 || Math.max(mobility.own, mobility.opponent) < 0) {
         console.log("something went wrong", mobility)
     }
 
-    let surroundingValue: number = (surrounding.opponent - mobility.own) / 6
+    if (Math.min(surrounding.own, surrounding.opponent) <= 0) {
+        return mobility.own - mobility.opponent 
+    }
+
+    let surroundingValue: number = Math.pow(2, surrounding.opponent) - Math.pow(2, surrounding.own) 
     let mobilityValue: number = mobility.own - mobility.opponent 
 
     switch (phase) {
         case "early":
             // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
-            mobilityValue *= 5
+            mobilityValue *= 20
         case "mid":
-            mobilityValue *= 0.2
+            mobilityValue *= 1
             // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
         case "late":
-            mobilityValue *= 0.3
+            mobilityValue *= 1
             // surroundingValue = surrounding.opponent >= surrounding.own ? 1 : 0
     }
 

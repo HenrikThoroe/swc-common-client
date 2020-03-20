@@ -58,10 +58,6 @@ export default class AlphaBeta {
         while (!this.timedOut) {
             const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
             this.horizon += 1
-            alpha = res - 1
-            beta = res + 1
-
-            console.log(res, isNaN(res))
 
             if (!this.timedOut || this.hasTimedOut || isNaN(rating) || res === 200) {
                 rating = res
