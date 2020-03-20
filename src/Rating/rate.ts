@@ -8,8 +8,11 @@ import rateFocus from "./rateFocus";
 import Mobility, { PieceCollection, sumPieceCollection } from "./Mobility";
 import getMobility from "./getMobility";
 import GamePhase from "./GamePhase";
+import createEvaluationTable from "../Cache/createEvaluationTable";
 
 const mobilityTable = new Map([[0, 3], [1, 2], [2, 1.5], [3, 1], [4, 0.9], [5, 0.9], [6, 0.9]])
+
+const evaluationTable = createEvaluationTable()
 
 function guard(x: number, min: number, max: number): number {
     if (x > max) return max
@@ -86,9 +89,19 @@ function calculateValue(state: State, player: Color, surrounding: Aspect, mobili
 }
 
 export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): Rating {
+    const cached = evaluationTable.read(state)
     const surrounding = rateSurrounding(state)
-    const mobility = { red: getMobility(state, Color.Red), blue: getMobility(state, Color.Blue) }
     const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Blue) || state.turn >= 60
+
+    if (cached) {
+        return {
+            isGameOver: isLastMove,
+            value: cached
+        }
+    }
+
+    
+    const mobility = { red: getMobility(state, Color.Red), blue: getMobility(state, Color.Blue) }
     const concreteSurrounding = substantiateAspect(player, surrounding)
 
     if (concreteSurrounding.opponent === 6) {
