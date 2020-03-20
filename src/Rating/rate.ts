@@ -38,7 +38,7 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
         console.log("something went wrong", mobility)
     }
 
-    let surroundingValue: number = (surrounding.opponent - surrounding.own) / 6
+    let surroundingValue: number = (surrounding.opponent - mobility.own) / 6
     let mobilityValue: number = mobility.own - mobility.opponent 
 
     switch (phase) {
@@ -46,10 +46,10 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
             // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
             mobilityValue *= 5
         case "mid":
-            mobilityValue *= 0.7
+            mobilityValue *= 0.2
             // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
         case "late":
-            mobilityValue *= 0.5
+            mobilityValue *= 0.3
             // surroundingValue = surrounding.opponent >= surrounding.own ? 1 : 0
     }
 
@@ -119,6 +119,8 @@ export default function rate(state: State, player: Color, causingMove?: Move, mo
     }
 
     const value = calculateValue(state, player, surrounding, mobility)
+
+    evaluationTable.push(state, value)
 
     return {
         isGameOver: isLastMove,

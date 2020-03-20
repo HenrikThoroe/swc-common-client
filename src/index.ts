@@ -9,6 +9,7 @@ import Timer from './utils/Timer'
 import simulateMove from './LookAhead/simulateMove'
 import enumerateBoard from './utils/enumerateBoard'
 import isDraggable from '@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable'
+import encodeBase64 from './utils/encodeBase64'
 
 const args = yargs
     .option("host", {
@@ -61,6 +62,21 @@ function errorCatcher(state: State, undeployed: Piece[], player: Player, availab
 
 function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
     const timer = new Timer()
+
+    const hasher = (state: State) => {
+        let key = ""
+
+        enumerateBoard(state.board, field => {
+            for (let i = 0; i < field.pieces.length; ++i) {
+                const id = (field.position.x << 12) ^ (field.position.y << 8) ^ (field.position.z << 4) ^ (field.pieces[i].type << 3) ^ field.pieces[i].owner
+                key += encodeBase64(id)
+            }
+        })
+
+        return key
+    }
+
+    console.log(hasher(state), hasher(state))
 
     if (available.length === 0) {
         throw new Error(`No Moves Available`)

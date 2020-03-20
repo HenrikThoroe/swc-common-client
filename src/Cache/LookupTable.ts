@@ -3,7 +3,7 @@ interface HashFunction<T> {
 }
 
 interface Table<T> {
-    [key: string]: T
+    [key: string]: T | undefined
 }
 
 export default class LookupTable<Key, Value> {
@@ -17,6 +17,8 @@ export default class LookupTable<Key, Value> {
     private keyStore: string[] = []
 
     private count: number = 0
+
+    private positiveReads: number = 0
 
     constructor(capacity: number, hasher: HashFunction<Key>) {
         this.capacity = capacity
@@ -38,6 +40,12 @@ export default class LookupTable<Key, Value> {
         const value = this.table[this.hasher(key)]
 
         if (value) {
+            this.positiveReads += 1
+
+            if (this.positiveReads % 10000 === 0) {
+                console.log("Succesfully cahced: ", this.positiveReads)
+            }
+
             return value
         }
 

@@ -6,7 +6,7 @@ import encodeBase64 from "../utils/encodeBase64";
 export type EvaluationTable = LookupTable<State, number>
 
 export default function createEvaluationTable(): EvaluationTable {
-    return new LookupTable(4000, state => {
+    return new LookupTable(10000, state => {
         let key = ""
 
         enumerateBoard(state.board, field => {
