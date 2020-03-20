@@ -13,7 +13,7 @@ export default function encodeBase64(x: number): string {
 
     // return result
 
-    return Buffer.alloc(1, x).toString("base64").replace("==", "")
+    return Buffer.alloc(8, x).toString("base64").replace("==", "")
 
     // let result = ""
     // let temp = 0

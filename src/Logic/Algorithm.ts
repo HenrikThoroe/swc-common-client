@@ -56,7 +56,7 @@ export default class AlphaBeta {
         let rating: number = NaN
 
         while (!this.timedOut) {
-            const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
+            const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta, 0)
             this.horizon += 1
 
             if (!this.timedOut || this.hasTimedOut || isNaN(rating) || res === 200) {
@@ -80,24 +80,24 @@ export default class AlphaBeta {
         }
     }
 
-    private mtdf(guess: number) {
-        let g = guess
-        let upperBound = Infinity
-        let lowerBound = -Infinity
+    // private mtdf(guess: number) {
+    //     let g = guess
+    //     let upperBound = Infinity
+    //     let lowerBound = -Infinity
 
-        while (lowerBound < upperBound) {
-            let beta = Math.max(lowerBound + 1, g)
-            g = this.max(this.initialState, this.availableMoves, this.horizon, beta - 1, beta)
+    //     while (lowerBound < upperBound) {
+    //         let beta = Math.max(lowerBound + 1, g)
+    //         g = this.max(this.initialState, this.availableMoves, this.horizon, beta - 1, beta)
 
-            if (g < beta) {
-                upperBound = g
-            } else {
-                lowerBound = g
-            }
-        }
+    //         if (g < beta) {
+    //             upperBound = g
+    //         } else {
+    //             lowerBound = g
+    //         }
+    //     }
 
-        return g
-    }
+    //     return g
+    // }
 
     private get hasTimedOut(): boolean {
         if (this.start < 0) {
@@ -107,10 +107,14 @@ export default class AlphaBeta {
         return Date.now() - this.start >= this.timeout
     }
 
-    private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, causingMove?: Move): number {
-        const evaluation = rate(state, this.player.color, causingMove, moves)
+    private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, previous: number): number {
+        const evaluation = rate(state, this.player.color)
 
-        if (depth === 0 || evaluation.isGameOver || this.hasTimedOut) {
+        if (evaluation.isGameOver || this.hasTimedOut) {
+            return evaluation.value
+        }
+
+        if (depth === 0) {
             return evaluation.value
         }
 
@@ -133,7 +137,7 @@ export default class AlphaBeta {
  
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return this.min(next, generateMoves(next), depth - 1, max, beta, move)
+                return this.min(next, generateMoves(next), depth - 1, max, beta, evaluation.value)
             })
             
             if (rating > max) {
@@ -157,10 +161,14 @@ export default class AlphaBeta {
         return max
     }
 
-    private min(state: State, moves: Move[], depth: number, alpha: number, beta: number, causingMove?: Move): number {
-        const evaluation = rate(state, this.player.color, causingMove, moves)
+    private min(state: State, moves: Move[], depth: number, alpha: number, beta: number, previous: number): number {
+        const evaluation = rate(state, this.player.color)
 
-        if (depth === 0 || evaluation.isGameOver || this.hasTimedOut) {
+        if (evaluation.isGameOver || this.hasTimedOut) {
+            return evaluation.value
+        }
+
+        if (depth === 0) {
             return evaluation.value
         }
 
@@ -177,7 +185,7 @@ export default class AlphaBeta {
 
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return this.max(next, generateMoves(next), depth - 1, alpha, min, move)
+                return this.max(next, generateMoves(next), depth - 1, alpha, min, evaluation.value)
             })
             
             if (rating < min) {
