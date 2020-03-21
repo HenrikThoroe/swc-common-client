@@ -53,20 +53,20 @@ export default class AlphaBeta {
 
         let alpha: number = -Infinity
         let beta: number = Infinity
-        let rating: number = NaN
+        let rating: number = this.negaScout(this.initialState, this.horizon, alpha, beta, 1) //NaN
 
-        while (!this.timedOut) {
-            const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta, 0)
-            this.horizon += 1
+        // while (!this.timedOut) {
+        //     const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta, 0)
+        //     this.horizon += 1
 
-            if (!this.timedOut || this.hasTimedOut || isNaN(rating) || res === 200) {
-                rating = res
-            }
+        //     if (!this.timedOut || this.hasTimedOut || isNaN(rating) || res === 200) {
+        //         rating = res
+        //     }
 
-            if (this.hasTimedOut) {
-                break
-            }
-        }
+        //     if (this.hasTimedOut) {
+        //         break
+        //     }
+        // }
 
         
         const time = Date.now() - this.start
@@ -110,7 +110,7 @@ export default class AlphaBeta {
     private negaScout(state: State, depth: number, alpha: number, beta: number, color: number): number {
         const evaluation = rate(state, this.player.color)
 
-        if (depth === this.horizon || evaluation.isGameOver) {
+        if (depth === 0 || evaluation.isGameOver || this.hasTimedOut) {
             return evaluation.value * color
         }
 
@@ -118,6 +118,7 @@ export default class AlphaBeta {
         let score: number = 0
 
         for (let i = 0; i < moves.length; ++i) {
+            this.operations += 1
             if (i === 0) {
                 score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -beta, -alpha, -color))
             } else {
@@ -128,7 +129,13 @@ export default class AlphaBeta {
                 }
             }
 
-            alpha = Math.max(score, alpha)
+            if (score > alpha) {
+                alpha = score 
+                
+                if (depth === this.horizon) {
+                    this.selectedMove = moves[i]
+                }
+            }
 
             if (alpha >= beta) {
                 break
