@@ -8,7 +8,7 @@ export default function encodeBase64(x: number): string {
     while (x > 0) {
         const y = x << bitsToShift >>> bitsToShift  // Read block
         x = x >>> blockLength                       // Remove block from number
-        result += base64Alphabet[y]                 // look up the associated character for block
+        result = base64Alphabet[y] + result         // look up the associated character for block
     }
 
     return result
