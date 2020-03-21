@@ -107,8 +107,36 @@ export default class AlphaBeta {
         return Date.now() - this.start >= this.timeout
     }
 
-    private negaScout(state: State, depth: number, alpha: number, beta: number): number {
-        if (depth === this.horizon)
+    private negaScout(state: State, depth: number, alpha: number, beta: number, color: number): number {
+        const evaluation = rate(state, this.player.color)
+
+        if (depth === this.horizon || evaluation.isGameOver) {
+            return evaluation.value * color
+        }
+
+        const moves = generateMoves(state)
+        let score: number = 0
+
+        for (let i = 0; i < moves.length; ++i) {
+            if (i === 0) {
+                score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -beta, -alpha, -color))
+            } else {
+                score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -alpha - 1, -alpha, -color))
+
+                if (alpha < score && score < beta) {
+                    score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -beta, -score, -color))
+                }
+            }
+
+            alpha = Math.max(score, alpha)
+
+            if (alpha >= beta) {
+                break
+            }
+        }
+
+        return alpha
+
     }
 
     private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, previous: number): number {
