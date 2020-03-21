@@ -6,10 +6,17 @@ interface Table<T> {
     [key: string]: T | undefined
 }
 
+/**
+ * A general purpose hashtable with restricted capacity.
+ */
 export default class LookupTable<Key, Value> {
 
-    static counter: number = 0
+    private static counter: number = 0
 
+    /**
+     * A value which sets an limit for the item capacity of the lookup table. 
+     * It is not equivalent to the size of the table.
+     */
     readonly capacity: number
 
     readonly hasher: HashFunction<Key>

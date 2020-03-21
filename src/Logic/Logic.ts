@@ -1,6 +1,5 @@
-import { State, Move, Player, fetchMoves } from '@henrikthoroe/swc-client'
+import { State, Move, Player } from '@henrikthoroe/swc-client'
 import rate from '../Rating/rate'
-import nextState from '../LookAhead/nextState'
 import simulateMove from '../LookAhead/simulateMove'
 import generateMoves from '../LookAhead/generateMoves'
 
@@ -11,13 +10,17 @@ export interface AlgorithmResult {
     value: Move | null
 }
 
-export default class AlphaBeta {
+/**
+ * Use this class to find the best possible move of an passed state. 
+ * It acts as a general interface for different algorythms and heuristics.
+ */
+export default class Logic {
+
+    horizon: number
 
     readonly timeout: number
 
     readonly initialState: State
-
-    horizon: number
 
     readonly availableMoves: Move[]
 
@@ -31,21 +34,12 @@ export default class AlphaBeta {
 
     private operations: number = 0
 
-    private randomTable: number[]
-
-    private lookupIndex = 0
-
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number) {
         this.initialState = state
         this.availableMoves = moves
         this.horizon = horizon > 0 ? horizon : 1
         this.timeout = timeout > 0 ? timeout : 0
         this.player = player
-        this.randomTable = []
-
-        for (let i = 0; i < 50; ++i) {
-            this.randomTable.push(Math.random())
-        }
     }
 
     findBest(): AlgorithmResult {
@@ -79,25 +73,6 @@ export default class AlphaBeta {
             value: this.selectedMove
         }
     }
-
-    // private mtdf(guess: number) {
-    //     let g = guess
-    //     let upperBound = Infinity
-    //     let lowerBound = -Infinity
-
-    //     while (lowerBound < upperBound) {
-    //         let beta = Math.max(lowerBound + 1, g)
-    //         g = this.max(this.initialState, this.availableMoves, this.horizon, beta - 1, beta)
-
-    //         if (g < beta) {
-    //             upperBound = g
-    //         } else {
-    //             lowerBound = g
-    //         }
-    //     }
-
-    //     return g
-    // }
 
     private get hasTimedOut(): boolean {
         if (this.start < 0) {
@@ -188,7 +163,7 @@ export default class AlphaBeta {
             }
     
             // Bring some random in to prevent opponent from finding some sort of pattern
-            if (rating === max && this.random() > 0.5 && depth === this.horizon) {
+            if (rating === max && Math.random() > 0.5 && depth === this.horizon) {
                 this.selectedMove = move
             }
 
@@ -237,10 +212,6 @@ export default class AlphaBeta {
         }
 
         return min
-    }
-
-    private random(): number {
-        return this.lookupIndex >= this.randomTable.length ? this.randomTable[this.lookupIndex = 0] : this.randomTable[this.lookupIndex]
     }
 
 }

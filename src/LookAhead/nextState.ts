@@ -2,6 +2,13 @@ import { State, Move, Piece, Position } from "@henrikthoroe/swc-client";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
 import copy from '../utils/copy'
 
+/**
+ * Calculates the resulting state from the passed state and move.
+ * @deprecated Do not use this function at all. Use `simulateMove` instead.
+ * @see simulateMove
+ * @param currentState 
+ * @param move 
+ */
 export default function nextState(currentState: State, move?: Move): State {
     const state: State = copy(currentState)
     const addPiece = (x: number, y: number, piece: Piece) => {

@@ -1,10 +1,9 @@
 import connect, { Move, State, Result, Player, ConnectOptions } from '@henrikthoroe/swc-client'
-import nextState from './LookAhead/nextState'
 import rate from './Rating/rate'
 import yargs from 'yargs'
 import Piece from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 import handleSpecialCase from './Logic/handleSpecialCase'
-import AlphaBeta from './Logic/Algorithm'
+import Logic from './Logic/Logic'
 import Timer from './utils/Timer'
 import simulateMove from './LookAhead/simulateMove'
 import enumerateBoard from './utils/enumerateBoard'
@@ -104,7 +103,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     //console.log(simulateMove(state, available[0], state => rate(state, player.color)), available[0])
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new AlphaBeta(state, available, player, 3, 1890 - timer.read())
+    const logic = new Logic(state, available, player, 3, 1890 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
