@@ -7,7 +7,7 @@ export default function hashState(state: State): string {
 
     enumerateBoard(state.board, field => {
         for (let i = 0; i < field.pieces.length; ++i) {
-            const id = (field.position.x << 12) ^ (field.position.y << 8) ^ (field.position.z << 4) ^ (field.pieces[i].type << 3) ^ field.pieces[i].owner
+            const id = (field.position.x << 12) ^ (field.position.y << 8) ^ (field.position.z << 4) ^ (field.pieces[i].type << 1) ^ field.pieces[i].owner
             key += encodeBase64(id)
         }
     })
