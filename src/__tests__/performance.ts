@@ -1,13 +1,6 @@
 import Timer from "../utils/Timer"
+import encodeBase64 from "../utils/encodeBase64"
 
 test("performance", () => {
-    console.time()
-
-    for (let i = 0; i <= 100000; ++i) {
-        let x = Math.random()
-
-        x += x - x
-    }
-
-    console.timeEnd()
+    console.log(encodeBase64(18))
 })

@@ -8,8 +8,11 @@ import rateFocus from "./rateFocus";
 import Mobility, { PieceCollection, sumPieceCollection } from "./Mobility";
 import getMobility from "./getMobility";
 import GamePhase from "./GamePhase";
+import createEvaluationTable from "../Cache/createEvaluationTable";
 
 const mobilityTable = new Map([[0, 3], [1, 2], [2, 1.5], [3, 1], [4, 0.9], [5, 0.9], [6, 0.9]])
+
+const evaluationTable = createEvaluationTable()
 
 function guard(x: number, min: number, max: number): number {
     if (x > max) return max
@@ -31,22 +34,28 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
     //     opp: Math.pow(2, surrounding.own) / (phase === "mid" ? 2 : 1)
     // }
 
+
+
     if (Math.max(mobility.own, mobility.opponent) > 1 || Math.max(mobility.own, mobility.opponent) < 0) {
         console.log("something went wrong", mobility)
     }
 
-    let surroundingValue: number = (surrounding.opponent - surrounding.own) / 6
+    if (Math.min(surrounding.own, surrounding.opponent) <= 0) {
+        return mobility.own - mobility.opponent 
+    }
+
+    let surroundingValue: number = Math.pow(2, surrounding.opponent) - Math.pow(2, surrounding.own) 
     let mobilityValue: number = mobility.own - mobility.opponent 
 
     switch (phase) {
         case "early":
             // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
-            mobilityValue *= 5
+            mobilityValue *= 20
         case "mid":
-            mobilityValue *= 0.7
+            mobilityValue *= 1
             // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
         case "late":
-            mobilityValue *= 0.5
+            mobilityValue *= 1
             // surroundingValue = surrounding.opponent >= surrounding.own ? 1 : 0
     }
 
@@ -86,9 +95,19 @@ function calculateValue(state: State, player: Color, surrounding: Aspect, mobili
 }
 
 export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): Rating {
+    const cached = evaluationTable.read(state)
     const surrounding = rateSurrounding(state)
-    const mobility = { red: getMobility(state, Color.Red), blue: getMobility(state, Color.Blue) }
     const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Blue) || state.turn >= 60
+
+    if (cached) {
+        return {
+            isGameOver: isLastMove,
+            value: cached
+        }
+    }
+
+    
+    const mobility = { red: getMobility(state, Color.Red), blue: getMobility(state, Color.Blue) }
     const concreteSurrounding = substantiateAspect(player, surrounding)
 
     if (concreteSurrounding.opponent === 6) {
@@ -106,6 +125,8 @@ export default function rate(state: State, player: Color, causingMove?: Move, mo
     }
 
     const value = calculateValue(state, player, surrounding, mobility)
+
+    evaluationTable.push(state, value)
 
     return {
         isGameOver: isLastMove,

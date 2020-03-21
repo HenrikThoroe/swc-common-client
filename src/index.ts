@@ -1,14 +1,14 @@
 import connect, { Move, State, Result, Player, ConnectOptions } from '@henrikthoroe/swc-client'
-import nextState from './LookAhead/nextState'
 import rate from './Rating/rate'
 import yargs from 'yargs'
 import Piece from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 import handleSpecialCase from './Logic/handleSpecialCase'
-import AlphaBeta from './Logic/Algorithm'
+import Logic from './Logic/Logic'
 import Timer from './utils/Timer'
 import simulateMove from './LookAhead/simulateMove'
 import enumerateBoard from './utils/enumerateBoard'
 import isDraggable from '@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable'
+import encodeBase64 from './utils/encodeBase64'
 
 const args = yargs
     .option("host", {
@@ -62,6 +62,21 @@ function errorCatcher(state: State, undeployed: Piece[], player: Player, availab
 function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
     const timer = new Timer()
 
+    // const hasher = (state: State) => {
+    //     let key = ""
+
+    //     enumerateBoard(state.board, field => {
+    //         for (let i = 0; i < field.pieces.length; ++i) {
+    //             const id = (field.position.x << 12) ^ (field.position.y << 8) ^ (field.position.z << 4) ^ (field.pieces[i].type << 3) ^ field.pieces[i].owner
+    //             key += encodeBase64(id)
+    //         }
+    //     })
+
+    //     return key
+    // }
+
+    // console.log(hasher(state), hasher(state))
+
     if (available.length === 0) {
         throw new Error(`No Moves Available`)
     }
@@ -88,7 +103,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     //console.log(simulateMove(state, available[0], state => rate(state, player.color)), available[0])
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new AlphaBeta(state, available, player, 2, 1890 - timer.read())
+    const logic = new Logic(state, available, player, 3, 1890 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!

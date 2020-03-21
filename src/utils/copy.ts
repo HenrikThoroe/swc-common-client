@@ -1,3 +1,8 @@
+/**
+ * This function copies an object. 
+ * Note: Only primitives and arrays are copied. 
+ * @param obj The object to copy
+ */
 export default function copy<T>(obj: T): T {
     let c: any = {}
 

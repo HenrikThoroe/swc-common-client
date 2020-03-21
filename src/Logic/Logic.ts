@@ -1,6 +1,5 @@
-import { State, Move, Player, fetchMoves } from '@henrikthoroe/swc-client'
+import { State, Move, Player } from '@henrikthoroe/swc-client'
 import rate from '../Rating/rate'
-import nextState from '../LookAhead/nextState'
 import simulateMove from '../LookAhead/simulateMove'
 import generateMoves from '../LookAhead/generateMoves'
 
@@ -11,13 +10,17 @@ export interface AlgorithmResult {
     value: Move | null
 }
 
-export default class AlphaBeta {
+/**
+ * Use this class to find the best possible move of an passed state. 
+ * It acts as a general interface for different algorythms and heuristics.
+ */
+export default class Logic {
+
+    horizon: number
 
     readonly timeout: number
 
     readonly initialState: State
-
-    horizon: number
 
     readonly availableMoves: Move[]
 
@@ -31,21 +34,12 @@ export default class AlphaBeta {
 
     private operations: number = 0
 
-    private randomTable: number[]
-
-    private lookupIndex = 0
-
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number) {
         this.initialState = state
         this.availableMoves = moves
         this.horizon = horizon > 0 ? horizon : 1
         this.timeout = timeout > 0 ? timeout : 0
         this.player = player
-        this.randomTable = []
-
-        for (let i = 0; i < 50; ++i) {
-            this.randomTable.push(Math.random())
-        }
     }
 
     findBest(): AlgorithmResult {
@@ -53,24 +47,20 @@ export default class AlphaBeta {
 
         let alpha: number = -Infinity
         let beta: number = Infinity
-        let rating: number = NaN
+        let rating: number = this.negaScout(this.initialState, this.horizon, alpha, beta, 1) //NaN
 
-        while (!this.timedOut) {
-            const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta)
-            this.horizon += 1
-            alpha = res - 1
-            beta = res + 1
+        // while (!this.timedOut) {
+        //     const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta, 0)
+        //     this.horizon += 1
 
-            console.log(res, isNaN(res))
+        //     if (!this.timedOut || this.hasTimedOut || isNaN(rating) || res === 200) {
+        //         rating = res
+        //     }
 
-            if (!this.timedOut || this.hasTimedOut || isNaN(rating) || res === 200) {
-                rating = res
-            }
-
-            if (this.hasTimedOut) {
-                break
-            }
-        }
+        //     if (this.hasTimedOut) {
+        //         break
+        //     }
+        // }
 
         
         const time = Date.now() - this.start
@@ -84,25 +74,6 @@ export default class AlphaBeta {
         }
     }
 
-    private mtdf(guess: number) {
-        let g = guess
-        let upperBound = Infinity
-        let lowerBound = -Infinity
-
-        while (lowerBound < upperBound) {
-            let beta = Math.max(lowerBound + 1, g)
-            g = this.max(this.initialState, this.availableMoves, this.horizon, beta - 1, beta)
-
-            if (g < beta) {
-                upperBound = g
-            } else {
-                lowerBound = g
-            }
-        }
-
-        return g
-    }
-
     private get hasTimedOut(): boolean {
         if (this.start < 0) {
             return true
@@ -111,10 +82,53 @@ export default class AlphaBeta {
         return Date.now() - this.start >= this.timeout
     }
 
-    private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, causingMove?: Move): number {
-        const evaluation = rate(state, this.player.color, causingMove, moves)
+    private negaScout(state: State, depth: number, alpha: number, beta: number, color: number): number {
+        const evaluation = rate(state, this.player.color)
 
         if (depth === 0 || evaluation.isGameOver || this.hasTimedOut) {
+            return evaluation.value * color
+        }
+
+        const moves = generateMoves(state)
+        let score: number = 0
+
+        for (let i = 0; i < moves.length; ++i) {
+            this.operations += 1
+            if (i === 0) {
+                score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -beta, -alpha, -color))
+            } else {
+                score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -alpha - 1, -alpha, -color))
+
+                if (alpha < score && score < beta) {
+                    score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -beta, -score, -color))
+                }
+            }
+
+            if (score > alpha) {
+                alpha = score 
+                
+                if (depth === this.horizon) {
+                    this.selectedMove = moves[i]
+                }
+            }
+
+            if (alpha >= beta) {
+                break
+            }
+        }
+
+        return alpha
+
+    }
+
+    private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, previous: number): number {
+        const evaluation = rate(state, this.player.color)
+
+        if (evaluation.isGameOver || this.hasTimedOut) {
+            return evaluation.value
+        }
+
+        if (depth === 0) {
             return evaluation.value
         }
 
@@ -137,7 +151,7 @@ export default class AlphaBeta {
  
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return this.min(next, generateMoves(next), depth - 1, max, beta, move)
+                return this.min(next, generateMoves(next), depth - 1, max, beta, evaluation.value)
             })
             
             if (rating > max) {
@@ -149,7 +163,7 @@ export default class AlphaBeta {
             }
     
             // Bring some random in to prevent opponent from finding some sort of pattern
-            if (rating === max && this.random() > 0.5 && depth === this.horizon) {
+            if (rating === max && Math.random() > 0.5 && depth === this.horizon) {
                 this.selectedMove = move
             }
 
@@ -161,10 +175,14 @@ export default class AlphaBeta {
         return max
     }
 
-    private min(state: State, moves: Move[], depth: number, alpha: number, beta: number, causingMove?: Move): number {
-        const evaluation = rate(state, this.player.color, causingMove, moves)
+    private min(state: State, moves: Move[], depth: number, alpha: number, beta: number, previous: number): number {
+        const evaluation = rate(state, this.player.color)
 
-        if (depth === 0 || evaluation.isGameOver || this.hasTimedOut) {
+        if (evaluation.isGameOver || this.hasTimedOut) {
+            return evaluation.value
+        }
+
+        if (depth === 0) {
             return evaluation.value
         }
 
@@ -181,7 +199,7 @@ export default class AlphaBeta {
 
             this.operations += 1
             const rating = simulateMove(state, move, next => {
-                return this.max(next, generateMoves(next), depth - 1, alpha, min, move)
+                return this.max(next, generateMoves(next), depth - 1, alpha, min, evaluation.value)
             })
             
             if (rating < min) {
@@ -194,10 +212,6 @@ export default class AlphaBeta {
         }
 
         return min
-    }
-
-    private random(): number {
-        return this.lookupIndex >= this.randomTable.length ? this.randomTable[this.lookupIndex = 0] : this.randomTable[this.lookupIndex]
     }
 
 }

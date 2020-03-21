@@ -55,6 +55,13 @@ function handleInitialMove(state: State, moves: Move[]): Move {
     return beeMoves[Math.floor(Math.random() * beeMoves.length)]
 }
 
+/**
+ * This function checks a state for special cases like the first move or guaranteed wins.
+ * @param state 
+ * @param player 
+ * @param moves 
+ * @param undeployed 
+ */
 export default function handleSpecialCase(state: State, player: Player, moves: Move[], undeployed: Piece[]): SpecialCaseResult {
     const errorResult: SpecialCaseResult = {
         isSpecialCase: true,
