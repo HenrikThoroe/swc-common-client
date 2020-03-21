@@ -107,6 +107,10 @@ export default class AlphaBeta {
         return Date.now() - this.start >= this.timeout
     }
 
+    private negaScout(state: State, depth: number, alpha: number, beta: number): number {
+        if (depth === this.horizon)
+    }
+
     private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, previous: number): number {
         const evaluation = rate(state, this.player.color)
 

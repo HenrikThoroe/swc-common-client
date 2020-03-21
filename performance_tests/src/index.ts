@@ -1,6 +1,7 @@
 import hashTest from './hash'
 import testHashtable from './hashtable'
 import testStateHash from './statehash'
+import testBase64 from './base64'
 
 interface Tests {
     [index: string]: () => void
@@ -9,7 +10,8 @@ interface Tests {
 const tests: Tests = {
     "hash": hashTest,
     "hashtable": testHashtable,
-    "statehash": testStateHash
+    "statehash": testStateHash,
+    "testBase64": testBase64
 }
 
 for (let p in tests) {
