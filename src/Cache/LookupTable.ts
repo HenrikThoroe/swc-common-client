@@ -8,6 +8,8 @@ interface Table<T> {
 
 export default class LookupTable<Key, Value> {
 
+    static counter: number = 0
+
     readonly capacity: number
 
     readonly hasher: HashFunction<Key>
@@ -20,9 +22,12 @@ export default class LookupTable<Key, Value> {
 
     private positiveReads: number = 0
 
+    private readonly id: number
+
     constructor(capacity: number, hasher: HashFunction<Key>) {
         this.capacity = capacity
         this.hasher = hasher
+        this.id = LookupTable.counter++
     }
 
     push(key: Key, value: Value) {
@@ -43,7 +48,7 @@ export default class LookupTable<Key, Value> {
             this.positiveReads += 1
 
             if (this.positiveReads % 10000 === 0) {
-                console.log("Succesfully cahced: ", this.positiveReads)
+                console.log(`Successfully cached ${this.positiveReads} items [id: ${this.id}]`)
             }
 
             return value
