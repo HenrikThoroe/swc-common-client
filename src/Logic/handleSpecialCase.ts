@@ -103,7 +103,7 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
         }
     }
 
-    if (simulateMove(state, moves[0], next => rate(next, player.color, moves[0]).value) === Constants.guaranteedWin) {
+    if (simulateMove(state, moves[0], next => rate(next, player.color).value) === Constants.guaranteedWin) {
         return {
             isSpecialCase: true,
             success: true,

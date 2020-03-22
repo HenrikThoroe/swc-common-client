@@ -3,12 +3,9 @@ import rate from './Rating/rate'
 import yargs from 'yargs'
 import Piece from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 import handleSpecialCase from './Logic/handleSpecialCase'
-import Logic from './Logic/Logic'
 import Timer from './utils/Timer'
 import simulateMove from './LookAhead/simulateMove'
-import enumerateBoard from './utils/enumerateBoard'
-import isDraggable from '@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable'
-import encodeBase64 from './utils/encodeBase64'
+import NegaScout from './Logic/NagaScout'
 
 const args = yargs
     .option("host", {
@@ -89,7 +86,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     if (available.length < 900) {
         const moveMap = available
             .sort(() => Math.random() - 0.5) // shuffle array 
-            .map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color, move).value) })) // sort array by estimated move order
+            .map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color).value) })) // sort array by estimated move order
 
         available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
     }
@@ -103,7 +100,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     //console.log(simulateMove(state, available[0], state => rate(state, player.color)), available[0])
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new Logic(state, available, player, 3, 1890 - timer.read())
+    const logic = new NegaScout(state, available, player, 3, 1890 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
@@ -111,7 +108,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
         throw new Error(`Failed to Generate Move`)
     }
 
-    const result = logic.findBest()
+    const result = logic.find()
 
     console.log(timer.read())
     console.log(result.rating, result.value)
