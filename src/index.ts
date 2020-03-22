@@ -42,15 +42,6 @@ function handleResult(result: Result) {
     process.kill(process.pid, 0)
 }
 
-function errorCatcher(state: State, undeployed: Piece[], player: Player, available: Move[]) {
-    try {
-        return handleMoveRequest(state, undeployed, player, available)
-    } catch (error) {
-        console.error(error)
-        throw error
-    }
-}
-
 function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
     const timer = new Timer()
 
@@ -88,7 +79,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     } 
 }
 
-connect(connectOpts, handleResult, errorCatcher)
+connect(connectOpts, handleResult, handleMoveRequest)
     .catch(error => {
         console.error("Failed to connect: ", error)
     })
