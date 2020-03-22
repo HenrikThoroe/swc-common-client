@@ -10,7 +10,7 @@ const moveTable = new LookupTable<State, Move[]>(3000, hashState)
  * @todo Implement a cache for already seen state. 
  */
 export default function generateMoves(state: State): Move[] {
-    return fetchMoves(state)
+    return fetchMoves(state, false)
 //     const cached = moveTable.read(state)
 
 //     if (cached) {

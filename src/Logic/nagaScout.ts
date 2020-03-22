@@ -7,6 +7,8 @@ import simulateMove from "../LookAhead/simulateMove";
 export default class NegaScout extends Logic {
 
     find(): SearchResult {
+        this.searchState.startTime = Date.now()
+
         const alpha = -Infinity
         const beta = Infinity
         const rating = this.search(this.initialState, this.horizon, alpha, beta, 1)
@@ -34,6 +36,11 @@ export default class NegaScout extends Logic {
 
         for (let i = 0; i < moves.length; ++i) {
             this.searchState.searchedNodes += 1
+
+            if (this.didTimeOut()) {
+                break
+            }
+
             if (i === 0) {
                 score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color))
             } else {
@@ -48,6 +55,7 @@ export default class NegaScout extends Logic {
                 alpha = score 
                 
                 if (depth === this.horizon) {
+                    console.log(state.currentPlayer, color, moves.length)
                     this.searchState.selectedMove = moves[i]
                 }
             }
