@@ -3,7 +3,7 @@ import yargs from 'yargs'
 import Piece from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 import handleSpecialCase from './Logic/handleSpecialCase'
 import Timer from './utils/Timer'
-import NegaScout from './Logic/NagaScout'
+import NegaScout from './Logic/NegaScout'
 import sortMoves from './Logic/sortMoves'
 
 const args = yargs
