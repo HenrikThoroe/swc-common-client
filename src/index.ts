@@ -6,6 +6,7 @@ import handleSpecialCase from './Logic/handleSpecialCase'
 import Timer from './utils/Timer'
 import simulateMove from './LookAhead/simulateMove'
 import NegaScout from './Logic/NagaScout'
+import sortMoves from './Logic/sortMoves'
 
 const args = yargs
     .option("host", {
@@ -84,11 +85,13 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     if (available.length < 900) {
-        const moveMap = available
-            .sort(() => Math.random() - 0.5) // shuffle array 
-            .map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color).value) })) // sort array by estimated move order
+        // const moveMap = available
+        //     .sort(() => Math.random() - 0.5) // shuffle array 
+        //     .map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color).value) })) // sort array by estimated move order
 
-        available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
+        // available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
+
+        available = sortMoves(state, available, player.color)
     }
 
     // enumerateBoard(state.board, field => {

@@ -1,5 +1,5 @@
 import Logic, { SearchResult } from "./Logic";
-import { State } from "@henrikthoroe/swc-client";
+import { State, Move } from "@henrikthoroe/swc-client";
 import rate from "../Rating/rate";
 import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
@@ -11,7 +11,7 @@ export default class NegaScout extends Logic {
 
         const alpha = -Infinity
         const beta = Infinity
-        const rating = this.search(this.initialState, this.horizon, alpha, beta, 1)
+        const rating = this.search(this.initialState, this.horizon, alpha, beta, 1, this.availableMoves)
         const move = this.searchState.selectedMove
 
         this.log()
@@ -24,9 +24,9 @@ export default class NegaScout extends Logic {
         }
     }
 
-    private search(state: State, depth: number, alpha: number, beta: number, color: number): number {
+    private search(state: State, depth: number, alpha: number, beta: number, color: number, availableMoves?: Move[]): number {
         const evaluation = rate(state, this.player.color)
-        const moves = generateMoves(state)
+        const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (depth === 0 || evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
             return evaluation.value * color
@@ -55,6 +55,7 @@ export default class NegaScout extends Logic {
                 alpha = score 
                 
                 if (depth === this.horizon) {
+                    console.log("Choose:", i, moves[i])
                     console.log(state.currentPlayer, color, moves.length)
                     this.searchState.selectedMove = moves[i]
                 }
