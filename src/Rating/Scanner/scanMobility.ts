@@ -1,10 +1,10 @@
 import { Color, State } from "@henrikthoroe/swc-client";
-import Mobility, { PieceCollection, emptyPieceCollection } from "./Mobility";
-import enumerateBoard from "../utils/enumerateBoard";
+import Mobility, { PieceCollection, emptyPieceCollection } from "../Mobility";
+import enumerateBoard from "../../utils/enumerateBoard";
 import Piece, { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import isDraggable from "@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable";
 
-export default function getMobility(state: State, color: Color): Mobility {
+export default function scanMobility(state: State, color: Color): Mobility {
     const draggable = emptyPieceCollection()
     const undeployed = emptyPieceCollection()
 

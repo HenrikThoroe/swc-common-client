@@ -2,40 +2,15 @@ import { State, fetchMoves, Move } from "@henrikthoroe/swc-client";
 import Rating, { Aspect, substantiateAspect, ConcreteAspect } from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
-import rateSurrounding from "./rateSurrounding";
-import Timer from "../utils/Timer";
-import rateFocus from "./rateFocus";
-import Mobility, { PieceCollection, sumPieceCollection } from "./Mobility";
-import getMobility from "./getMobility";
+import scanSurrounding from "./Scanner/scanSurrounding";
+import Mobility, { sumPieceCollection } from "./Mobility";
+import scanMobility from "./Scanner/scanMobility";
 import GamePhase from "./GamePhase";
 import createEvaluationTable from "../Cache/createEvaluationTable";
 
-const mobilityTable = new Map([[0, 3], [1, 2], [2, 1.5], [3, 1], [4, 0.9], [5, 0.9], [6, 0.9]])
-
 const evaluationTable = createEvaluationTable()
 
-function guard(x: number, min: number, max: number): number {
-    if (x > max) return max
-    if (x < min) return min
-
-    return x
-}
-
 function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>) {
-    const index = phase === "early" ? 0 : phase === "mid" ? 1 : 2
-
-    const factors = {
-        surrounding:    [2, 8, 10],
-        mobility:       [8, 2, 0]
-    }
-
-    // const surroundingConclusion = {
-    //     own: Math.pow(2, surrounding.opponent),
-    //     opp: Math.pow(2, surrounding.own) / (phase === "mid" ? 2 : 1)
-    // }
-
-
-
     if (Math.max(mobility.own, mobility.opponent) > 1 || Math.max(mobility.own, mobility.opponent) < 0) {
         console.log("something went wrong", mobility)
     }
@@ -49,26 +24,14 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
 
     switch (phase) {
         case "early":
-            // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
             mobilityValue *= 20
         case "mid":
             mobilityValue *= 1
-            // surroundingValue = surrounding.opponent > surrounding.own ? 1 : 0
         case "late":
             mobilityValue *= 1
-            // surroundingValue = surrounding.opponent >= surrounding.own ? 1 : 0
     }
 
     return surroundingValue + mobilityValue
-
-    
-
-    // const mobilityConclusion = {
-    //     own: surroundingConclusion.own * mobility.own,
-    //     opp: surroundingConclusion.opp * mobility.opponent,
-    // }
-
-    // return ((surroundingConclusion.own * factors.surrounding[index] + mobilityConclusion.own * factors.mobility[index]) - (surroundingConclusion.opp * factors.surrounding[index] + mobilityConclusion.opp * factors.mobility[index])) / 10
 }
 
 function chooseGamePhase(player: Color, surrounding: Aspect, mobility: Aspect<Mobility>): GamePhase {
@@ -94,9 +57,9 @@ function calculateValue(state: State, player: Color, surrounding: Aspect, mobili
     return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility))
 }
 
-export default function rate(state: State, player: Color, causingMove?: Move, moves?: Move[]): Rating {
+export default function rate(state: State, player: Color): Rating {
     const cached = evaluationTable.read(state)
-    const surrounding = rateSurrounding(state)
+    const surrounding = scanSurrounding(state)
     const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Blue) || state.turn >= 60
 
     if (cached) {
@@ -107,7 +70,7 @@ export default function rate(state: State, player: Color, causingMove?: Move, mo
     }
 
     
-    const mobility = { red: getMobility(state, Color.Red), blue: getMobility(state, Color.Blue) }
+    const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
     const concreteSurrounding = substantiateAspect(player, surrounding)
 
     if (concreteSurrounding.opponent === 6) {

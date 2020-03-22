@@ -1,217 +1,65 @@
 import { State, Move, Player } from '@henrikthoroe/swc-client'
-import rate from '../Rating/rate'
-import simulateMove from '../LookAhead/simulateMove'
-import generateMoves from '../LookAhead/generateMoves'
 
-export interface AlgorithmResult {
+export interface SearchResult {
     rating: number
     success: boolean
     timedOut: boolean
     value: Move | null
 }
 
+export interface SearchState {
+    selectedMove: Move | null
+    timedOut: boolean
+    startTime: number
+    searchedNodes: number
+}
+
 /**
- * Use this class to find the best possible move of an passed state. 
- * It acts as a general interface for different algorythms and heuristics.
+ * An abstract class which provides an interface and helper methods for algorythms, 
+ * which determine the best possible move for a provided state.
  */
-export default class Logic {
+export default abstract class Logic {
 
-    horizon: number
+    protected horizon: number
 
-    readonly timeout: number
+    protected searchState: SearchState
 
-    readonly initialState: State
+    protected readonly initialState: State
 
-    readonly availableMoves: Move[]
+    protected readonly timeout: number
 
-    readonly player: Player
+    protected readonly availableMoves: Move[]
 
-    private selectedMove: Move | null = null
-
-    private start: number = -1
-
-    private timedOut: boolean = false
-
-    private operations: number = 0
+    protected readonly player: Player
 
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number) {
         this.initialState = state
-        this.availableMoves = moves
-        this.horizon = horizon > 0 ? horizon : 1
-        this.timeout = timeout > 0 ? timeout : 0
+        this.availableMoves = moves 
         this.player = player
-    }
-
-    findBest(): AlgorithmResult {
-        this.start = Date.now()
-
-        let alpha: number = -Infinity
-        let beta: number = Infinity
-        let rating: number = this.negaScout(this.initialState, this.horizon, alpha, beta, 1) //NaN
-
-        // while (!this.timedOut) {
-        //     const res = this.max(this.initialState, this.availableMoves, this.horizon, alpha, beta, 0)
-        //     this.horizon += 1
-
-        //     if (!this.timedOut || this.hasTimedOut || isNaN(rating) || res === 200) {
-        //         rating = res
-        //     }
-
-        //     if (this.hasTimedOut) {
-        //         break
-        //     }
-        // }
-
-        
-        const time = Date.now() - this.start
-        console.log(`Performed ${this.operations} operations in ${time} milliseconds [${this.operations / (time / 1000)} op/s][${this.availableMoves.length}][depth: ${this.horizon}].`)
-
-        return {
-            rating: rating,
-            success: this.selectedMove !== null,
-            timedOut: this.timedOut,
-            value: this.selectedMove
+        this.horizon = horizon
+        this.timeout = timeout
+        this.searchState = {
+            selectedMove: null,
+            timedOut: false,
+            startTime: -1,
+            searchedNodes: 0
         }
     }
 
-    private get hasTimedOut(): boolean {
-        if (this.start < 0) {
+    protected didTimeOut(): boolean {
+        if (this.searchState.startTime < 0) {
             return true
         }
 
-        return Date.now() - this.start >= this.timeout
+        return Date.now() - this.searchState.startTime >= this.timeout
     }
 
-    private negaScout(state: State, depth: number, alpha: number, beta: number, color: number): number {
-        const evaluation = rate(state, this.player.color)
+    protected log() {
+        const time = Date.now() - this.searchState.startTime
+        const o = this.searchState.searchedNodes
 
-        if (depth === 0 || evaluation.isGameOver || this.hasTimedOut) {
-            return evaluation.value * color
-        }
-
-        const moves = generateMoves(state)
-        let score: number = 0
-
-        for (let i = 0; i < moves.length; ++i) {
-            this.operations += 1
-            if (i === 0) {
-                score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -beta, -alpha, -color))
-            } else {
-                score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -alpha - 1, -alpha, -color))
-
-                if (alpha < score && score < beta) {
-                    score = simulateMove(state, moves[i], next => -this.negaScout(next, depth - 1, -beta, -score, -color))
-                }
-            }
-
-            if (score > alpha) {
-                alpha = score 
-                
-                if (depth === this.horizon) {
-                    this.selectedMove = moves[i]
-                }
-            }
-
-            if (alpha >= beta) {
-                break
-            }
-        }
-
-        return alpha
-
+        console.log(`Performed ${o} operations in ${time} milliseconds [${o / (time / 1000)} op/s][${this.availableMoves.length}][depth: ${this.horizon}].`)
     }
 
-    private max(state: State, moves: Move[], depth: number, alpha: number, beta: number, previous: number): number {
-        const evaluation = rate(state, this.player.color)
-
-        if (evaluation.isGameOver || this.hasTimedOut) {
-            return evaluation.value
-        }
-
-        if (depth === 0) {
-            return evaluation.value
-        }
-
-        let max = alpha
-        let c = 0
-        let move: Move
-
-        for (let i = 0; i < moves.length; ++i) {
-            move = moves[i]
-            c += 1
-
-            if (this.hasTimedOut) {
-                this.timedOut = true
-
-                if (depth === this.horizon) {
-                    console.log(`Timed out after searching ${c} of ${moves.length} nodes.`)
-                }
-                break
-            }
- 
-            this.operations += 1
-            const rating = simulateMove(state, move, next => {
-                return this.min(next, generateMoves(next), depth - 1, max, beta, evaluation.value)
-            })
-            
-            if (rating > max) {
-                max = rating
-                
-                if (depth === this.horizon) {
-                    this.selectedMove = move
-                }
-            }
-    
-            // Bring some random in to prevent opponent from finding some sort of pattern
-            if (rating === max && Math.random() > 0.5 && depth === this.horizon) {
-                this.selectedMove = move
-            }
-
-            if (max >= beta) {
-                break
-            }
-        }
-
-        return max
-    }
-
-    private min(state: State, moves: Move[], depth: number, alpha: number, beta: number, previous: number): number {
-        const evaluation = rate(state, this.player.color)
-
-        if (evaluation.isGameOver || this.hasTimedOut) {
-            return evaluation.value
-        }
-
-        if (depth === 0) {
-            return evaluation.value
-        }
-
-        let min = beta
-        let move: Move
-
-        for (let i = 0; i < moves.length; ++i) {
-            move = moves[i]
-
-            if (this.hasTimedOut) {
-                this.timedOut = true
-                break
-            }
-
-            this.operations += 1
-            const rating = simulateMove(state, move, next => {
-                return this.max(next, generateMoves(next), depth - 1, alpha, min, evaluation.value)
-            })
-            
-            if (rating < min) {
-                min = rating
-            }
-
-            if (rating <= alpha) {
-                break
-            }
-        }
-
-        return min
-    }
-
+    abstract find(): SearchResult
 }

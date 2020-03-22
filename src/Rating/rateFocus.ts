@@ -32,6 +32,10 @@ function findPiece(position: Position, board: Board): Piece | null {
     return null
 }
 
+/**
+ * 
+ * @deprecated
+ */
 export default function rateFocus(state: State, player: Color, move: Move): number {
     if (isPosition(move.start)) {
         const piece = findPiece(move.start, state.board)
