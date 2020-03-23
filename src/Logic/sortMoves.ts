@@ -51,5 +51,10 @@ export default function sortMoves(state: State, moves: Move[], player: Color): M
         return [...deployMoves, ...dragMoves]
     }
 
-    return [...deployMap.map(a => ({ move: a.move, rating: a.rating })), ...dragMap.map(a => ({ move: a.move, rating: a.rating + 7 }))].sort((a, b) => b.rating - a.rating).map(map => map.move)
+    return [
+        ...deployMap.map(a => ({ move: a.move, rating: a.rating })), 
+        ...dragMap.map(a => ({ move: a.move, rating: a.rating + 7 }))
+    ]
+    .sort((a, b) => b.rating - a.rating)
+    .map(map => map.move)
 }
