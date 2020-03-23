@@ -58,7 +58,7 @@ export default class LookupTable<Key, Value> {
 
             if (this.positiveReads % 10000 === 0) {
                 const ratio = this.positiveReads / (this.positiveReads + this.negativeReads)
-                console.log(`Successfully cached ${this.positiveReads} items [id: ${this.id}][cached: ${ratio * 100}%]`)
+                console.log(`Successfully cached ${this.positiveReads} items [id: ${this.id}][cached: ${(ratio * 100).toFixed(2)}%]`)
             }
 
             return value

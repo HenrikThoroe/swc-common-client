@@ -23,7 +23,7 @@ interface EvaluationMap {
  * @todo Simplify and document the code. Improve heuristics to take the piece's type into account. Improve performance
  */
 export default function sortMoves(state: State, moves: Move[], player: Color): Move[] {
-    const start = process.hrtime()[1]
+    // const start = process.hrtime()[1]
     const surrounding = scanSurrounding(state)
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
     const phase = chooseGamePhase(player, surrounding, mobility)
@@ -43,11 +43,13 @@ export default function sortMoves(state: State, moves: Move[], player: Color): M
     const deployMoves = deployMap.sort((a, b) => b.rating - a.rating).map(map => map.move)
     const dragMoves = dragMap.sort((a, b) => b.rating - a.rating).map(map => map.move)
 
-    console.log(phase, deployMoves.length > 0 ? deployMoves[0].start : "no deploy move", dragMoves.length > 0 ? dragMoves[0].start : "no drag move")
-    console.log("Sorting: ", (process.hrtime()[1] - start) / 1000000)
+    //Debug Prints
+    // console.log(phase, deployMoves.length > 0 ? deployMoves[0].start : "no deploy move", dragMoves.length > 0 ? dragMoves[0].start : "no drag move")
+    // console.log("Sorting: ", (process.hrtime()[1] - start) / 1000000)
+
     if (phase === "early") {
         return [...deployMoves, ...dragMoves]
     }
 
-    return [...deployMap.map(a => ({ move: a.move, rating: a.rating })), ...dragMap.map(a => ({ move: a.move, rating: a.rating + 10 }))].sort((a, b) => b.rating - a.rating).map(map => map.move)
+    return [...deployMap.map(a => ({ move: a.move, rating: a.rating })), ...dragMap.map(a => ({ move: a.move, rating: a.rating + 7 }))].sort((a, b) => b.rating - a.rating).map(map => map.move)
 }
