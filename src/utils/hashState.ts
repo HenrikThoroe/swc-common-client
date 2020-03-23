@@ -10,7 +10,7 @@ import encodeBase64 from "./encodeBase64";
  * @returns A base64 encoded string containing information about the state's board's pieces and the current player.
  */
 export default function hashState(state: State): string {
-    let key = `p:${state.currentPlayer}`
+    let key = encodeBase64(state.currentPlayer)
 
     enumerateBoard(state.board, field => {
         for (let i = 0; i < field.pieces.length; ++i) {
