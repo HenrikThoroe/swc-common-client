@@ -37,9 +37,23 @@ process.on("exit", e => {
     console.log(`Process terminated with error code ${e}`)
 })
 
+function printMemoryUsage() {
+    const usage = process.memoryUsage()
+    const toMB = (mem: number) => (mem / 1024 / 1024).toFixed(2)
+
+    console.log("---Memory Usage---")
+    console.log(`RSS: ${toMB(usage.rss)}`)
+    console.log(`Heap Total: ${toMB(usage.heapTotal)}`)
+    console.log(`Heap Used: ${toMB(usage.heapUsed)}`)
+    console.log(`External: ${toMB(usage.external)}`)
+    console.log(`Array Buffers: ${toMB(usage.arrayBuffers)}`)
+    console.log("------------------")
+}
+
 function handleResult(result: Result) {
+    printMemoryUsage()
     console.log(result)
-    process.kill(process.pid, 0)
+    process.exit()
 }
 
 function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
