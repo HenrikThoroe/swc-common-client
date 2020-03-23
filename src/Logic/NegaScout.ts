@@ -4,6 +4,12 @@ import rate from "../Rating/rate";
 import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
 
+/**
+ * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.
+ * It assumes that the first move provided is also the best one. 
+ * For this reason a good move ordering is essential for NegaScout to work. 
+ * If the first few moves are not the best ones the performance is even worse than normal Alpha Beta.
+ */
 export default class NegaScout extends Logic {
 
     find(): SearchResult {
@@ -42,10 +48,14 @@ export default class NegaScout extends Logic {
             }
 
             if (i === 0) {
+                // NegaScout assumes that the first move is the best one
+                // So it searches it with full with alpha beta window
                 score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color))
             } else {
+                // To create as many cutoffs as possible the following moves are searched with a null window
                 score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color))
 
+                // If the actual score is not within the assumed window a full alpha beta search is committed
                 if (alpha < score && score < beta) {
                     score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color))
                 }
@@ -55,8 +65,6 @@ export default class NegaScout extends Logic {
                 alpha = score 
                 
                 if (depth === this.horizon) {
-                    console.log("Choose:", i, moves[i])
-                    console.log(state.currentPlayer, color, moves.length)
                     this.searchState.selectedMove = moves[i]
                 }
             }
