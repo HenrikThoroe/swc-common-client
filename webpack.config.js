@@ -2,6 +2,7 @@ const path = require("path")
 
 module.exports = {
     entry: './src/index.ts',
+    mode: 'production',
     node: {
         fs: 'empty'
     },
@@ -10,6 +11,9 @@ module.exports = {
             {
                 test: /\.tsx?$/,
                 use: 'ts-loader',
+                // exclude: [
+                //     path.resolve(__dirname, '../performance_tests/')
+                // ],
                 // include: [/node_modules/]
                 // exclude: /node_modules/
             }

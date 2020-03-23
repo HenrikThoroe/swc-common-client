@@ -1,14 +1,10 @@
 import connect, { Move, State, Result, Player, ConnectOptions } from '@henrikthoroe/swc-client'
-import nextState from './LookAhead/nextState'
-import rate from './Rating/rate'
 import yargs from 'yargs'
 import Piece from '@henrikthoroe/swc-client/dist/client/Model/Piece'
 import handleSpecialCase from './Logic/handleSpecialCase'
-import AlphaBeta from './Logic/Algorithm'
 import Timer from './utils/Timer'
-import simulateMove from './LookAhead/simulateMove'
-import enumerateBoard from './utils/enumerateBoard'
-import isDraggable from '@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable'
+import NegaScout from './Logic/NegaScout'
+import sortMoves from './Logic/sortMoves'
 
 const args = yargs
     .option("host", {
@@ -25,10 +21,6 @@ const args = yargs
     })
     .option("stupid", {
         alias: "s",
-        type: 'boolean'
-    })
-    .option("ai", {
-        alias: "a",
         type: 'boolean'
     })
     .parse()
@@ -50,15 +42,6 @@ function handleResult(result: Result) {
     process.kill(process.pid, 0)
 }
 
-function errorCatcher(state: State, undeployed: Piece[], player: Player, available: Move[]) {
-    try {
-        return handleMoveRequest(state, undeployed, player, available)
-    } catch (error) {
-        console.error(error)
-        throw error
-    }
-}
-
 function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
     const timer = new Timer()
 
@@ -67,28 +50,15 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     if (args.stupid) {
-        console.log("stupid")
         return available[Math.floor(Math.random() * available.length)]
     }
 
     if (available.length < 900) {
-        const moveMap = available
-            .sort(() => Math.random() - 0.5) // shuffle array 
-            .map(move => ({ move: move, rating: simulateMove(state, move, next => rate(next, player.color, move).value) })) // sort array by estimated move order
-
-        available = moveMap.sort((a, b) => b.rating - a.rating).map(a => a.move)
+        available = sortMoves(state, available, player.color)
     }
 
-    // enumerateBoard(state.board, field => {
-    //     if (field.pieces.length > 0) {
-    //         console.log(field.position, isDraggable(state, field.position))
-    //     }
-    // })
-
-    //console.log(simulateMove(state, available[0], state => rate(state, player.color)), available[0])
-
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new AlphaBeta(state, available, player, 2, 1890 - timer.read())
+    const logic = new NegaScout(state, available, player, 3, 1890 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
@@ -96,10 +66,11 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
         throw new Error(`Failed to Generate Move`)
     }
 
-    const result = logic.findBest()
+    const result = logic.find()
 
-    console.log(timer.read())
-    console.log(result.rating, result.value)
+    console.log(`Finished search after ${timer.read()}ms`)
+    console.log(`Rating: ${result.rating}`)
+    console.log(`Selected move:`, result.value)
 
     if (result.success) {
         return result.value!
@@ -108,7 +79,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     } 
 }
 
-connect(connectOpts, handleResult, errorCatcher)
+connect(connectOpts, handleResult, handleMoveRequest)
     .catch(error => {
         console.error("Failed to connect: ", error)
     })

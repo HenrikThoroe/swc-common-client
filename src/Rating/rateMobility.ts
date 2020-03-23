@@ -1,14 +1,8 @@
-import { State, Move, Position, fetchMoves, Color, Piece, Board } from '@henrikthoroe/swc-client'
-import { Aspect, ConcreteAspect } from '.'
-import isDraggable from '@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable'
-import enumerateBoard from '../utils/enumerateBoard'
+import { State } from '@henrikthoroe/swc-client'
+import { ConcreteAspect } from '.'
 import Mobility, { PieceCollection } from './Mobility'
 import GamePhase from './GamePhase'
 import { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
-
-function isPosition(obj: Piece | Position): obj is Position {
-    return (obj as Position).x !== undefined
-}
 
 const pieceTable = {
     ant:            [0.9,     1,      1],

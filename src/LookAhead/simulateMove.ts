@@ -1,23 +1,22 @@
 import { State, Move, Position, Piece, Color } from "@henrikthoroe/swc-client";
 import copy from "../utils/copy";
-import Timer from "../utils/Timer";
-import nextState from "./nextState";
-import hash from 'object-hash'
 
+/**
+ * This function simulates the state which results from appling the passed move to the passed state. 
+ * The resulting state is passed to the action. The result of the action will be returned as the functions return value.
+ * @param state The original state
+ * @param move The state passed to the action relies on this move. 
+ *             If `null` is passed only the `currentUser` property of the state will be changed.
+ * @param action An action to perform on the resulting state. 
+ *               Before this action is performed the move will be applied to the original state. 
+ *               After performing the action the move will be undone.
+ */
 export default function simulateMove<T>(state: State, move: Move | null, action: (arg0: State) => T): T {
-    // const a = state.undeployed.red.length
-    // const b = state.undeployed.blue.length
-    applyMove(state, move || undefined)
-    // const c = state.undeployed.red.length
-    // const d = state.undeployed.blue.length
-    const res = action(state) 
-    undoMove(state, move || undefined)
-    // const e = state.undeployed.red.length
-    // const f = state.undeployed.blue.length
+    let res: T
 
-    // if (state.turn === 2) {
-    //     console.log(a, c, e, b, d, f)
-    // }
+    applyMove(state, move || undefined)
+    res = action(state) 
+    undoMove(state, move || undefined)
 
     return res
 }
