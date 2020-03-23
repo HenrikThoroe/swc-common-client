@@ -42,7 +42,7 @@ function calculateValue(state: State, player: Color, surrounding: Aspect, mobili
     return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility))
 }
 
-export default function rate(state: State, player: Color): Rating {
+export default function evaluate(state: State, player: Color): Rating {
     const cached = evaluationTable.read(state)
     const surrounding = scanSurrounding(state)
     const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Blue) || state.turn >= 60

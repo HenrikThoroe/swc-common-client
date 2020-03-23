@@ -1,6 +1,6 @@
 import Logic, { SearchResult } from "./Logic";
 import { State, Move } from "@henrikthoroe/swc-client";
-import rate from "../Rating/rate";
+import evaluate from "../Rating/evaluate";
 import simulateMove from "../LookAhead/simulateMove";
 import generateMoves from "../LookAhead/generateMoves";
 
@@ -38,7 +38,7 @@ export default class AlphaBeta extends Logic {
     }
     
     private max(state: State, moves: Move[], depth: number, alpha: number, beta: number): number {
-        const evaluation = rate(state, this.player.color)
+        const evaluation = evaluate(state, this.player.color)
 
         if (evaluation.isGameOver || this.didTimeOut()) {
             return evaluation.value
@@ -92,7 +92,7 @@ export default class AlphaBeta extends Logic {
     }
 
     private min(state: State, moves: Move[], depth: number, alpha: number, beta: number): number {
-        const evaluation = rate(state, this.player.color)
+        const evaluation = evaluate(state, this.player.color)
 
         if (evaluation.isGameOver || this.didTimeOut()) {
             return evaluation.value

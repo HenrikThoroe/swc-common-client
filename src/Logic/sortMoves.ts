@@ -4,7 +4,7 @@ import scanSurrounding from "../Rating/Scanner/scanSurrounding"
 import scanMobility from "../Rating/Scanner/scanMobility"
 import isPosition from "../utils/isPosition"
 import simulateMove from "../LookAhead/simulateMove"
-import rate from "../Rating/rate"
+import evaluate from "../Rating/evaluate"
 
 interface EvaluationMap {
     move: Move
@@ -28,7 +28,7 @@ export default function sortMoves(state: State, moves: Move[], player: Color): M
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
     const phase = chooseGamePhase(player, surrounding, mobility)
 
-    const moveMap: EvaluationMap[] = moves.map(move => simulateMove(state, move, next => ({ move: move, rating: rate(next, player).value })))
+    const moveMap: EvaluationMap[] = moves.map(move => simulateMove(state, move, next => ({ move: move, rating: evaluate(next, player).value })))
     const deployMap: EvaluationMap[] = []
     const dragMap: EvaluationMap[] = []
 

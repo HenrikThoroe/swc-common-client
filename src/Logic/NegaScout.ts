@@ -1,6 +1,6 @@
 import Logic, { SearchResult } from "./Logic";
 import { State, Move } from "@henrikthoroe/swc-client";
-import rate from "../Rating/rate";
+import evaluate from "../Rating/evaluate";
 import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
 
@@ -31,7 +31,7 @@ export default class NegaScout extends Logic {
     }
 
     private search(state: State, depth: number, alpha: number, beta: number, color: number, availableMoves?: Move[]): number {
-        const evaluation = rate(state, this.player.color)
+        const evaluation = evaluate(state, this.player.color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (depth === 0 || evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {

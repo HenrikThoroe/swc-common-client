@@ -2,7 +2,7 @@ import { Move, State, Piece, getNeighbours, Player, Color } from "@henrikthoroe/
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import { filter } from "@henrikthoroe/swc-client/dist/utils";
 import simulateMove from "../LookAhead/simulateMove";
-import rate from "../Rating/rate";
+import evaluate from "../Rating/evaluate";
 
 export interface SpecialCaseResult {
     isSpecialCase: boolean
@@ -103,7 +103,7 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
         }
     }
 
-    if (simulateMove(state, moves[0], next => rate(next, player.color).value) === Constants.guaranteedWin) {
+    if (simulateMove(state, moves[0], next => evaluate(next, player.color).value) === Constants.guaranteedWin) {
         return {
             isSpecialCase: true,
             success: true,
