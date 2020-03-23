@@ -39,7 +39,7 @@ process.on("exit", e => {
 
 function printMemoryUsage() {
     const usage = process.memoryUsage()
-    const toMB = (mem: number) => (mem / 1024 / 1024).toFixed(2)
+    const toMB = (mem: number) => (mem / 1024 / 1024).toFixed(2) + " Megabyte"
 
     console.log("---Memory Usage---")
     console.log(`RSS: ${toMB(usage.rss)}`)
