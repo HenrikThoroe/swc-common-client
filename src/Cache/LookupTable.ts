@@ -21,13 +21,15 @@ export default class LookupTable<Key, Value> {
 
     readonly hasher: HashFunction<Key>
 
-    private table: Table<Value> = {}
+    private table = new Map<string, Value>()
 
     private keyStore: string[] = []
 
     private count: number = 0
 
     private positiveReads: number = 0
+
+    private negativeReads: number = 0
 
     private readonly id: number
 
@@ -39,27 +41,30 @@ export default class LookupTable<Key, Value> {
 
     push(key: Key, value: Value) {
         if (this.count >= this.capacity) {
-            delete this.table[this.keyStore.shift()!]
+            this.table.delete(this.keyStore.shift()!)
         }
 
         const hash = this.hasher(key)
         
-        this.table[hash] = value
+        this.table.set(hash, value)
         this.keyStore.push(hash)
     }
 
     read(key: Key): Value | null {
-        const value = this.table[this.hasher(key)]
+        const value = this.table.get(this.hasher(key))
 
         if (value) {
             this.positiveReads += 1
 
             if (this.positiveReads % 10000 === 0) {
-                console.log(`Successfully cached ${this.positiveReads} items [id: ${this.id}]`)
+                const ratio = this.positiveReads / (this.positiveReads + this.negativeReads)
+                console.log(`Successfully cached ${this.positiveReads} items [id: ${this.id}][cached: ${ratio * 100}%]`)
             }
 
             return value
         }
+
+        this.negativeReads += 1
 
         return null
     }
