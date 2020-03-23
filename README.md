@@ -20,12 +20,10 @@ node ./dist/bundle.js --port myPort --host myHost --reservation myReservation
 ---
 
 To build and archive the repository run the following script.
-The compiled and bundled program will be packed in `./archive/player.zip`.<br>
-**Attention: Because Windows does not ship with a propper shell and Linux has not all required commands preinstalled this script works only under macOS. A fix is in progress.**
+The compiled and bundled program will be packed in `./archive/player.zip`.
 ```
 npm run bundle
 ```
-To achive the same effect under Windows or Linux run `npm build` and zip `./dist` and `start.sh` into a zip file called `player.zip`. Place this file in `./archive`.
 
 ---
 

@@ -5,11 +5,12 @@
   "main": "./dist/bundle.js",
   "scripts": {
     "test": "jest",
+    "zip": "bash zip.sh",
     "build": "webpack",
     "start": "ts-node ./src/index.ts",
     "clean": "rm -f -r ./node_modules && npm i",
-    "bundle": "npm update && npm run build && mkdir -p ./archive && rm -f ./archive/player.zip && zip -y -r -q ./archive/player.zip ./dist/bundle.js start.sh",
-    "bundle-no-update": "npm run build && mkdir -p ./archive && rm -f ./archive/player.zip && zip -y -r -q ./archive/player.zip ./dist/bundle.js start.sh",
+    "bundle": "npm update && npm run build && npm run zip",
+    "bundle-no-update": "npm run build && npm run zip",
     "buildAssets": "ts-node ./src/Cache/build.ts",
     "performanceTest": "tsc --project ./performance_tests/tsconfig.json && node ./performance_tests/dist/index.js"
   },
@@ -30,6 +31,7 @@
     "@types/jest": "^25.1.4",
     "@types/object-hash": "^1.3.1",
     "babel-jest": "^25.1.0",
+    "bestzip": "^2.1.5",
     "jest": "^25.1.0",
     "ts-loader": "^6.2.2",
     "ts-node": "^8.8.1",
