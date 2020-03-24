@@ -33,29 +33,31 @@ function handleInitialMove(state: State, moves: Move[], player: Player): Move {
     }
 
     const beetleMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
-    // let min = Infinity
-    // let selected: Move | null = null
+    let min = Infinity
+    let selected: Move | null = null
 
-    // for (const move of beetleMoves) {
-    //     const pos = Math.abs(move.end.x) + Math.abs(move.end.y) + Math.abs(move.end.z)
-    //     const neighbourFields = getNeighbours(state.board, move.end)
-    //     const count = filter(neighbourFields, neighbour => neighbour.pieces.length > 0 || neighbour.isObstructed).length
-    //     const border = 6 - neighbourFields.length
-    //     const filled = count + border
+    for (const move of beetleMoves) {
+        const pos = Math.abs(move.end.x) + Math.abs(move.end.y) + Math.abs(move.end.z)
+        const neighbourFields = getNeighbours(state.board, move.end)
+        const count = filter(neighbourFields, neighbour => neighbour.pieces.length > 0 || neighbour.isObstructed).length
+        const border = 6 - neighbourFields.length
+        const filled = count + border
         
-    //     if (pos < min && filled === 0) {
-    //         min = pos
-    //         selected = move
-    //     }
-    // }
+        if (pos < min && filled === 0) {
+            min = pos
+            selected = move
+        }
+    }
 
-    // if (selected) {
-    //     return selected
-    // }
+    if (selected) {
+        return selected
+    }
 
-    const computed = new NegaScout(state, beetleMoves, player, 3, 1800).find()
+    return beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
 
-    return computed.success ? computed.value! : beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
+    // const computed = new NegaScout(state, beetleMoves, player, 3, 1800).find()
+
+    // return computed.success ? computed.value! : beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
 }
 
 /**

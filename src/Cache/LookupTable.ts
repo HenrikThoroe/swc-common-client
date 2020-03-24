@@ -69,4 +69,16 @@ export default class LookupTable<Key, Value> {
         return null
     }
 
+    get(key: Key, fallback: () => Value): Value {
+        const c = this.read(key)
+
+        if (c) {
+            return c
+        } else {
+            const value = fallback()
+            this.push(key, value)
+            return value
+        }
+    }
+
 }
