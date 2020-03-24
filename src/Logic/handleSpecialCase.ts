@@ -81,35 +81,35 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
         }
     }
 
-    if (undeployed.length === Constants.maximumUndeployed) {
-        if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
-            const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
-            return {
-                isSpecialCase: true,
-                success: true,
-                selectedMove: beeMoves[0]
-            }
-        }
-    }
+    // if (undeployed.length === Constants.maximumUndeployed) {
+    //     if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
+    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
+    //         return {
+    //             isSpecialCase: true,
+    //             success: true,
+    //             selectedMove: beeMoves[0]
+    //         }
+    //     }
+    // }
 
-    if (undeployed.length === Constants.maximumUndeployed - 1) {
-        if ((player.color === Color.Red && hasPiece(Type.BEE, state.undeployed.red)) || (player.color === Color.Blue && hasPiece(Type.BEE, state.undeployed.blue))) {
-            const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
-            return {
-                isSpecialCase: true,
-                success: true,
-                selectedMove: beeMoves[0]
-            }
-        }
-    }
+    // if (undeployed.length === Constants.maximumUndeployed - 1) {
+    //     if ((player.color === Color.Red && hasPiece(Type.BEE, state.undeployed.red)) || (player.color === Color.Blue && hasPiece(Type.BEE, state.undeployed.blue))) {
+    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
+    //         return {
+    //             isSpecialCase: true,
+    //             success: true,
+    //             selectedMove: beeMoves[0]
+    //         }
+    //     }
+    // }
 
-    if (simulateMove(state, moves[0], next => evaluate(next, player.color).value) === Constants.guaranteedWin) {
-        return {
-            isSpecialCase: true,
-            success: true,
-            selectedMove: moves[0]
-        }
-    }
+    // if (simulateMove(state, moves[0], next => evaluate(next, player.color).value) === Constants.guaranteedWin) {
+    //     return {
+    //         isSpecialCase: true,
+    //         success: true,
+    //         selectedMove: moves[0]
+    //     }
+    // }
 
     return {
         isSpecialCase: false,
