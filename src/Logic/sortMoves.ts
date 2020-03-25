@@ -77,14 +77,17 @@ function sortMidGame(currentSurrounding: number, map: EvaluationMap[]): Move[] {
  * The function orders the passed moves based on the game's state. 
  * Using this method before passing the moves to the logic (PVS, AlphaBeta, ...) speeds up the execution dramatically and leads most of the time to better results.
  * 
- * ---
- * **Note: The performance of the function is quite bad (~40ms). Use it only once for the initial moves.**
  * @param state 
  * @param moves 
  * @param player 
  * @todo Simplify and document the code. Improve heuristics to take the piece's type into account. Improve performance
  */
 export default function sortMoves(state: State, moves: Move[], player: Color, memory: StateMemoryTable): Move[] {
+    const start = process.hrtime()[1]
+    const log = (res: Move[]) => {
+        console.log(`Sorting took ${((process.hrtime()[1] - start) / 1000000).toFixed(3)} ms`)
+        return res
+    }
     const map = mapMoves(state, player, moves)
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
     const surrounding = scanSurrounding(state)
@@ -92,8 +95,8 @@ export default function sortMoves(state: State, moves: Move[], player: Color, me
 
     switch (phase) {
         case "early":
-            return sortEarlyGame(map)
+            return log(sortEarlyGame(map))
         default: 
-            return sortMidGame(evaluateSurrounding(substantiateAspect(player, surrounding)), map)
+            return log(sortMidGame(evaluateSurrounding(substantiateAspect(player, surrounding)), map))
     }
 }
