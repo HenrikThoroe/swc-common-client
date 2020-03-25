@@ -5,6 +5,7 @@ import scanMobility from "../Rating/Scanner/scanMobility"
 import isPosition from "../utils/isPosition"
 import simulateMove from "../LookAhead/simulateMove"
 import evaluate from "../Rating/evaluate"
+import { StateMemoryTable } from "../Cache/createStateMemoryTable"
 
 interface EvaluationMap {
     move: Move
@@ -22,7 +23,7 @@ interface EvaluationMap {
  * @param player 
  * @todo Simplify and document the code. Improve heuristics to take the piece's type into account. Improve performance
  */
-export default function sortMoves(state: State, moves: Move[], player: Color): Move[] {
+export default function sortMoves(state: State, moves: Move[], player: Color, memory: StateMemoryTable): Move[] {
     // const start = process.hrtime()[1]
     const surrounding = scanSurrounding(state)
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }

@@ -5,6 +5,9 @@ import handleSpecialCase from './Logic/handleSpecialCase'
 import Timer from './utils/Timer'
 import NegaScout from './Logic/NegaScout'
 import sortMoves from './Logic/sortMoves'
+import createStateMemoryTable from './Cache/createStateMemoryTable'
+import evaluate from './Rating/evaluate'
+import simulateMove from './LookAhead/simulateMove'
 
 const args = yargs
     .option("host", {
@@ -33,6 +36,8 @@ const connectOpts: ConnectOptions = {
     } 
 }
 
+const stateMemory = createStateMemoryTable()
+
 process.on("exit", e => {
     console.log(`Process terminated with error code ${e}`)
 })
@@ -56,6 +61,22 @@ function handleResult(result: Result) {
     process.exit()
 }
 
+function memoryWrapper(state: State, undeployed: Piece[], player: Player, available: Move[]): Move {
+    const initialRating = evaluate(state, player.color).value
+    stateMemory.push(state.turn, initialRating)
+
+    try {
+        const move = handleMoveRequest(state, undeployed, player, available)
+        const rating = simulateMove(state, move, next => evaluate(next, player.color).value)
+        stateMemory.push(state.turn + 1, rating)
+        return move
+    } catch (e) {
+        stateMemory.push(state.turn + 1, initialRating)
+        throw e
+    }
+    
+}
+
 function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
     const timer = new Timer()
 
@@ -68,7 +89,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     if (available.length < 900) {
-        available = sortMoves(state, available, player.color)
+        available = sortMoves(state, available, player.color, stateMemory)
     }
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
@@ -93,7 +114,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     } 
 }
 
-connect(connectOpts, handleResult, handleMoveRequest)
+connect(connectOpts, handleResult, memoryWrapper)
     .catch(error => {
         console.error("Failed to connect: ", error)
     })
