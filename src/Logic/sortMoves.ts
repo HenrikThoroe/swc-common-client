@@ -36,6 +36,11 @@ function sortEarlyGame(map: EvaluationMap[]): Move[] {
         .map(map => map.move)
 }
 
+/**
+ * Use this function to order moves which do not directly affect the surrounding of any queen. 
+ * It assumes that deploying grasshoppers or beetles will provide the highest chance to surround the enemy queen with further moves.
+ * @param mapArray 
+ */
 function applyHeuristics(mapArray: EvaluationMap[]): EvaluationMap[] {
     for (const map of mapArray) {
         if (!isPosition(map.move.start)) {
