@@ -1,4 +1,5 @@
 import { State, Move, Player } from '@henrikthoroe/swc-client'
+import Rating from '../Rating'
 
 export interface SearchResult {
     rating: number
@@ -44,6 +45,10 @@ export default abstract class Logic {
             startTime: -1,
             searchedNodes: 0
         }
+    }
+
+    protected isTerminating(evaluation: Rating, moveCount: number): boolean {
+        return evaluation.isGameOver || moveCount === 0 || this.didTimeOut()
     }
 
     protected didTimeOut(): boolean {
