@@ -7,19 +7,16 @@ import Mobility, { sumPieceCollection } from "./Mobility";
 import scanMobility from "./Scanner/scanMobility";
 import GamePhase, { chooseGamePhase } from "./GamePhase";
 import createEvaluationTable from "../Cache/createEvaluationTable";
+import evaluateSurrounding from "./evaluateSurrounding";
 
 const evaluationTable = createEvaluationTable()
 
 function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>) {
-    if (Math.max(mobility.own, mobility.opponent) > 1 || Math.max(mobility.own, mobility.opponent) < 0) {
-        console.log("something went wrong", mobility)
-    }
-
     if (Math.min(surrounding.own, surrounding.opponent) <= 0) {
         return mobility.own - mobility.opponent 
     }
 
-    let surroundingValue: number = Math.pow(2, surrounding.opponent) - Math.pow(2, surrounding.own) 
+    let surroundingValue: number = evaluateSurrounding(surrounding) 
     let mobilityValue: number = mobility.own - mobility.opponent 
 
     switch (phase) {
