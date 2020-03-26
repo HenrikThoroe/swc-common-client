@@ -8,6 +8,7 @@ import sortMoves from './Logic/sortMoves'
 import createStateMemoryTable from './Cache/createStateMemoryTable'
 import evaluate from './Rating/evaluate'
 import simulateMove from './LookAhead/simulateMove'
+import MTDf from './Logic/MTDf'
 
 const args = yargs
     .option("host", {
@@ -93,7 +94,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new NegaScout(state, available, player, 3, 1890 - timer.read())
+    const logic = new MTDf(state, available, player, 3, 1890 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
