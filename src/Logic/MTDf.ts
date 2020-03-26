@@ -3,8 +3,11 @@ import { State } from "@henrikthoroe/swc-client";
 import evaluate from "../Rating/evaluate";
 import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
+import createEvaluationTable from "../Cache/createEvaluationTable";
 
 export default class MTDf extends Logic {
+
+    private transpositionTable = createEvaluationTable()
 
     find(): SearchResult {
         this.searchState.startTime = Date.now()
@@ -37,6 +40,8 @@ export default class MTDf extends Logic {
             } else {
                 lowerBound = guess
             }
+
+            console.log(guess, lowerBound, upperBound)
         }
 
         return guess
@@ -55,6 +60,9 @@ export default class MTDf extends Logic {
 
         for (let i = 0; i < moves.length; ++i) {
             if (this.didTimeOut()) {
+                if (depth === this.horizon) {
+                    console.log(`Timed out after searching ${i} nodes`)
+                }
                 break
             }
 
@@ -70,10 +78,12 @@ export default class MTDf extends Logic {
                 if (depth === this.horizon) {
                     this.searchState.selectedMove = moves[i]
                 } 
+            }
 
-                if (max >= beta) {
-                    break
-                }
+            alpha = Math.max(score, alpha)
+
+            if (alpha >= beta) {
+                break
             }
         }
 
