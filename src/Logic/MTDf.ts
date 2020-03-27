@@ -1,9 +1,4 @@
-import Logic, { SearchResult } from "./Logic";
-import { State } from "@henrikthoroe/swc-client";
-import evaluate from "../Rating/evaluate";
-import generateMoves from "../LookAhead/generateMoves";
-import simulateMove from "../LookAhead/simulateMove";
-import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
+import Logic, { SearchResult } from "./Logic"
 
 export default class MTDf extends Logic {
 
