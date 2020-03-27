@@ -66,8 +66,7 @@ export default class MTDf extends Logic {
             return evaluation.value * color
         }
 
-        let max = alpha
-        let score: number
+        let value = -Infinity
 
         for (let i = 0; i < moves.length; ++i) {
             if (this.didTimeOut()) {
@@ -79,19 +78,14 @@ export default class MTDf extends Logic {
 
             this.searchState.searchedNodes += 1
 
-            score = simulateMove(state, moves[i], next => {
-                return -this.negamax(next, depth - 1, -beta, -max, -color)
-            })
+            value = simulateMove(state, moves[i], next => 
+                Math.max(value, -this.negamax(next, depth - 1, -beta, -alpha, -color))
+            )
 
-            if (score > max) {
-                max = score
-
-                if (depth === this.horizon) {
-                    this.searchState.selectedMove = moves[i]
-                } 
+            if (value > alpha) {
+                alpha = value
+                this.searchState.selectedMove = moves[i]
             }
-
-            alpha = Math.max(score, alpha)
 
             if (alpha >= beta) {
                 break
@@ -100,13 +94,13 @@ export default class MTDf extends Logic {
 
         const newEntry: TranspositionTableEntry = {
             depth: depth,
-            value: max,
+            value: value,
             flag: TranspositionTableFlag.Exact
         }
 
-        if (max <= originalAlpha) {
+        if (value <= originalAlpha) {
             newEntry.flag = TranspositionTableFlag.UpperBound
-        } else if (max >= beta) {
+        } else if (value >= beta) {
             newEntry.flag = TranspositionTableFlag.LowerBound
         } else {
             newEntry.flag = TranspositionTableFlag.Exact
@@ -114,7 +108,7 @@ export default class MTDf extends Logic {
 
         Logic.transpositionTable.push(state, newEntry)
 
-        return max
+        return value
     }
     
 }
