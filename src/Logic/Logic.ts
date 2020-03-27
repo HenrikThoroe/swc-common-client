@@ -111,7 +111,10 @@ export default abstract class Logic {
 
             if (value > alpha) {
                 alpha = value
-                this.searchState.selectedMove = moves[i]
+                
+                if (depth === this.horizon) {
+                    this.searchState.selectedMove = moves[i]
+                }
             }
 
             if (alpha >= beta) {

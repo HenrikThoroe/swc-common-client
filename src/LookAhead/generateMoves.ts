@@ -1,5 +1,6 @@
 import { fetchMoves, State, Move } from "@henrikthoroe/swc-client"
 import createMoveTable from "../Cache/createMoveTable"
+import sortMoves from "../Logic/sortMoves"
 
 const moveTable = createMoveTable()
 
@@ -8,5 +9,6 @@ const moveTable = createMoveTable()
  * @returns An array of moves which the current player can perform on the passed state.
  */
 export default function generateMoves(state: State): Move[] {
+    // return moveTable.get(state, () => sortMoves(state, fetchMoves(state), state.currentPlayer))
     return moveTable.get(state, () => fetchMoves(state))
 }

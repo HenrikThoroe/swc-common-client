@@ -23,8 +23,10 @@ export default class MTDf extends Logic {
         let upperBound = Infinity
         let lowerBound = -Infinity
         let beta: number
+        let rounds = 0
 
         while (lowerBound < upperBound) {
+            rounds += 1
             beta = Math.max(guess, lowerBound + 1)
             guess = this.negamax(this.initialState, this.horizon, beta - 1, beta, 1)
 
@@ -34,8 +36,13 @@ export default class MTDf extends Logic {
                 lowerBound = guess
             }
 
-            console.log(guess, lowerBound, upperBound)
+            if (this.didTimeOut()) {
+                break
+            }
         }
+
+        this.log()
+        console.log(`MTDf made ${rounds} rounds`)
 
         return guess
     }
