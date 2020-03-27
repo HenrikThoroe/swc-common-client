@@ -3,11 +3,9 @@ import { State } from "@henrikthoroe/swc-client";
 import evaluate from "../Rating/evaluate";
 import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
-import createEvaluationTable from "../Cache/createEvaluationTable";
+import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
 
 export default class MTDf extends Logic {
-
-    private transpositionTable = createEvaluationTable()
 
     find(): SearchResult {
         this.searchState.startTime = Date.now()
@@ -48,6 +46,19 @@ export default class MTDf extends Logic {
     }
 
     private negamax(state: State, depth: number, alpha: number, beta: number, color: number): number {
+        const entry = Logic.transpositionTable.read(state) 
+        const originalAlpha = alpha
+
+        if (entry && entry.depth >= depth) {
+            if (entry.flag === TranspositionTableFlag.Exact) {
+                return entry.value
+            } else if (entry.flag === TranspositionTableFlag.LowerBound) {
+                alpha = Math.max(alpha, entry.value)
+            } else if (entry.flag === TranspositionTableFlag.UpperBound) {
+                beta = Math.min(entry.value, beta)
+            }
+        }
+
         const evaluation = evaluate(state, this.player.color)
         const moves = generateMoves(state)
 
@@ -86,6 +97,22 @@ export default class MTDf extends Logic {
                 break
             }
         }
+
+        const newEntry: TranspositionTableEntry = {
+            depth: depth,
+            value: max,
+            flag: TranspositionTableFlag.Exact
+        }
+
+        if (max <= originalAlpha) {
+            newEntry.flag = TranspositionTableFlag.UpperBound
+        } else if (max >= beta) {
+            newEntry.flag = TranspositionTableFlag.LowerBound
+        } else {
+            newEntry.flag = TranspositionTableFlag.Exact
+        }
+
+        Logic.transpositionTable.push(state, newEntry)
 
         return max
     }

@@ -1,5 +1,6 @@
 import { State, Move, Player } from '@henrikthoroe/swc-client'
 import Rating from '../Rating'
+import createTranspositionTable from '../Cache/createTranspositonTable'
 
 export interface SearchResult {
     rating: number
@@ -32,6 +33,8 @@ export default abstract class Logic {
     protected readonly availableMoves: Move[]
 
     protected readonly player: Player
+
+    protected static transpositionTable = createTranspositionTable()
 
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number) {
         this.initialState = state
