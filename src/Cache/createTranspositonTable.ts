@@ -1,3 +1,7 @@
+import LookupTable from "./LookupTable";
+import { State } from "@henrikthoroe/swc-client";
+import hashState from "../utils/hashState";
+
 export enum TranspositionTableFlag {
     exact,
     lowerBound,
@@ -6,8 +10,12 @@ export enum TranspositionTableFlag {
 
 export interface TranspositionTableEntry {
     flag: TranspositionTableFlag
+    value: number
+    depth: number
 }
 
-export default function createTranspositionTable() {
+export type TranspositionTable = LookupTable<State, TranspositionTableEntry>
 
+export default function createTranspositionTable(): TranspositionTable {
+    return new LookupTable(500000, hashState)
 }
