@@ -3,9 +3,9 @@ import { State } from "@henrikthoroe/swc-client";
 import hashState from "../utils/hashState";
 
 export enum TranspositionTableFlag {
-    exact,
-    lowerBound,
-    upperBound
+    Exact,
+    LowerBound,
+    UpperBound
 }
 
 export interface TranspositionTableEntry {
