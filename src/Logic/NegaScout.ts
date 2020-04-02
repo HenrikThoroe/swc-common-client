@@ -37,16 +37,23 @@ export default class NegaScout extends Logic {
     }
 
     private search(state: State, depth: number, alpha: number, beta: number, color: number, availableMoves?: Move[]): number {
-        const entry = Logic.transpositionTable.read(state) 
-        const originalAlpha = alpha
+        const ttResult = this.readTranspositionTable(state, depth, alpha, beta)
 
-        if (entry && entry.depth >= depth) {
-            if (entry.flag === TranspositionTableFlag.Exact) {
-                return entry.value
-            } else if (entry.flag === TranspositionTableFlag.LowerBound) {
-                alpha = Math.max(alpha, entry.value)
-            } else if (entry.flag === TranspositionTableFlag.UpperBound) {
-                beta = Math.min(entry.value, beta)
+        if (ttResult) {
+            const [type, value, ttAlpha, ttBeta] = ttResult
+
+            switch (type) {
+                case "exact":
+                    if (depth == this.horizon) {
+                        console.log("well ok that was surprising")
+                    }
+                    return value
+                case "alpha":
+                    alpha = ttAlpha
+                    break
+                case "beta":
+                    beta = ttBeta
+                    break
             }
         }
 
@@ -93,21 +100,7 @@ export default class NegaScout extends Logic {
             }
         }
 
-        const newEntry: TranspositionTableEntry = {
-            depth: depth,
-            value: score,
-            flag: TranspositionTableFlag.Exact
-        }
-
-        if (score <= originalAlpha) {
-            newEntry.flag = TranspositionTableFlag.UpperBound
-        } else if (score >= beta) {
-            newEntry.flag = TranspositionTableFlag.LowerBound
-        } else {
-            newEntry.flag = TranspositionTableFlag.Exact
-        }
-
-        Logic.transpositionTable.push(state, newEntry)
+        this.setTranspositionTable(state, score, depth, beta)
 
         return alpha
     }

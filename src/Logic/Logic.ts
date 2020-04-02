@@ -39,6 +39,8 @@ export default abstract class Logic {
 
     protected static transpositionTable = createTranspositionTable()
 
+    private tempAlpha: number = -Infinity
+
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number) {
         this.initialState = state
         this.availableMoves = moves 
@@ -72,17 +74,69 @@ export default abstract class Logic {
         console.log(`Performed ${o} operations in ${time} milliseconds [${o / (time / 1000)} op/s][${this.availableMoves.length}][depth: ${this.horizon}].`)
     }
 
-    protected negamax(state: State, depth: number, alpha: number, beta: number, color: number): number {
+    protected readTranspositionTable(state: State, depth: number, alpha: number, beta: number): ["exact" | "alpha" | "beta", number, number, number] |  undefined {
         const entry = Logic.transpositionTable.read(state) 
-        const originalAlpha = alpha
+        this.tempAlpha = alpha
 
         if (entry && entry.depth >= depth) {
             if (entry.flag === TranspositionTableFlag.Exact) {
-                return entry.value
+                if (depth === this.horizon && typeof(entry.move) !== "number") {
+                    if (entry.move === null) {
+                        console.warn("Expected the assigned move but found null")
+                        return undefined
+                    }
+
+                    this.searchState.selectedMove = entry.move
+                }
+
+                return ["exact", entry.value, -1, -1]
             } else if (entry.flag === TranspositionTableFlag.LowerBound) {
-                alpha = Math.max(alpha, entry.value)
+                return ["alpha", -1, Math.max(alpha, entry.value), -1]
             } else if (entry.flag === TranspositionTableFlag.UpperBound) {
-                beta = Math.min(entry.value, beta)
+                return ["beta", -1, -1, Math.min(entry.value, beta)]
+            }
+        }
+
+        return undefined
+    }
+
+    protected setTranspositionTable(state: State, score: number, depth: number, beta: number) {
+        const newEntry: TranspositionTableEntry = {
+            depth: depth,
+            value: score,
+            flag: TranspositionTableFlag.Exact,
+            move: depth === this.horizon ? this.searchState.selectedMove! : 0
+        }
+
+        if (score <= this.tempAlpha) {
+            newEntry.flag = TranspositionTableFlag.UpperBound
+        } else if (score >= beta) {
+            newEntry.flag = TranspositionTableFlag.LowerBound
+        } else {
+            newEntry.flag = TranspositionTableFlag.Exact
+        }
+
+        Logic.transpositionTable.push(state, newEntry)
+    }
+
+    protected negamax(state: State, depth: number, alpha: number, beta: number, color: number): number {
+        const ttResult = this.readTranspositionTable(state, depth, alpha, beta)
+
+        if (ttResult) {
+            const [type, value, ttAlpha, ttBeta] = ttResult
+
+            switch (type) {
+                case "exact":
+                    if (depth == this.horizon) {
+                        console.log("well ok that was surprising")
+                    }
+                    return value
+                case "alpha":
+                    alpha = ttAlpha
+                    break
+                case "beta":
+                    beta = ttBeta
+                    break
             }
         }
 
@@ -122,21 +176,7 @@ export default abstract class Logic {
             }
         }
 
-        const newEntry: TranspositionTableEntry = {
-            depth: depth,
-            value: value,
-            flag: TranspositionTableFlag.Exact
-        }
-
-        if (value <= originalAlpha) {
-            newEntry.flag = TranspositionTableFlag.UpperBound
-        } else if (value >= beta) {
-            newEntry.flag = TranspositionTableFlag.LowerBound
-        } else {
-            newEntry.flag = TranspositionTableFlag.Exact
-        }
-
-        Logic.transpositionTable.push(state, newEntry)
+        this.setTranspositionTable(state, value, depth, beta)
 
         return value
     }
