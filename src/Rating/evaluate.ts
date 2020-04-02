@@ -55,14 +55,14 @@ export default function evaluate(state: State, player: Color): Rating {
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
     const concreteSurrounding = substantiateAspect(player, surrounding)
 
-    if (concreteSurrounding.opponent === 6) {
+    if ((concreteSurrounding.opponent === 6 && player === Color.Blue) || (isLastMove && concreteSurrounding.own < concreteSurrounding.opponent)) {
         return {
             isGameOver: isLastMove,
             value: 200
         }
     }
 
-    if (concreteSurrounding.own === 6) {
+    if ((concreteSurrounding.own === 6 && player === Color.Blue) || (isLastMove && concreteSurrounding.own > concreteSurrounding.opponent)) {
         return {
             isGameOver: isLastMove,
             value: -200

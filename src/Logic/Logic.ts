@@ -4,6 +4,7 @@ import createTranspositionTable, { TranspositionTableFlag, TranspositionTableEnt
 import evaluate from '../Rating/evaluate'
 import generateMoves from '../LookAhead/generateMoves'
 import simulateMove from '../LookAhead/simulateMove'
+import createKillerTable from '../Cache/createKillerTable'
 
 export interface SearchResult {
     rating: number
@@ -38,6 +39,8 @@ export default abstract class Logic {
     protected readonly player: Player
 
     protected static transpositionTable = createTranspositionTable()
+
+    protected static killerTable = createKillerTable()
 
     private tempAlpha: number = -Infinity
 
@@ -74,13 +77,26 @@ export default abstract class Logic {
         console.log(`Performed ${o} operations in ${time} milliseconds [${o / (time / 1000)} op/s][${this.availableMoves.length}][depth: ${this.horizon}].`)
     }
 
+    protected applyKillerHeuristic(state: State, moves: Move[]) {
+        let border = 0
+
+        for (let i = 1; i < moves.length; ++i) {
+            const cache = Logic.killerTable.read([state, moves[i]])
+
+            if (cache === true) {
+                [moves[border], moves[i]] = [moves[i], moves[border]]
+                border += 1
+            }
+        }
+    }
+
     protected readTranspositionTable(state: State, depth: number, alpha: number, beta: number): ["exact" | "alpha" | "beta", number, number, number] |  undefined {
         const entry = Logic.transpositionTable.read(state) 
         this.tempAlpha = alpha
 
         if (entry && entry.depth >= depth) {
             if (entry.flag === TranspositionTableFlag.Exact) {
-                if (depth === this.horizon && typeof(entry.move) !== "number") {
+                if (entry.depth === this.horizon && typeof(entry.move) !== "number") {
                     if (entry.move === null) {
                         console.warn("Expected the assigned move but found null")
                         return undefined
@@ -105,7 +121,7 @@ export default abstract class Logic {
             depth: depth,
             value: score,
             flag: TranspositionTableFlag.Exact,
-            move: depth === this.horizon ? this.searchState.selectedMove! : 0
+            move: depth === this.horizon ? this.searchState.selectedMove || 0 : 0
         }
 
         if (score <= this.tempAlpha) {

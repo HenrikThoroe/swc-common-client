@@ -3,7 +3,7 @@ import { State, Move } from "@henrikthoroe/swc-client";
 import evaluate from "../Rating/evaluate";
 import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
-import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
+import { loadPartialConfig } from "@babel/core";
 
 /**
  * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.
@@ -12,6 +12,8 @@ import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/create
  * If the first few moves are not the best ones the performance is even worse than normal Alpha Beta.
  */
 export default class NegaScout extends Logic {
+
+    private cutoffs = 0
 
     find(): SearchResult {
         this.searchState.startTime = Date.now()
@@ -22,11 +24,25 @@ export default class NegaScout extends Logic {
         let move: Move | null = this.searchState.selectedMove
 
         while (!this.didTimeOut()) {
-            rating = this.search(this.initialState, this.horizon++, alpha, beta, 1, this.availableMoves)
-            move = this.searchState.selectedMove
+            rating = this.search(this.initialState, this.horizon, alpha, beta, 1, this.availableMoves)
+            
+            if (!this.didTimeOut() || rating === 200) {
+                move = this.searchState.selectedMove
+            }
+
+            this.horizon += 1
         }
 
         this.log()
+
+        if (move === null) {
+            console.warn("NO MOVE SELECTED")
+        }
+        
+        // If somebody is interested just change the flag to true
+        if (false) {
+            console.log(`Cutoff Ratio: ${this.cutoffs / this.searchState.searchedNodes}`)
+        }
 
         return {
             rating: rating,
@@ -44,9 +60,6 @@ export default class NegaScout extends Logic {
 
             switch (type) {
                 case "exact":
-                    if (depth == this.horizon) {
-                        console.log("well ok that was surprising")
-                    }
                     return value
                 case "alpha":
                     alpha = ttAlpha
@@ -61,10 +74,16 @@ export default class NegaScout extends Logic {
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (depth === 0 || evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
+            if (depth === this.horizon) {
+                console.log(evaluation.isGameOver, this.didTimeOut(), moves.length === 0)
+            }
+
             return evaluation.value * color
         }
 
         let score: number = 0
+
+        this.applyKillerHeuristic(state, moves)
 
         for (let i = 0; i < moves.length; ++i) {
             this.searchState.searchedNodes += 1
@@ -96,6 +115,8 @@ export default class NegaScout extends Logic {
             }
 
             if (alpha >= beta) {
+                Logic.killerTable.push([state, moves[i]], true)
+                this.cutoffs += 1
                 break
             }
         }
