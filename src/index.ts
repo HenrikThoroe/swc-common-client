@@ -8,6 +8,7 @@ import sortMoves from './Logic/sortMoves'
 import createStateMemoryTable from './Cache/createStateMemoryTable'
 import evaluate from './Rating/evaluate'
 import simulateMove from './LookAhead/simulateMove'
+import MTDf from './Logic/MTDf'
 
 const args = yargs
     .option("host", {

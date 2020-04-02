@@ -3,6 +3,7 @@ import { State, Move } from "@henrikthoroe/swc-client";
 import evaluate from "../Rating/evaluate";
 import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
+import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
 
 /**
  * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.
@@ -17,8 +18,13 @@ export default class NegaScout extends Logic {
 
         const alpha = -Infinity
         const beta = Infinity
-        const rating = this.search(this.initialState, this.horizon, alpha, beta, 1, this.availableMoves)
-        const move = this.searchState.selectedMove
+        let rating: number = this.search(this.initialState, this.horizon, alpha, beta, 1, this.availableMoves)
+        let move: Move | null = this.searchState.selectedMove
+
+        while (!this.didTimeOut()) {
+            rating = this.search(this.initialState, this.horizon++, alpha, beta, 1, this.availableMoves)
+            move = this.searchState.selectedMove
+        }
 
         this.log()
 
@@ -31,6 +37,19 @@ export default class NegaScout extends Logic {
     }
 
     private search(state: State, depth: number, alpha: number, beta: number, color: number, availableMoves?: Move[]): number {
+        const entry = Logic.transpositionTable.read(state) 
+        const originalAlpha = alpha
+
+        if (entry && entry.depth >= depth) {
+            if (entry.flag === TranspositionTableFlag.Exact) {
+                return entry.value
+            } else if (entry.flag === TranspositionTableFlag.LowerBound) {
+                alpha = Math.max(alpha, entry.value)
+            } else if (entry.flag === TranspositionTableFlag.UpperBound) {
+                beta = Math.min(entry.value, beta)
+            }
+        }
+
         const evaluation = evaluate(state, this.player.color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
@@ -73,6 +92,22 @@ export default class NegaScout extends Logic {
                 break
             }
         }
+
+        const newEntry: TranspositionTableEntry = {
+            depth: depth,
+            value: score,
+            flag: TranspositionTableFlag.Exact
+        }
+
+        if (score <= originalAlpha) {
+            newEntry.flag = TranspositionTableFlag.UpperBound
+        } else if (score >= beta) {
+            newEntry.flag = TranspositionTableFlag.LowerBound
+        } else {
+            newEntry.flag = TranspositionTableFlag.Exact
+        }
+
+        Logic.transpositionTable.push(state, newEntry)
 
         return alpha
     }

@@ -1,4 +1,9 @@
 import { State, Move, Player } from '@henrikthoroe/swc-client'
+import Rating from '../Rating'
+import createTranspositionTable, { TranspositionTableFlag, TranspositionTableEntry } from '../Cache/createTranspositonTable'
+import evaluate from '../Rating/evaluate'
+import generateMoves from '../LookAhead/generateMoves'
+import simulateMove from '../LookAhead/simulateMove'
 
 export interface SearchResult {
     rating: number
@@ -32,6 +37,8 @@ export default abstract class Logic {
 
     protected readonly player: Player
 
+    protected static transpositionTable = createTranspositionTable()
+
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number) {
         this.initialState = state
         this.availableMoves = moves 
@@ -44,6 +51,10 @@ export default abstract class Logic {
             startTime: -1,
             searchedNodes: 0
         }
+    }
+
+    protected isTerminating(evaluation: Rating, moveCount: number): boolean {
+        return evaluation.isGameOver || moveCount === 0 || this.didTimeOut()
     }
 
     protected didTimeOut(): boolean {
@@ -59,6 +70,75 @@ export default abstract class Logic {
         const o = this.searchState.searchedNodes
 
         console.log(`Performed ${o} operations in ${time} milliseconds [${o / (time / 1000)} op/s][${this.availableMoves.length}][depth: ${this.horizon}].`)
+    }
+
+    protected negamax(state: State, depth: number, alpha: number, beta: number, color: number): number {
+        const entry = Logic.transpositionTable.read(state) 
+        const originalAlpha = alpha
+
+        if (entry && entry.depth >= depth) {
+            if (entry.flag === TranspositionTableFlag.Exact) {
+                return entry.value
+            } else if (entry.flag === TranspositionTableFlag.LowerBound) {
+                alpha = Math.max(alpha, entry.value)
+            } else if (entry.flag === TranspositionTableFlag.UpperBound) {
+                beta = Math.min(entry.value, beta)
+            }
+        }
+
+        const evaluation = evaluate(state, this.player.color)
+        const moves = generateMoves(state)
+
+        if (depth === 0 || this.isTerminating(evaluation, moves.length)) {
+            return evaluation.value * color
+        }
+
+        let value = -Infinity
+
+        for (let i = 0; i < moves.length; ++i) {
+            if (this.didTimeOut()) {
+                if (depth === this.horizon) {
+                    console.log(`Timed out after searching ${i} nodes`)
+                }
+                break
+            }
+
+            this.searchState.searchedNodes += 1
+
+            value = simulateMove(state, moves[i], next => 
+                Math.max(value, -this.negamax(next, depth - 1, -beta, -alpha, -color))
+            )
+
+            if (value > alpha) {
+                alpha = value
+                
+                if (depth === this.horizon) {
+                    this.searchState.selectedMove = moves[i]
+                }
+            }
+
+            if (alpha >= beta) {
+                break
+            }
+        }
+
+        const newEntry: TranspositionTableEntry = {
+            depth: depth,
+            value: value,
+            flag: TranspositionTableFlag.Exact
+        }
+
+        if (value <= originalAlpha) {
+            newEntry.flag = TranspositionTableFlag.UpperBound
+        } else if (value >= beta) {
+            newEntry.flag = TranspositionTableFlag.LowerBound
+        } else {
+            newEntry.flag = TranspositionTableFlag.Exact
+        }
+
+        Logic.transpositionTable.push(state, newEntry)
+
+        return value
     }
 
     abstract find(): SearchResult

@@ -13,8 +13,7 @@ npm start
 ```
 To use different port and address run
 ```
-npm build
-node ./dist/bundle.js --port myPort --host myHost --reservation myReservation
+npm start -- --port myPort --host myHost --reservation myReservation
 ```
 
 ---

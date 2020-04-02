@@ -87,10 +87,10 @@ function sortMidGame(currentSurrounding: number, map: EvaluationMap[]): Move[] {
  * @param player 
  * @todo Simplify and document the code. Improve heuristics to take the piece's type into account. Improve performance
  */
-export default function sortMoves(state: State, moves: Move[], player: Color, memory: StateMemoryTable): Move[] {
+export default function sortMoves(state: State, moves: Move[], player: Color, memory?: StateMemoryTable): Move[] {
     const start = process.hrtime()[1]
     const log = (res: Move[]) => {
-        console.log(`Sorting took ${((process.hrtime()[1] - start) / 1000000).toFixed(3)} ms`)
+        // console.log(`Sorting took ${((process.hrtime()[1] - start) / 1000000).toFixed(3)} ms`)
         return res
     }
     const map = mapMoves(state, player, moves)
