@@ -38,7 +38,7 @@ const connectOpts: ConnectOptions = {
     } 
 }
 
-const stateMemory = createStateMemoryTable()
+// const stateMemory = createStateMemoryTable()
 
 process.on("exit", e => {
     console.log(`Process terminated with error code ${e}`)
@@ -63,21 +63,21 @@ function handleResult(result: Result) {
     process.exit()
 }
 
-function memoryWrapper(state: State, undeployed: Piece[], player: Player, available: Move[]): Move {
-    const initialRating = evaluate(state, player.color).value
-    stateMemory.push(state.turn, initialRating)
+// function memoryWrapper(state: State, undeployed: Piece[], player: Player, available: Move[]): Move {
+//     const initialRating = evaluate(state, player.color).value
+//     stateMemory.push(state.turn, initialRating)
 
-    try {
-        const move = handleMoveRequest(state, undeployed, player, available)
-        const rating = simulateMove(state, move, next => evaluate(next, player.color).value)
-        stateMemory.push(state.turn + 1, rating)
-        return move
-    } catch (e) {
-        stateMemory.push(state.turn + 1, initialRating)
-        throw e
-    }
+//     try {
+//         const move = handleMoveRequest(state, undeployed, player, available)
+//         const rating = simulateMove(state, move, next => evaluate(next, player.color).value)
+//         stateMemory.push(state.turn + 1, rating)
+//         return move
+//     } catch (e) {
+//         stateMemory.push(state.turn + 1, initialRating)
+//         throw e
+//     }
     
-}
+// }
 
 function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
     const timer = new Timer()
@@ -91,7 +91,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     }
 
     if (available.length < 900) {
-        available = sortMoves(state, available, player.color, stateMemory)
+        available = sortMoves(state, available, player.color)
     }
 
     const preRating = handleSpecialCase(state, player, available, undeployed)
@@ -116,7 +116,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, av
     } 
 }
 
-connect(connectOpts, handleResult, memoryWrapper)
+connect(connectOpts, handleResult, handleMoveRequest)
     .catch(error => {
         console.error("Failed to connect: ", error)
     })
