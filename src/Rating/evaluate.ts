@@ -8,10 +8,14 @@ import scanMobility from "./Scanner/scanMobility";
 import GamePhase, { chooseGamePhase } from "./GamePhase";
 import createEvaluationTable from "../Cache/createEvaluationTable";
 import evaluateSurrounding from "./evaluateSurrounding";
+import enumerateBoard from "../utils/enumerateBoard";
+import isDraggable from "@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable";
+import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
+import invertColor from "../utils/invertColor";
 
 const evaluationTable = createEvaluationTable()
 
-function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>) {
+function conclude(state: State, player: Color, phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>) {
     if (Math.min(surrounding.own, surrounding.opponent) <= 0) {
         return mobility.own - mobility.opponent 
     }
@@ -28,6 +32,26 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
             mobilityValue *= 1
     }
 
+    enumerateBoard(state.board, field => {
+        if (field.pieces.length > 0) {
+            const index = field.pieces.findIndex(piece => piece.type === Type.BEE)
+
+            if (index > -1) {
+                let pinned = true
+
+                if (index === field.pieces.length - 1) {
+                    pinned = !isDraggable(state, field.position)
+                }
+                
+                if (field.pieces[index].owner === player && pinned) {
+                    mobilityValue -= 80
+                } else if (field.pieces[index].owner === invertColor(player) && pinned) {
+                    mobilityValue += 80
+                }
+            }
+        }
+    })
+
     return surroundingValue + mobilityValue
 }
 
@@ -36,7 +60,7 @@ function calculateValue(state: State, player: Color, surrounding: Aspect, mobili
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const concreteMobility = substantiateAspect(player, mobility)
 
-    return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility))
+    return conclude(state, player, phase, concreteSurrounding, rateMobility(state, phase, concreteMobility))
 }
 
 export default function evaluate(state: State, player: Color): Rating {
