@@ -79,8 +79,10 @@ function handleResult(result: Result) {
     
 // }
 
-function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
-    const timer = new Timer()
+function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[], elapsedTime: number) {
+    const timer = new Timer(elapsedTime)
+
+    console.log(`Already elpased time: ${elapsedTime}`)
 
     if (available.length === 0) {
         throw new Error(`No Moves Available`)

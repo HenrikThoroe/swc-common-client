@@ -41,7 +41,7 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@henrikthoroe/swc-client": "^1.0.36",
+    "@henrikthoroe/swc-client": "^1.0.37",
     "@types/node": "^13.9.8",
     "@types/node-persist": "^3.0.0",
     "@types/yargs": "^15.0.4",
