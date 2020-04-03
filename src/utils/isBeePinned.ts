@@ -2,9 +2,12 @@ import { Aspect } from "../Rating";
 import enumerateBoard from "./enumerateBoard";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import isDraggable from "@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable";
-import invertColor from "./invertColor";
 import { State, Color } from "@henrikthoroe/swc-client";
 
+/**
+ * Returns an aspect which contains whether the bees are pinned or not.
+ * @param state 
+ */
 export default function isBeePinned(state: State): Aspect<boolean> {
     const result: Aspect<boolean> = { red: false, blue: false }
 
