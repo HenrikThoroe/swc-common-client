@@ -9,6 +9,7 @@ import createStateMemoryTable from './Cache/createStateMemoryTable'
 import evaluate from './Rating/evaluate'
 import simulateMove from './LookAhead/simulateMove'
 import MTDf from './Logic/MTDf'
+import isBeePinned from './utils/isBeePinned'
 
 const args = yargs
     .option("host", {
