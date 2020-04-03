@@ -4,6 +4,7 @@ import evaluate from "../Rating/evaluate";
 import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
 import { loadPartialConfig } from "@babel/core";
+import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
 
 /**
  * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.
@@ -53,22 +54,33 @@ export default class NegaScout extends Logic {
     }
 
     private search(state: State, depth: number, alpha: number, beta: number, color: number, availableMoves?: Move[]): number {
-        const ttResult = this.readTranspositionTable(state, depth, alpha, beta)
+        const entry = Logic.transpositionTable.read(state) 
+        const originalAlpha = alpha
 
-        if (ttResult) {
-            const [type, value, ttAlpha, ttBeta] = ttResult
+        if (entry && entry.depth >= depth) {
+            if (entry.flag === TranspositionTableFlag.Exact) {
+                let ignore = false
 
-            switch (type) {
-                case "exact":
-                    return value
-                case "alpha":
-                    alpha = ttAlpha
-                    break
-                case "beta":
-                    beta = ttBeta
-                    break
+                if (entry.depth === depth && depth === this.horizon) {
+                    if (typeof(entry.move) !== "number") {
+                        this.searchState.selectedMove = entry.move
+                    } else {
+                        ignore = true
+                    }   
+                    
+                }
+
+                if (!ignore) {
+                    return entry.value
+                }
+
+            } else if (entry.flag === TranspositionTableFlag.LowerBound) {
+                alpha = Math.max(alpha, entry.value)
+            } else if (entry.flag === TranspositionTableFlag.UpperBound) {
+                beta = Math.min(entry.value, beta)
             }
         }
+
 
         const evaluation = evaluate(state, this.player.color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
@@ -121,7 +133,26 @@ export default class NegaScout extends Logic {
             }
         }
 
-        this.setTranspositionTable(state, score, depth, beta)
+        const newEntry: TranspositionTableEntry = {
+            depth: depth,
+            value: score,
+            flag: TranspositionTableFlag.Exact,
+            move: 0
+        }
+
+        if (score <= originalAlpha) {
+            newEntry.flag = TranspositionTableFlag.UpperBound
+        } else if (score >= beta) {
+            newEntry.flag = TranspositionTableFlag.LowerBound
+        } else {
+            if (depth === this.horizon) {
+                newEntry.move = this.searchState.selectedMove || 0
+            }
+
+            newEntry.flag = TranspositionTableFlag.Exact
+        }
+
+        Logic.transpositionTable.push(state, newEntry)
 
         return alpha
     }
