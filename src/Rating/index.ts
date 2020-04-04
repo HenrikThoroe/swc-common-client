@@ -3,6 +3,7 @@ import { Color } from "@henrikthoroe/swc-client";
 export default interface Rating {
     isGameOver: boolean
     value: number
+    surrounding: ConcreteAspect<number>
 }
 
 export interface Aspect<T = number> {

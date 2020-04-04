@@ -51,24 +51,26 @@ function calculateValue(state: State, player: Color, surrounding: Aspect, mobili
 export default function evaluate(state: State, player: Color): Rating {
     const cached = evaluationTable.read(state)
     const surrounding = scanSurrounding(state)
+    const concreteSurrounding = substantiateAspect(player, surrounding)
     const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
 
     if (cached) {
         return {
             isGameOver: isLastMove,
-            value: cached
+            value: cached,
+            surrounding: concreteSurrounding
         }
     }
 
     
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
-    const concreteSurrounding = substantiateAspect(player, surrounding)
 
     if ((isLastMove && concreteSurrounding.opponent === 6) || (isLastMove && concreteSurrounding.own < concreteSurrounding.opponent)) {
         // console.log("Expected end (good): ", state.turn)
         return {
             isGameOver: isLastMove,
-            value: 200
+            value: 200,
+            surrounding: concreteSurrounding
         }
     }
 
@@ -76,7 +78,8 @@ export default function evaluate(state: State, player: Color): Rating {
         // console.log("Expected end (bad): ", state.turn)
         return {
             isGameOver: isLastMove,
-            value: -200
+            value: -200,
+            surrounding: concreteSurrounding
         }
     }
 
@@ -86,6 +89,7 @@ export default function evaluate(state: State, player: Color): Rating {
 
     return {
         isGameOver: isLastMove,
-        value: value
+        value: value,
+        surrounding: concreteSurrounding
     }
 }

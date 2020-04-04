@@ -5,6 +5,7 @@ import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
 import { loadPartialConfig } from "@babel/core";
 import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
+import Rating from "../Rating";
 
 /**
  * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.
@@ -21,11 +22,12 @@ export default class NegaScout extends Logic {
 
         const alpha = -Infinity
         const beta = Infinity
-        let rating: number = this.search(this.initialState, this.horizon, alpha, beta, 1, this.availableMoves)
+        const initialRating = evaluate(this.initialState, this.player.color)
+        let rating: number = this.search(this.initialState, this.horizon, alpha, beta, 1, initialRating, false, this.availableMoves)
         let move: Move | null = this.searchState.selectedMove
 
         while (!this.didTimeOut()) {
-            rating = this.search(this.initialState, this.horizon, alpha, beta, 1, this.availableMoves)
+            rating = this.search(this.initialState, this.horizon, alpha, beta, 1, initialRating, false, this.availableMoves)
             
             if (!this.didTimeOut() || rating === 200) {
                 move = this.searchState.selectedMove
@@ -53,9 +55,10 @@ export default class NegaScout extends Logic {
         }
     }
 
-    private search(state: State, depth: number, alpha: number, beta: number, color: number, availableMoves?: Move[]): number {
+    private search(state: State, depth: number, alpha: number, beta: number, color: number, previous: Rating, quiescene: boolean, availableMoves?: Move[]): number {
         const entry = Logic.transpositionTable.read(state) 
         const originalAlpha = alpha
+        const realDepth = this.horizon + depth
 
         if (entry && entry.depth >= depth) {
             if (entry.flag === TranspositionTableFlag.Exact) {
@@ -85,12 +88,18 @@ export default class NegaScout extends Logic {
         const evaluation = evaluate(state, this.player.color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
-        if (depth === 0 || evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
-            if (depth === this.horizon) {
-                console.log(evaluation.isGameOver, this.didTimeOut(), moves.length === 0)
-            }
-
+        if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
             return evaluation.value * color
+        }
+
+        if (depth === 0) {
+            // Move is not quiet
+            if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene) {
+                console.log("Searching Deeper")
+                return this.search(state, 2, alpha, beta, color, previous, true, moves)
+            } else {
+                return evaluation.value
+            }
         }
 
         let score: number = 0
@@ -107,14 +116,14 @@ export default class NegaScout extends Logic {
             if (i === 0) {
                 // NegaScout assumes that the first move is the best one
                 // So it searches it with full with alpha beta window
-                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color))
+                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color, evaluation, quiescene))
             } else {
                 // To create as many cutoffs as possible the following moves are searched with a null window
-                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color))
+                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color, evaluation, quiescene))
 
                 // If the actual score is not within the assumed window a full alpha beta search is committed
                 if (alpha < score && score < beta) {
-                    score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color))
+                    score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color, evaluation, quiescene))
                 }
             }
 
@@ -134,7 +143,7 @@ export default class NegaScout extends Logic {
         }
 
         const newEntry: TranspositionTableEntry = {
-            depth: depth,
+            depth: realDepth,
             value: score,
             flag: TranspositionTableFlag.Exact,
             move: 0
