@@ -2,7 +2,8 @@ import { Move, State, Piece, getNeighbours, Player, Color } from "@henrikthoroe/
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import { filter } from "@henrikthoroe/swc-client/dist/utils";
 import simulateMove from "../LookAhead/simulateMove";
-import rate from "../Rating/rate";
+import evaluate from "../Rating/evaluate";
+import NegaScout from "./NegaScout";
 
 export interface SpecialCaseResult {
     isSpecialCase: boolean
@@ -26,16 +27,16 @@ function hasPiece(type: Type, collection: Piece[]): boolean {
     return false
 }
 
-function handleInitialMove(state: State, moves: Move[]): Move {
+function handleInitialMove(state: State, moves: Move[], player: Player): Move {
     if (moves.length !== Constants.initialMoveCount) {
         throw new Error(`Invalid Input`)
     }
 
-    const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
+    const beetleMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
     let min = Infinity
     let selected: Move | null = null
 
-    for (const move of beeMoves) {
+    for (const move of beetleMoves) {
         const pos = Math.abs(move.end.x) + Math.abs(move.end.y) + Math.abs(move.end.z)
         const neighbourFields = getNeighbours(state.board, move.end)
         const count = filter(neighbourFields, neighbour => neighbour.pieces.length > 0 || neighbour.isObstructed).length
@@ -52,7 +53,11 @@ function handleInitialMove(state: State, moves: Move[]): Move {
         return selected
     }
 
-    return beeMoves[Math.floor(Math.random() * beeMoves.length)]
+    return beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
+
+    // const computed = new NegaScout(state, beetleMoves, player, 3, 1800).find()
+
+    // return computed.success ? computed.value! : beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
 }
 
 /**
@@ -74,42 +79,42 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
             return {
                 isSpecialCase: true,
                 success: true,
-                selectedMove: handleInitialMove(state, moves)
+                selectedMove: handleInitialMove(state, moves, player)
             }
         } catch (e) {
             return errorResult
         }
     }
 
-    if (undeployed.length === Constants.maximumUndeployed) {
-        if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
-            const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
-            return {
-                isSpecialCase: true,
-                success: true,
-                selectedMove: beeMoves[0]
-            }
-        }
-    }
+    // if (undeployed.length === Constants.maximumUndeployed) {
+    //     if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
+    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
+    //         return {
+    //             isSpecialCase: true,
+    //             success: true,
+    //             selectedMove: beeMoves[0]
+    //         }
+    //     }
+    // }
 
-    if (undeployed.length === Constants.maximumUndeployed - 1) {
-        if ((player.color === Color.Red && hasPiece(Type.BEE, state.undeployed.red)) || (player.color === Color.Blue && hasPiece(Type.BEE, state.undeployed.blue))) {
-            const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
-            return {
-                isSpecialCase: true,
-                success: true,
-                selectedMove: beeMoves[0]
-            }
-        }
-    }
+    // if (undeployed.length === Constants.maximumUndeployed - 1) {
+    //     if ((player.color === Color.Red && hasPiece(Type.BEE, state.undeployed.red)) || (player.color === Color.Blue && hasPiece(Type.BEE, state.undeployed.blue))) {
+    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
+    //         return {
+    //             isSpecialCase: true,
+    //             success: true,
+    //             selectedMove: beeMoves[0]
+    //         }
+    //     }
+    // }
 
-    if (simulateMove(state, moves[0], next => rate(next, player.color).value) === Constants.guaranteedWin) {
-        return {
-            isSpecialCase: true,
-            success: true,
-            selectedMove: moves[0]
-        }
-    }
+    // if (simulateMove(state, moves[0], next => evaluate(next, player.color).value) === Constants.guaranteedWin) {
+    //     return {
+    //         isSpecialCase: true,
+    //         success: true,
+    //         selectedMove: moves[0]
+    //     }
+    // }
 
     return {
         isSpecialCase: false,

@@ -26,7 +26,7 @@ function pieceValue(phase: GamePhase, type: Type) {
 
 function queenFactor(phase: GamePhase, isOwnQueen: boolean): number {
     switch (phase) {
-        case "early": return isOwnQueen ? 1 : 10
+        case "early": return isOwnQueen ? 10 : 10
         case "mid": return 10
         case "late": return 10
     }
@@ -34,6 +34,10 @@ function queenFactor(phase: GamePhase, isOwnQueen: boolean): number {
 
 export default function rateMobility(state: State, phase: GamePhase, mobility: ConcreteAspect<Mobility>): ConcreteAspect<number> {
     const rateDraggable = (pieces: PieceCollection, queenFactor: number) => {
+        if (pieces.bee === 0) {
+            return 0
+        }
+
         const summedDraggable = 
             1 * pieces.ant + 
             queenFactor * pieces.bee +

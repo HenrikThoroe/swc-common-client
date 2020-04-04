@@ -5,6 +5,12 @@ import handleSpecialCase from './Logic/handleSpecialCase'
 import Timer from './utils/Timer'
 import NegaScout from './Logic/NegaScout'
 import sortMoves from './Logic/sortMoves'
+import createStateMemoryTable from './Cache/createStateMemoryTable'
+import evaluate from './Rating/evaluate'
+import simulateMove from './LookAhead/simulateMove'
+import MTDf from './Logic/MTDf'
+import isBeePinned from './utils/isBeePinned'
+import generateMoves from './LookAhead/generateMoves'
 
 const args = yargs
     .option("host", {
@@ -33,17 +39,52 @@ const connectOpts: ConnectOptions = {
     } 
 }
 
+// const stateMemory = createStateMemoryTable()
+
 process.on("exit", e => {
     console.log(`Process terminated with error code ${e}`)
 })
 
-function handleResult(result: Result) {
-    console.log(result)
-    process.kill(process.pid, 0)
+function printMemoryUsage() {
+    const usage = process.memoryUsage()
+    const toMB = (mem: number) => (mem / 1024 / 1024).toFixed(2) + " Megabyte"
+
+    console.log("---Memory Usage---")
+    console.log(`RSS: ${toMB(usage.rss)}`)
+    console.log(`Heap Total: ${toMB(usage.heapTotal)}`)
+    console.log(`Heap Used: ${toMB(usage.heapUsed)}`)
+    console.log(`External: ${toMB(usage.external)}`)
+    console.log(`Array Buffers: ${toMB(usage.arrayBuffers)}`)
+    console.log("------------------")
 }
 
-function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[]) {
-    const timer = new Timer()
+function handleResult(result: Result) {
+    printMemoryUsage()
+    console.log(result)
+    process.exit()
+}
+
+// function memoryWrapper(state: State, undeployed: Piece[], player: Player, available: Move[]): Move {
+//     const initialRating = evaluate(state, player.color).value
+//     stateMemory.push(state.turn, initialRating)
+
+//     try {
+//         const move = handleMoveRequest(state, undeployed, player, available)
+//         const rating = simulateMove(state, move, next => evaluate(next, player.color).value)
+//         stateMemory.push(state.turn + 1, rating)
+//         return move
+//     } catch (e) {
+//         stateMemory.push(state.turn + 1, initialRating)
+//         throw e
+//     }
+    
+// }
+
+function handleMoveRequest(state: State, undeployed: Piece[], player: Player, elapsedTime: number) {
+    const timer = new Timer(elapsedTime)
+    let available = generateMoves(state)
+
+    console.log(`Already elpased time: ${elapsedTime}`)
 
     if (available.length === 0) {
         throw new Error(`No Moves Available`)

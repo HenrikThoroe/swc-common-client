@@ -2,14 +2,17 @@ export default class Timer {
 
     private start: number = -1
 
-    constructor(shouldBegin: boolean = true) {
+    private offset: number
+
+    constructor(offset: number = 0, shouldBegin: boolean = true) {
+        this.offset = offset
         if (shouldBegin) {
             this.begin()
         }
     }
 
     begin() {
-        this.start = Date.now()
+        this.start = Date.now() + this.offset
     }
 
     read(): number {
