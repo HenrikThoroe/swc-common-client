@@ -10,6 +10,7 @@ import evaluate from './Rating/evaluate'
 import simulateMove from './LookAhead/simulateMove'
 import MTDf from './Logic/MTDf'
 import isBeePinned from './utils/isBeePinned'
+import generateMoves from './LookAhead/generateMoves'
 
 const args = yargs
     .option("host", {
@@ -79,8 +80,9 @@ function handleResult(result: Result) {
     
 // }
 
-function handleMoveRequest(state: State, undeployed: Piece[], player: Player, available: Move[], elapsedTime: number) {
+function handleMoveRequest(state: State, undeployed: Piece[], player: Player, elapsedTime: number) {
     const timer = new Timer(elapsedTime)
+    let available = generateMoves(state)
 
     console.log(`Already elpased time: ${elapsedTime}`)
 
