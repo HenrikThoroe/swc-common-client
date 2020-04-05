@@ -34,14 +34,14 @@
     "bestzip": "^2.1.5",
     "jest": "^25.2.7",
     "ts-loader": "^6.2.2",
-    "ts-node": "^8.8.1",
+    "ts-node": "^8.8.2",
     "tsc": "^1.20150623.0",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
-    "@henrikthoroe/swc-client": "^1.0.38",
+    "@henrikthoroe/swc-client": "^1.1.7",
     "@types/node": "^13.9.8",
     "@types/node-persist": "^3.0.0",
     "@types/yargs": "^15.0.4",

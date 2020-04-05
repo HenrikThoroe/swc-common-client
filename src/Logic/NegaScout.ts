@@ -58,7 +58,7 @@ export default class NegaScout extends Logic {
     private search(state: State, depth: number, alpha: number, beta: number, color: number, previous: Rating, quiescene: boolean, availableMoves?: Move[]): number {
         const entry = Logic.transpositionTable.read(state) 
         const originalAlpha = alpha
-        const realDepth = this.horizon + depth
+        const realDepth = quiescene ? this.horizon + depth : depth
 
         if (entry && entry.depth >= depth) {
             if (entry.flag === TranspositionTableFlag.Exact) {
@@ -94,12 +94,13 @@ export default class NegaScout extends Logic {
 
         if (depth === 0) {
             // Move is not quiet
-            if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene) {
-                console.log("Searching Deeper")
-                return this.search(state, 2, alpha, beta, color, previous, true, moves)
-            } else {
-                return evaluation.value
-            }
+            // if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene && Math.max(evaluation.surrounding.own, evaluation.surrounding.opponent) > 4) {
+            //     console.log("Searching Deeper")
+            //     return this.search(state, 2, alpha, beta, color, previous, true, moves)
+            // } else {
+            //     return evaluation.value
+            // }
+            return evaluation.value
         }
 
         let score: number = 0

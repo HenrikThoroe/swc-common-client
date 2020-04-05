@@ -84,6 +84,8 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, el
     const timer = new Timer(elapsedTime)
     let available = generateMoves(state)
 
+    console.log(available.length)
+
     console.log(`Already elpased time: ${elapsedTime}`)
 
     if (available.length === 0) {
@@ -98,6 +100,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, el
         available = sortMoves(state, available, player.color)
     }
 
+    const fallback = available[0]
     const preRating = handleSpecialCase(state, player, available, undeployed)
     const logic = new NegaScout(state, available, player, 3, 1890 - timer.read())
 
@@ -116,7 +119,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, el
     if (result.success) {
         return result.value!
     } else {
-        return available[Math.floor(Math.random() * available.length)]
+        return fallback
     } 
 }
 
