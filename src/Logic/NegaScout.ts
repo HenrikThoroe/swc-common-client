@@ -88,20 +88,20 @@ export default class NegaScout extends Logic {
         const evaluation = evaluate(state, this.player.color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
-        if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
+        if (depth === 0 || evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
             return evaluation.value * color
         }
 
-        if (depth === 0) {
-            // Move is not quiet
-            // if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene && Math.max(evaluation.surrounding.own, evaluation.surrounding.opponent) > 4) {
-            //     console.log("Searching Deeper")
-            //     return this.search(state, 2, alpha, beta, color, previous, true, moves)
-            // } else {
-            //     return evaluation.value
-            // }
-            return evaluation.value
-        }
+        // if (depth === 0) {
+        //     // Move is not quiet
+        //     // if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene && Math.max(evaluation.surrounding.own, evaluation.surrounding.opponent) > 4) {
+        //     //     console.log("Searching Deeper")
+        //     //     return this.search(state, 2, alpha, beta, color, previous, true, moves)
+        //     // } else {
+        //     //     return evaluation.value
+        //     // }
+        //     return evaluation.value
+        // }
 
         let score: number = 0
 
