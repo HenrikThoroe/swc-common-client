@@ -66,7 +66,7 @@ export default function evaluate(state: State, player: Color): Rating {
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
 
     if ((isLastMove && concreteSurrounding.opponent === 6) || (isLastMove && concreteSurrounding.own < concreteSurrounding.opponent)) {
-        // console.log("Expected end (good): ", state.turn)
+        // Environment.debugPrint("Expected end (good): ", state.turn)
         return {
             isGameOver: isLastMove,
             value: 200,
@@ -75,7 +75,7 @@ export default function evaluate(state: State, player: Color): Rating {
     }
 
     if ((isLastMove && concreteSurrounding.own === 6) || (isLastMove && concreteSurrounding.own > concreteSurrounding.opponent)) {
-        // console.log("Expected end (bad): ", state.turn)
+        // Environment.debugPrint("Expected end (bad): ", state.turn)
         return {
             isGameOver: isLastMove,
             value: -200,

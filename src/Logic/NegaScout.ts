@@ -6,6 +6,7 @@ import simulateMove from "../LookAhead/simulateMove";
 import { loadPartialConfig } from "@babel/core";
 import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
 import Rating from "../Rating";
+import Environment from "../utils/Environment";
 
 /**
  * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.
@@ -44,7 +45,7 @@ export default class NegaScout extends Logic {
         
         // If somebody is interested just change the flag to true
         if (false) {
-            console.log(`Cutoff Ratio: ${this.cutoffs / this.searchState.searchedNodes}`)
+            Environment.debugPrint(`Cutoff Ratio: ${this.cutoffs / this.searchState.searchedNodes}`)
         }
 
         return {
@@ -88,20 +89,20 @@ export default class NegaScout extends Logic {
         const evaluation = evaluate(state, this.player.color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
-        if (depth === 0 || evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
+        if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
             return evaluation.value * color
         }
 
-        // if (depth === 0) {
-        //     // Move is not quiet
-        //     // if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene && Math.max(evaluation.surrounding.own, evaluation.surrounding.opponent) > 4) {
-        //     //     console.log("Searching Deeper")
-        //     //     return this.search(state, 2, alpha, beta, color, previous, true, moves)
-        //     // } else {
-        //     //     return evaluation.value
-        //     // }
-        //     return evaluation.value
-        // }
+        if (depth === 0) {
+            // Move is not quiet
+            if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene && Math.max(evaluation.surrounding.own, evaluation.surrounding.opponent) > 4) {
+                Environment.debugPrint("Searching Deeper")
+                return this.search(state, 2, alpha, beta, color, previous, true, moves)
+            } else {
+                return evaluation.value * color
+            }
+            // return evaluation.value * color
+        }
 
         let score: number = 0
 

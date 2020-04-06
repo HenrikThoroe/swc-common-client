@@ -1,3 +1,5 @@
+import Environment from "../utils/Environment"
+
 interface HashFunction<T> {
     (arg0: T): string
 }
@@ -58,7 +60,7 @@ export default class LookupTable<Key, Value> {
 
             if (this.positiveReads % 100000 === 0) {
                 const ratio = this.positiveReads / (this.positiveReads + this.negativeReads)
-                console.log(`Successfully cached ${this.positiveReads} items [id: ${this.id}][cached: ${(ratio * 100).toFixed(2)}%]`)
+                Environment.debugPrint(`Successfully cached ${this.positiveReads} items [id: ${this.id}][cached: ${(ratio * 100).toFixed(2)}%]`)
             }
 
             return value

@@ -94,7 +94,7 @@ export default function sortMoves(state: State, moves: Move[], player: Color, me
      * Wrapper to easily add debug output
      */
     const log = (res: Move[]) => {
-        // console.log(`Sorting took ${((process.hrtime()[1] - start) / 1000000).toFixed(3)} ms`)
+        // Environment.debugPrint(`Sorting took ${((process.hrtime()[1] - start) / 1000000).toFixed(3)} ms`)
         return res
     }
     const map = mapMoves(state, player, moves)                                                          // Every move is mapped to an object with the move itself and it's rating and resulting surrounding
