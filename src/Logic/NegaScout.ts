@@ -102,21 +102,21 @@ export default class NegaScout extends Logic {
         const evaluation = evaluate(state, this.player.color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
-        if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
+        if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
             return evaluation.value * color
         }
 
-        if (depth === 0) {
-            // Move is not quiet
-            if (!quiescene && !this.isQuiet(previous, evaluation)) {
-                // Environment.debugPrint("Searching Deeper")
-                quiescene = true
-                depth += 2
-            } else {
-                return evaluation.value * color
-            }
-            // return evaluation.value * color
-        }
+        // if (depth === 0) {
+        //     // Move is not quiet
+        //     if (!quiescene && !this.isQuiet(previous, evaluation)) {
+        //         // Environment.debugPrint("Searching Deeper")
+        //         quiescene = true
+        //         depth += 2
+        //     } else {
+        //         return evaluation.value * color
+        //     }
+        //     // return evaluation.value * color
+        // }
 
         let score: number = 0
 
@@ -160,7 +160,7 @@ export default class NegaScout extends Logic {
         }
 
         const newEntry: TranspositionTableEntry = {
-            depth: depth > -1 ? depth : -depth,
+            depth: depth,
             value: score,
             flag: TranspositionTableFlag.Exact,
             move: 0
