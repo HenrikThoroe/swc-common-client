@@ -54,7 +54,7 @@ export default function evaluate(state: State, player: Color): Rating {
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
 
-    if (cached) {
+    if (cached !== null) {
         return {
             isGameOver: isLastMove,
             value: cached,

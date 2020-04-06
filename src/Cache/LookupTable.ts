@@ -55,7 +55,7 @@ export default class LookupTable<Key, Value> {
     read(key: Key): Value | null {
         const value = this.table.get(this.hasher(key))
 
-        if (value) {
+        if (value !== undefined) {
             this.positiveReads += 1
 
             if (this.positiveReads % 100000 === 0) {
@@ -74,7 +74,7 @@ export default class LookupTable<Key, Value> {
     get(key: Key, fallback: () => Value): Value {
         const c = this.read(key)
 
-        if (c) {
+        if (c !== null) {
             return c
         } else {
             const value = fallback()
