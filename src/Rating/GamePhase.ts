@@ -12,7 +12,7 @@ export function chooseGamePhase(player: Color, surrounding: Aspect, mobility: As
         return "early"
     }
 
-    if (Math.max(concreteSurrounding.own, concreteSurrounding.opponent) > 4) {
+    if (concreteSurrounding.own > 4 || concreteSurrounding.opponent > 4) {
         return "late"
     }
 

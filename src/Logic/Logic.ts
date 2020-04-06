@@ -5,6 +5,7 @@ import evaluate from '../Rating/evaluate'
 import generateMoves from '../LookAhead/generateMoves'
 import simulateMove from '../LookAhead/simulateMove'
 import createKillerTable from '../Cache/createKillerTable'
+import Environment from '../utils/Environment'
 
 export interface SearchResult {
     rating: number
@@ -74,7 +75,7 @@ export default abstract class Logic {
         const time = Date.now() - this.searchState.startTime
         const o = this.searchState.searchedNodes
 
-        console.log(`Performed ${o} operations in ${time} milliseconds [${o / (time / 1000)} op/s][${this.availableMoves.length}][depth: ${this.horizon}].`)
+        Environment.debugPrint(`Performed ${o} operations in ${time} milliseconds [${o / (time / 1000)} op/s][${this.availableMoves.length}][depth: ${this.horizon}].`)
     }
 
     protected applyKillerHeuristic(state: State, moves: Move[]) {
@@ -144,7 +145,7 @@ export default abstract class Logic {
             switch (type) {
                 case "exact":
                     if (depth == this.horizon) {
-                        console.log("well ok that was surprising")
+                        Environment.debugPrint("well ok that was surprising")
                     }
                     return value
                 case "alpha":
@@ -168,7 +169,7 @@ export default abstract class Logic {
         for (let i = 0; i < moves.length; ++i) {
             if (this.didTimeOut()) {
                 if (depth === this.horizon) {
-                    console.log(`Timed out after searching ${i} nodes`)
+                    Environment.debugPrint(`Timed out after searching ${i} nodes`)
                 }
                 break
             }

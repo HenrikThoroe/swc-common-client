@@ -11,6 +11,7 @@ import simulateMove from './LookAhead/simulateMove'
 import MTDf from './Logic/MTDf'
 import isBeePinned from './utils/isBeePinned'
 import generateMoves from './LookAhead/generateMoves'
+import Environment from './utils/Environment'
 
 const args = yargs
     .option("host", {
@@ -29,6 +30,9 @@ const args = yargs
         alias: "s",
         type: 'boolean'
     })
+    .options("production", {
+        type: "boolean"
+    })
     .parse()
 
 const connectOpts: ConnectOptions = { 
@@ -39,28 +43,28 @@ const connectOpts: ConnectOptions = {
     } 
 }
 
-// const stateMemory = createStateMemoryTable()
+Environment.mode = args.production ? "production" : "development"
 
 process.on("exit", e => {
-    console.log(`Process terminated with error code ${e}`)
+    Environment.print(`Process terminated with error code ${e}`)
 })
 
 function printMemoryUsage() {
     const usage = process.memoryUsage()
     const toMB = (mem: number) => (mem / 1024 / 1024).toFixed(2) + " Megabyte"
 
-    console.log("---Memory Usage---")
-    console.log(`RSS: ${toMB(usage.rss)}`)
-    console.log(`Heap Total: ${toMB(usage.heapTotal)}`)
-    console.log(`Heap Used: ${toMB(usage.heapUsed)}`)
-    console.log(`External: ${toMB(usage.external)}`)
-    console.log(`Array Buffers: ${toMB(usage.arrayBuffers)}`)
-    console.log("------------------")
+    Environment.print("---Memory Usage---")
+    Environment.print(`RSS: ${toMB(usage.rss)}`)
+    Environment.print(`Heap Total: ${toMB(usage.heapTotal)}`)
+    Environment.print(`Heap Used: ${toMB(usage.heapUsed)}`)
+    Environment.print(`External: ${toMB(usage.external)}`)
+    Environment.print(`Array Buffers: ${toMB(usage.arrayBuffers)}`)
+    Environment.print("------------------")
 }
 
 function handleResult(result: Result) {
     printMemoryUsage()
-    console.log(result)
+    Environment.print(result)
     process.exit()
 }
 
@@ -84,7 +88,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, el
     const timer = new Timer(elapsedTime)
     let available = generateMoves(state)
 
-    console.log(`Already elpased time: ${elapsedTime}`)
+    Environment.debugPrint(`Already elpased time: ${elapsedTime}`)
 
     if (available.length === 0) {
         throw new Error(`No Moves Available`)
@@ -98,6 +102,7 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, el
         available = sortMoves(state, available, player.color)
     }
 
+    const fallback = available[0]
     const preRating = handleSpecialCase(state, player, available, undeployed)
     const logic = new NegaScout(state, available, player, 3, 1890 - timer.read())
 
@@ -109,14 +114,14 @@ function handleMoveRequest(state: State, undeployed: Piece[], player: Player, el
 
     const result = logic.find()
 
-    console.log(`Finished search after ${timer.read()}ms`)
-    console.log(`Rating: ${result.rating}`)
-    console.log(`Selected move:`, result.value)
+    Environment.print(`Finished search after ${timer.read()}ms`)
+    Environment.debugPrint(`Rating: ${result.rating}`)
+    Environment.debugPrint(`Selected move:`, result.value)
 
     if (result.success) {
         return result.value!
     } else {
-        return available[Math.floor(Math.random() * available.length)]
+        return fallback
     } 
 }
 

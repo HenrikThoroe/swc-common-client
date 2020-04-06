@@ -5,6 +5,8 @@ import generateMoves from "../LookAhead/generateMoves";
 import simulateMove from "../LookAhead/simulateMove";
 import { loadPartialConfig } from "@babel/core";
 import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
+import Rating from "../Rating";
+import Environment from "../utils/Environment";
 
 /**
  * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.
@@ -21,11 +23,12 @@ export default class NegaScout extends Logic {
 
         const alpha = -Infinity
         const beta = Infinity
-        let rating: number = this.search(this.initialState, this.horizon, alpha, beta, 1, this.availableMoves)
+        const initialRating = evaluate(this.initialState, this.player.color)
+        let rating: number = this.search(this.initialState, this.horizon, alpha, beta, 1, initialRating, false, this.availableMoves)
         let move: Move | null = this.searchState.selectedMove
 
         while (!this.didTimeOut()) {
-            rating = this.search(this.initialState, this.horizon, alpha, beta, 1, this.availableMoves)
+            rating = this.search(this.initialState, this.horizon, alpha, beta, 1, initialRating, false, this.availableMoves)
             
             if (!this.didTimeOut() || rating === 200) {
                 move = this.searchState.selectedMove
@@ -37,12 +40,12 @@ export default class NegaScout extends Logic {
         this.log()
 
         if (move === null) {
-            console.warn("NO MOVE SELECTED")
+            Environment.print("NO MOVE SELECTED")
         }
         
         // If somebody is interested just change the flag to true
         if (false) {
-            console.log(`Cutoff Ratio: ${this.cutoffs / this.searchState.searchedNodes}`)
+            Environment.debugPrint(`Cutoff Ratio: ${this.cutoffs / this.searchState.searchedNodes}`)
         }
 
         return {
@@ -53,7 +56,21 @@ export default class NegaScout extends Logic {
         }
     }
 
-    private search(state: State, depth: number, alpha: number, beta: number, color: number, availableMoves?: Move[]): number {
+    private isQuiet(previous: Rating, current: Rating): boolean {
+        // Only trigger quiescene search at the end of the game
+        if (current.surrounding.opponent < 5) {
+            return true
+        }
+
+        // Quiet if the surrounding of both queens did not change
+        if (previous.surrounding.opponent !== current.surrounding.opponent || previous.surrounding.own !== current.surrounding.own) {
+            return true
+        }
+
+        return false
+    }
+
+    private search(state: State, depth: number, alpha: number, beta: number, color: number, previous: Rating, quiescene: boolean, availableMoves?: Move[]): number {
         const entry = Logic.transpositionTable.read(state) 
         const originalAlpha = alpha
 
@@ -85,13 +102,21 @@ export default class NegaScout extends Logic {
         const evaluation = evaluate(state, this.player.color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
-        if (depth === 0 || evaluation.isGameOver || this.didTimeOut() || moves.length === 0) {
-            if (depth === this.horizon) {
-                console.log(evaluation.isGameOver, this.didTimeOut(), moves.length === 0)
-            }
-
+        if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
             return evaluation.value * color
         }
+
+        // if (depth === 0) {
+        //     // Move is not quiet
+        //     if (!quiescene && !this.isQuiet(previous, evaluation)) {
+        //         // Environment.debugPrint("Searching Deeper")
+        //         quiescene = true
+        //         depth += 2
+        //     } else {
+        //         return evaluation.value * color
+        //     }
+        //     // return evaluation.value * color
+        // }
 
         let score: number = 0
 
@@ -101,20 +126,21 @@ export default class NegaScout extends Logic {
             this.searchState.searchedNodes += 1
 
             if (this.didTimeOut()) {
+                if (depth === this.horizon) Environment.debugPrint(`Timed out after searching ${i + 1} of ${moves.length} nodes. Depth: ${this.horizon}`)
                 break
             }
 
             if (i === 0) {
                 // NegaScout assumes that the first move is the best one
                 // So it searches it with full with alpha beta window
-                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color))
+                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color, evaluation, quiescene))
             } else {
                 // To create as many cutoffs as possible the following moves are searched with a null window
-                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color))
+                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color, evaluation, quiescene))
 
                 // If the actual score is not within the assumed window a full alpha beta search is committed
                 if (alpha < score && score < beta) {
-                    score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color))
+                    score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color, evaluation, quiescene))
                 }
             }
 

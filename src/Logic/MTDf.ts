@@ -1,4 +1,5 @@
 import Logic, { SearchResult } from "./Logic"
+import Environment from "../utils/Environment"
 
 export default class MTDf extends Logic {
 
@@ -42,7 +43,7 @@ export default class MTDf extends Logic {
         }
 
         this.log()
-        console.log(`MTDf made ${rounds} rounds`)
+        Environment.debugPrint(`MTDf made ${rounds} rounds`)
 
         return guess
     }

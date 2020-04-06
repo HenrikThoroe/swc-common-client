@@ -3,6 +3,7 @@ import { State, Move } from "@henrikthoroe/swc-client";
 import evaluate from "../Rating/evaluate";
 import simulateMove from "../LookAhead/simulateMove";
 import generateMoves from "../LookAhead/generateMoves";
+import Environment from "../utils/Environment";
 
 export default class AlphaBeta extends Logic {
     
@@ -60,7 +61,7 @@ export default class AlphaBeta extends Logic {
                 this.searchState.timedOut = true
 
                 if (depth === this.horizon) {
-                    console.log(`Timed out after searching ${c} of ${moves.length} nodes.`)
+                    Environment.debugPrint(`Timed out after searching ${c} of ${moves.length} nodes.`)
                 }
                 break
             }

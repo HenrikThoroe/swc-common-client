@@ -51,32 +51,35 @@ function calculateValue(state: State, player: Color, surrounding: Aspect, mobili
 export default function evaluate(state: State, player: Color): Rating {
     const cached = evaluationTable.read(state)
     const surrounding = scanSurrounding(state)
-    const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
+    const concreteSurrounding = substantiateAspect(player, surrounding)
+    const isGameOver = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
 
-    if (cached) {
+    if (cached !== null) {
         return {
-            isGameOver: isLastMove,
-            value: cached
+            isGameOver: isGameOver,
+            value: cached,
+            surrounding: concreteSurrounding
         }
     }
 
     
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
-    const concreteSurrounding = substantiateAspect(player, surrounding)
 
-    if ((isLastMove && concreteSurrounding.opponent === 6) || (isLastMove && concreteSurrounding.own < concreteSurrounding.opponent)) {
-        // console.log("Expected end (good): ", state.turn)
+    if ((isGameOver && concreteSurrounding.opponent === 6) || (isGameOver && concreteSurrounding.own < concreteSurrounding.opponent)) {
+        // Environment.debugPrint("Expected end (good): ", state.turn)
         return {
-            isGameOver: isLastMove,
-            value: 200
+            isGameOver: isGameOver,
+            value: 200,
+            surrounding: concreteSurrounding
         }
     }
 
-    if ((isLastMove && concreteSurrounding.own === 6) || (isLastMove && concreteSurrounding.own > concreteSurrounding.opponent)) {
-        // console.log("Expected end (bad): ", state.turn)
+    if ((isGameOver && concreteSurrounding.own === 6) || (isGameOver && concreteSurrounding.own > concreteSurrounding.opponent)) {
+        // Environment.debugPrint("Expected end (bad): ", state.turn)
         return {
-            isGameOver: isLastMove,
-            value: -200
+            isGameOver: isGameOver,
+            value: -200,
+            surrounding: concreteSurrounding
         }
     }
 
@@ -85,7 +88,8 @@ export default function evaluate(state: State, player: Color): Rating {
     evaluationTable.push(state, value)
 
     return {
-        isGameOver: isLastMove,
-        value: value
+        isGameOver: isGameOver,
+        value: value,
+        surrounding: concreteSurrounding
     }
 }

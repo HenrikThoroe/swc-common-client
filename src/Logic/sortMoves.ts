@@ -9,6 +9,7 @@ import { StateMemoryTable } from "../Cache/createStateMemoryTable"
 import { ConcreteAspect, substantiateAspect } from "../Rating"
 import evaluateSurrounding from "../Rating/evaluateSurrounding"
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece"
+import Environment from "../utils/Environment"
 
 interface EvaluationMap {
     move: Move
@@ -88,16 +89,16 @@ function sortMidGame(currentSurrounding: number, map: EvaluationMap[]): Move[] {
  * @todo Simplify and document the code. Improve heuristics to take the piece's type into account. Improve performance
  */
 export default function sortMoves(state: State, moves: Move[], player: Color, memory?: StateMemoryTable): Move[] {
-    // const start = process.hrtime()[1]
+    const start = process.hrtime()[1]
 
     /**
      * Wrapper to easily add debug output
      */
     const log = (res: Move[]) => {
-        // console.log(`Sorting took ${((process.hrtime()[1] - start) / 1000000).toFixed(3)} ms`)
+        Environment.debugPrint(`Sorting took ${((process.hrtime()[1] - start) / 1000).toFixed(4)} us`)
         return res
     }
-    const map = mapMoves(state, player, moves)                                                          // Every move is mapped to an object with the move itself and it's rating and resulting surrounding
+    const map = mapMoves(state, player, moves)                              // Every move is mapped to an object with the move itself and it's rating and resulting surrounding
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }     
     const surrounding = scanSurrounding(state)
     const phase = chooseGamePhase(player, surrounding, mobility)

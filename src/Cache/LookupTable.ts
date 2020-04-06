@@ -1,3 +1,5 @@
+import Environment from "../utils/Environment"
+
 interface HashFunction<T> {
     (arg0: T): string
 }
@@ -53,12 +55,12 @@ export default class LookupTable<Key, Value> {
     read(key: Key): Value | null {
         const value = this.table.get(this.hasher(key))
 
-        if (value) {
+        if (value !== undefined) {
             this.positiveReads += 1
 
             if (this.positiveReads % 100000 === 0) {
                 const ratio = this.positiveReads / (this.positiveReads + this.negativeReads)
-                console.log(`Successfully cached ${this.positiveReads} items [id: ${this.id}][cached: ${(ratio * 100).toFixed(2)}%]`)
+                Environment.debugPrint(`Successfully cached ${this.positiveReads} items [id: ${this.id}][cached: ${(ratio * 100).toFixed(2)}%]`)
             }
 
             return value
@@ -72,7 +74,7 @@ export default class LookupTable<Key, Value> {
     get(key: Key, fallback: () => Value): Value {
         const c = this.read(key)
 
-        if (c) {
+        if (c !== null) {
             return c
         } else {
             const value = fallback()

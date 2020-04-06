@@ -12,7 +12,7 @@ export interface SpecialCaseResult {
 }
 
 const Constants = {
-    initialMoveCount: 968,
+    initialMoveCount: 440,
     maximumUndeployed: 11,
     guaranteedWin: 200
 }
