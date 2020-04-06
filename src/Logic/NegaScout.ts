@@ -40,7 +40,7 @@ export default class NegaScout extends Logic {
         this.log()
 
         if (move === null) {
-            console.warn("NO MOVE SELECTED")
+            Environment.print("NO MOVE SELECTED")
         }
         
         // If somebody is interested just change the flag to true
@@ -56,10 +56,23 @@ export default class NegaScout extends Logic {
         }
     }
 
+    private isQuiet(previous: Rating, current: Rating): boolean {
+        // Only trigger quiescene search at the end of the game
+        if (current.surrounding.opponent < 5) {
+            return true
+        }
+
+        // Quiet if the surrounding of both queens did not change
+        if (previous.surrounding.opponent !== current.surrounding.opponent || previous.surrounding.own !== current.surrounding.own) {
+            return true
+        }
+
+        return false
+    }
+
     private search(state: State, depth: number, alpha: number, beta: number, color: number, previous: Rating, quiescene: boolean, availableMoves?: Move[]): number {
         const entry = Logic.transpositionTable.read(state) 
         const originalAlpha = alpha
-        const realDepth = quiescene ? this.horizon + depth : depth
 
         if (entry && entry.depth >= depth) {
             if (entry.flag === TranspositionTableFlag.Exact) {
@@ -95,13 +108,14 @@ export default class NegaScout extends Logic {
 
         if (depth === 0) {
             // Move is not quiet
-            // if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene && Math.max(evaluation.surrounding.own, evaluation.surrounding.opponent) > 4) {
-            //     // Environment.debugPrint("Searching Deeper")
-            //     return this.search(state, 2, alpha, beta, color, previous, true, moves)
-            // } else {
-            //     return evaluation.value * color
-            // }
-            return evaluation.value * color
+            if (!quiescene && !this.isQuiet(previous, evaluation)) {
+                // Environment.debugPrint("Searching Deeper")
+                quiescene = true
+                depth += 2
+            } else {
+                return evaluation.value * color
+            }
+            // return evaluation.value * color
         }
 
         let score: number = 0
@@ -112,6 +126,7 @@ export default class NegaScout extends Logic {
             this.searchState.searchedNodes += 1
 
             if (this.didTimeOut()) {
+                if (depth === this.horizon) Environment.debugPrint(`Timed out after searching ${i + 1} of ${moves.length} nodes. Depth: ${this.horizon}`)
                 break
             }
 
@@ -145,7 +160,7 @@ export default class NegaScout extends Logic {
         }
 
         const newEntry: TranspositionTableEntry = {
-            depth: realDepth,
+            depth: depth > -1 ? depth : -depth,
             value: score,
             flag: TranspositionTableFlag.Exact,
             move: 0
