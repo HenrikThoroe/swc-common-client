@@ -98,14 +98,10 @@ export default function sortMoves(state: State, moves: Move[], player: Color, me
         Environment.debugPrint(`Sorting took ${((process.hrtime()[1] - start) / 1000).toFixed(4)} us`)
         return res
     }
-    const map = mapMoves(state, player, moves)   
-    Environment.debugPrint("A", ((process.hrtime()[1] - start) / 1000).toFixed(4))                                                       // Every move is mapped to an object with the move itself and it's rating and resulting surrounding
+    const map = mapMoves(state, player, moves)                              // Every move is mapped to an object with the move itself and it's rating and resulting surrounding
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }     
-    Environment.debugPrint("B", ((process.hrtime()[1] - start) / 1000).toFixed(4))
     const surrounding = scanSurrounding(state)
-    Environment.debugPrint("C", ((process.hrtime()[1] - start) / 1000).toFixed(4))
     const phase = chooseGamePhase(player, surrounding, mobility)
-    Environment.debugPrint("D", ((process.hrtime()[1] - start) / 1000).toFixed(4))
 
     switch (phase) {
         case "early":
