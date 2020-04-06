@@ -52,7 +52,7 @@ export default function evaluate(state: State, player: Color): Rating {
     const cached = evaluationTable.read(state)
     const surrounding = scanSurrounding(state)
     const concreteSurrounding = substantiateAspect(player, surrounding)
-    const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
+    const isLastMove = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Blue) || state.turn >= 59
 
     if (cached !== null) {
         return {

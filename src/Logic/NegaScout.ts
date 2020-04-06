@@ -95,13 +95,13 @@ export default class NegaScout extends Logic {
 
         if (depth === 0) {
             // Move is not quiet
-            if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene && Math.max(evaluation.surrounding.own, evaluation.surrounding.opponent) > 4) {
-                Environment.debugPrint("Searching Deeper")
-                return this.search(state, 2, alpha, beta, color, previous, true, moves)
-            } else {
-                return evaluation.value * color
-            }
-            // return evaluation.value * color
+            // if ((previous.surrounding.own !== evaluation.surrounding.own || previous.surrounding.opponent !== evaluation.surrounding.opponent) && !quiescene && Math.max(evaluation.surrounding.own, evaluation.surrounding.opponent) > 4) {
+            //     // Environment.debugPrint("Searching Deeper")
+            //     return this.search(state, 2, alpha, beta, color, previous, true, moves)
+            // } else {
+            //     return evaluation.value * color
+            // }
+            return evaluation.value * color
         }
 
         let score: number = 0
