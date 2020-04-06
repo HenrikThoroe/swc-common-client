@@ -9,7 +9,7 @@ export default abstract class Environment {
             return 
         }
 
-        console.log(message)
+        console.log(...message)
     }
 
     static debugPrint(...message: any) {
@@ -17,7 +17,7 @@ export default abstract class Environment {
             return 
         }
 
-        console.log(message)
+        console.log(...message)
     }
 
 }
