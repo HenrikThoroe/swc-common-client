@@ -1,12 +1,12 @@
 import { State, Move, getNeighbours, Color } from "@henrikthoroe/swc-client";
 import { foreach, flat, filter, map } from "@henrikthoroe/swc-client/dist/utils";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
-import { Aspect } from ".."
+import Aspect from "../Aspect";
 
 /**
  * Scans a provided state for both players queen surrounding.
  */
-export default function scanSurrounding(state: State): Aspect {
+export default function scanSurrounding(state: State): Aspect<number> {
     const allFields = state.board.fields.flatMap(a => Object.values(a).filter(b => b !== null))
     let red: number | null = null
     let blue: number | null = null

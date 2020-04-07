@@ -6,10 +6,10 @@ import isPosition from "../utils/isPosition"
 import simulateMove from "../LookAhead/simulateMove"
 import evaluate from "../Rating/evaluate"
 import { StateMemoryTable } from "../Cache/createStateMemoryTable"
-import { ConcreteAspect, substantiateAspect } from "../Rating"
 import evaluateSurrounding from "../Rating/evaluateSurrounding"
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece"
 import Environment from "../utils/Environment"
+import { substantiateAspect } from "../Rating/ConcreteAspect"
 
 interface EvaluationMap {
     move: Move
