@@ -12,7 +12,8 @@
     "bundle": "npm update && npm run build && npm run zip",
     "bundle-no-update": "npm run build && npm run zip",
     "buildAssets": "ts-node ./src/Cache/build.ts",
-    "performanceTest": "tsc --project ./performance_tests/tsconfig.json && node ./performance_tests/dist/index.js"
+    "performanceTest": "tsc --project ./performance_tests/tsconfig.json && node ./performance_tests/dist/index.js",
+    "export": "npm run build && ts-node export.ts"
   },
   "repository": {
     "type": "git",

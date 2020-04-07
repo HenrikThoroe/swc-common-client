@@ -60,6 +60,7 @@
     // "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
   },
   "exclude": [
-      "performance_tests"
+      "performance_tests",
+      "export.ts"
   ]
 }
