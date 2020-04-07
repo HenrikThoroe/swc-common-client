@@ -13,10 +13,12 @@ export default function hashState(state: State): string {
     let key = encodeBase64(state.currentPlayer)
 
     enumerateBoard(state.board, field => {
+        const x = field.position.x + 5
+        const y = field.position.y + 5
+        const z = field.position.z + 5
+
         for (let i = 0; i < field.pieces.length; ++i) {
-            const x = field.position.x + 5
-            const y = field.position.y + 5
-            const z = field.position.z + 5
+            // x (4 bit) - y (4 bit) - z (4 bit) - piece (3 bit) - owner (1 bit) => 16 bit
             const id = (x << 12) ^ (y << 8) ^ (z << 4) ^ (field.pieces[i].type << 1) ^ field.pieces[i].owner
             key += encodeBase64(id)
         }

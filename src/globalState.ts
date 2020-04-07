@@ -1,4 +1,4 @@
-import { ConnectOptions } from "@henrikthoroe/swc-client"
+import { ConnectOptions, Color } from "@henrikthoroe/swc-client"
 import Environment from "./utils/Environment"
 import yargs from "yargs"
 
@@ -7,10 +7,13 @@ export interface State {
     port: number,
     reservation?: string,
     simpleClient: boolean,
-    productionMode: boolean
+    productionMode: boolean,
+    color: Color
 }
 
 class GlobalState implements State {
+
+    color: Color
 
     readonly host: string
 
@@ -28,6 +31,7 @@ class GlobalState implements State {
         this.simpleClient = state.simpleClient
         this.productionMode = state.productionMode
         this.reservation = state.reservation
+        this.color = state.color
         this.prepareEnvironment()
     }
 
@@ -76,7 +80,8 @@ class GlobalState implements State {
             port: args.port || 13050,
             reservation: args.reservation,
             simpleClient: args.stupid || false,
-            productionMode: args.production || false
+            productionMode: args.production || false,
+            color: Color.Red
         }
 
         return new GlobalState(state)
@@ -84,4 +89,10 @@ class GlobalState implements State {
 
 }
 
-export default GlobalState.fromCommandLineArguments()
+/**
+ * An object which contains information about the state of the application to share this state between multiple files.
+ * It is not related to the game state. 
+ */
+const globalState = GlobalState.fromCommandLineArguments()
+
+export default globalState

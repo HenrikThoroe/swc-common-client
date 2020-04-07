@@ -1,8 +1,8 @@
 import { State } from '@henrikthoroe/swc-client'
-import { ConcreteAspect } from '.'
 import Mobility, { PieceCollection } from './Mobility'
 import GamePhase from './GamePhase'
 import { Type } from '@henrikthoroe/swc-client/dist/client/Model/Piece'
+import ConcreteAspect from './ConcreteAspect'
 
 const pieceTable = {
     ant:            [0.9,     1,      1],

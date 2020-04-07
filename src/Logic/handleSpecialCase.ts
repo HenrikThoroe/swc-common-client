@@ -1,9 +1,6 @@
 import { Move, State, Piece, getNeighbours, Player, Color } from "@henrikthoroe/swc-client";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import { filter } from "@henrikthoroe/swc-client/dist/utils";
-import simulateMove from "../LookAhead/simulateMove";
-import evaluate from "../Rating/evaluate";
-import NegaScout from "./NegaScout";
 
 export interface SpecialCaseResult {
     isSpecialCase: boolean
@@ -15,16 +12,6 @@ const Constants = {
     initialMoveCount: 440,
     maximumUndeployed: 11,
     guaranteedWin: 200
-}
-
-function hasPiece(type: Type, collection: Piece[]): boolean {
-    for (const piece of collection) {
-        if (piece.type === type) {
-            return true
-        }
-    }
-
-    return false
 }
 
 function handleInitialMove(state: State, moves: Move[], player: Player): Move {
@@ -54,10 +41,6 @@ function handleInitialMove(state: State, moves: Move[], player: Player): Move {
     }
 
     return beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
-
-    // const computed = new NegaScout(state, beetleMoves, player, 3, 1800).find()
-
-    // return computed.success ? computed.value! : beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
 }
 
 /**
@@ -85,36 +68,6 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
             return errorResult
         }
     }
-
-    // if (undeployed.length === Constants.maximumUndeployed) {
-    //     if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
-    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
-    //         return {
-    //             isSpecialCase: true,
-    //             success: true,
-    //             selectedMove: beeMoves[0]
-    //         }
-    //     }
-    // }
-
-    // if (undeployed.length === Constants.maximumUndeployed - 1) {
-    //     if ((player.color === Color.Red && hasPiece(Type.BEE, state.undeployed.red)) || (player.color === Color.Blue && hasPiece(Type.BEE, state.undeployed.blue))) {
-    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
-    //         return {
-    //             isSpecialCase: true,
-    //             success: true,
-    //             selectedMove: beeMoves[0]
-    //         }
-    //     }
-    // }
-
-    // if (simulateMove(state, moves[0], next => evaluate(next, player.color).value) === Constants.guaranteedWin) {
-    //     return {
-    //         isSpecialCase: true,
-    //         success: true,
-    //         selectedMove: moves[0]
-    //     }
-    // }
 
     return {
         isSpecialCase: false,

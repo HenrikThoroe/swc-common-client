@@ -2,14 +2,20 @@ import { State, Piece, Player } from "@henrikthoroe/swc-client"
 import Timer from "../utils/Timer"
 import generateMoves from "../LookAhead/generateMoves"
 import Environment from "../utils/Environment"
-import sortMoves from "../Logic/sortMoves"
 import handleSpecialCase from "../Logic/handleSpecialCase"
 import NegaScout from "../Logic/NegaScout"
 import globalState from "../globalState"
 
+let initiated = false
+
 export default function handleMoveRequest(state: State, undeployed: Piece[], player: Player, elapsedTime: number) {
+    if (!initiated) {
+        globalState.color = player.color
+        initiated = true
+    }
+
     const timer = new Timer(elapsedTime)
-    let available = generateMoves(state)
+    const available = generateMoves(state, true)
 
     Environment.debugPrint(`Already elpased time: ${elapsedTime}`)
 
@@ -19,10 +25,6 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
 
     if (globalState.simpleClient) {
         return available[Math.floor(Math.random() * available.length)]
-    }
-
-    if (available.length < 900) {
-        available = sortMoves(state, available, player.color)
     }
 
     const fallback = available[0]

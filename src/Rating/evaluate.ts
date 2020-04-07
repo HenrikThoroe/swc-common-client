@@ -1,18 +1,16 @@
-import { State, fetchMoves, Move } from "@henrikthoroe/swc-client";
-import Rating, { Aspect, substantiateAspect, ConcreteAspect } from ".";
+import { State } from "@henrikthoroe/swc-client";
+import Rating from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
 import scanSurrounding from "./Scanner/scanSurrounding";
-import Mobility, { sumPieceCollection } from "./Mobility";
+import Mobility from "./Mobility";
 import scanMobility from "./Scanner/scanMobility";
 import GamePhase, { chooseGamePhase } from "./GamePhase";
 import createEvaluationTable from "../Cache/createEvaluationTable";
 import evaluateSurrounding from "./evaluateSurrounding";
-import enumerateBoard from "../utils/enumerateBoard";
-import isDraggable from "@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable";
-import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
-import invertColor from "../utils/invertColor";
 import isBeePinned from "../utils/isBeePinned";
+import ConcreteAspect, { substantiateAspect } from "./ConcreteAspect";
+import Aspect from "./Aspect";
 
 const evaluationTable = createEvaluationTable()
 
@@ -40,7 +38,7 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
     return surroundingValue + mobilityValue + beeValue
 }
 
-function calculateValue(state: State, player: Color, surrounding: Aspect, mobility: Aspect<Mobility>): number {
+function calculateValue(state: State, player: Color, surrounding: Aspect<number>, mobility: Aspect<Mobility>): number {
     const phase = chooseGamePhase(player, surrounding, mobility)
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const concreteMobility = substantiateAspect(player, mobility)

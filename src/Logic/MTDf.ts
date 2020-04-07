@@ -1,6 +1,10 @@
 import Logic, { SearchResult } from "./Logic"
 import Environment from "../utils/Environment"
 
+/**
+ * Not stable yet. Use negascout instead.
+ * @see NegaScout
+ */
 export default class MTDf extends Logic {
 
     find(): SearchResult {
