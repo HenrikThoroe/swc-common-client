@@ -42,11 +42,11 @@ npm run build
 ```
 
 ### Export 
-- destination: Required path to output directory. The script will create a subdirectory containing the application like the bundled version but not zipped
-- tag: A custom to to append the export directory name.
+- destination (required): Path to output directory. The script will create a subdirectory containing the application like the bundled version but not zipped
+- tag (optional): A custom to to append the export directory name.
     - Default name: swc-player
     - With Tag: swc-player-mytag
-- force: Flag whether an existing export at the passed destination should be overwritten.
+- force (optional): Flag whether an existing export at the passed destination should be overwritten.
 ```sh
 npm run export -- --destination /path/to/directory --tag mySpecialTag --force
 # or with shorthands
