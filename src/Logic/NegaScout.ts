@@ -24,10 +24,10 @@ export default class NegaScout extends Logic {
         const alpha = -Infinity
         const beta = Infinity
         const initialRating = evaluate(this.initialState, this.player.color)
-        let rating: number = this.search(this.initialState, this.horizon, alpha, beta, 1, initialRating, false, this.availableMoves)
-        let move: Move | null = this.searchState.selectedMove
+        let rating: number
+        let move: Move | null = null
 
-        while (!this.didTimeOut()) {
+        do {
             rating = this.search(this.initialState, this.horizon, alpha, beta, 1, initialRating, false, this.availableMoves)
             
             if (!this.didTimeOut() || rating === 200) {
@@ -35,7 +35,7 @@ export default class NegaScout extends Logic {
             }
 
             this.horizon += 1
-        }
+        } while (!this.didTimeOut())
 
         this.log()
 
