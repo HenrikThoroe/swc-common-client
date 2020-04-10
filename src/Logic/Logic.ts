@@ -136,67 +136,67 @@ export default abstract class Logic {
         Logic.transpositionTable.push(state, newEntry)
     }
 
-    protected negamax(state: State, depth: number, alpha: number, beta: number, color: number): number {
-        const ttResult = this.readTranspositionTable(state, depth, alpha, beta)
+    // protected negamax(state: State, depth: number, alpha: number, beta: number, color: number): number {
+    //     const ttResult = this.readTranspositionTable(state, depth, alpha, beta)
 
-        if (ttResult) {
-            const [type, value, ttAlpha, ttBeta] = ttResult
+    //     if (ttResult) {
+    //         const [type, value, ttAlpha, ttBeta] = ttResult
 
-            switch (type) {
-                case "exact":
-                    if (depth == this.horizon) {
-                        Environment.debugPrint("well ok that was surprising")
-                    }
-                    return value
-                case "alpha":
-                    alpha = ttAlpha
-                    break
-                case "beta":
-                    beta = ttBeta
-                    break
-            }
-        }
+    //         switch (type) {
+    //             case "exact":
+    //                 if (depth == this.horizon) {
+    //                     Environment.debugPrint("well ok that was surprising")
+    //                 }
+    //                 return value
+    //             case "alpha":
+    //                 alpha = ttAlpha
+    //                 break
+    //             case "beta":
+    //                 beta = ttBeta
+    //                 break
+    //         }
+    //     }
 
-        const evaluation = evaluate(state, this.player.color)
-        const moves = generateMoves(state)
+    //     const evaluation = evaluate(state, this.player.color)
+    //     const moves = generateMoves(state)
 
-        if (depth === 0 || this.isTerminating(evaluation, moves.length)) {
-            return evaluation.value * color
-        }
+    //     if (depth === 0 || this.isTerminating(evaluation, moves.length)) {
+    //         return evaluation.value * color
+    //     }
 
-        let value = -Infinity
+    //     let value = -Infinity
 
-        for (let i = 0; i < moves.length; ++i) {
-            if (this.didTimeOut()) {
-                if (depth === this.horizon) {
-                    Environment.debugPrint(`Timed out after searching ${i} nodes`)
-                }
-                break
-            }
+    //     for (let i = 0; i < moves.length; ++i) {
+    //         if (this.didTimeOut()) {
+    //             if (depth === this.horizon) {
+    //                 Environment.debugPrint(`Timed out after searching ${i} nodes`)
+    //             }
+    //             break
+    //         }
 
-            this.searchState.searchedNodes += 1
+    //         this.searchState.searchedNodes += 1
 
-            value = simulateMove(state, moves[i], next => 
-                Math.max(value, -this.negamax(next, depth - 1, -beta, -alpha, -color))
-            )
+    //         value = simulateMove(state, moves[i], next => 
+    //             Math.max(value, -this.negamax(next, depth - 1, -beta, -alpha, -color))
+    //         )
 
-            if (value > alpha) {
-                alpha = value
+    //         if (value > alpha) {
+    //             alpha = value
                 
-                if (depth === this.horizon) {
-                    this.searchState.selectedMove = moves[i]
-                }
-            }
+    //             if (depth === this.horizon) {
+    //                 this.searchState.selectedMove = moves[i]
+    //             }
+    //         }
 
-            if (alpha >= beta) {
-                break
-            }
-        }
+    //         if (alpha >= beta) {
+    //             break
+    //         }
+    //     }
 
-        this.setTranspositionTable(state, value, depth, beta)
+    //     this.setTranspositionTable(state, value, depth, beta)
 
-        return value
-    }
+    //     return value
+    // }
 
     abstract find(): SearchResult
 }
