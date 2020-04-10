@@ -1,6 +1,6 @@
 import Logic, { SearchResult } from "./Logic"
 import Environment from "../utils/Environment"
-import { State, Move, Player } from "@henrikthoroe/swc-client"
+import { State, Move } from "@henrikthoroe/swc-client"
 import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable"
 import evaluate from "../Rating/evaluate"
 import generateMoves from "../LookAhead/generateMoves"
@@ -12,27 +12,28 @@ import simulateMove from "../LookAhead/simulateMove"
  */
 export default class MTDf extends Logic {
 
-    private firstGuess: number
-
     private static addedDepths: number = 0
 
     private static searches: number = 0
-
-    constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number, firstGuess: number) {
-        super(state, moves, player, horizon, timeout)
-        this.firstGuess = firstGuess
-    }
 
     find(): SearchResult {
         this.searchState.startTime = Date.now()
 
         let result: number = NaN
         let move: Move | null = null
-        let guess = this.firstGuess
+        let guess = this.firstGuess()
 
         do {
             const r = this.search(guess, this.availableMoves)
             const m = this.searchState.selectedMove
+
+            if (this.horizon % 2 === 0 && this.initialState.turn % 2 === 0) {
+                guess === r
+            } 
+
+            if (this.horizon % 2 !== 0 && this.initialState.turn % 2 !== 0) {
+                guess = r
+            }
 
             if (!this.didTimeOut()) {
                 this.horizon += 1
@@ -42,8 +43,6 @@ export default class MTDf extends Logic {
             if (!this.didTimeOut() || r === 200) {
                 move = m
             }
-
-            guess = r
         } while (!this.didTimeOut())
 
         this.log()
@@ -61,8 +60,14 @@ export default class MTDf extends Logic {
         }
     }
 
+    private firstGuess(): number {
+        const evaluation = evaluate(this.initialState, this.player.color)
+        const increase = Math.pow(2, evaluation.surrounding.opponent) / 2
+
+        return evaluation.value + increase
+    }
+
     private compareFloat(a: number, b: number): boolean {
-        // Environment.debugPrint("Is Equal: ", a, b, Math.abs(a - b) < 0.0000001)
         return Math.abs(a - b) < 0.0000001
     }
 
@@ -124,7 +129,6 @@ export default class MTDf extends Logic {
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
-            // console.log("Return", depth, moves.length, evaluation.isGameOver, this.didTimeOut())
             return evaluation.value * color
         }
 

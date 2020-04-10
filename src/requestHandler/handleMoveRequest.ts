@@ -31,7 +31,7 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
 
     const fallback = available[0]
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new MTDf(state, available, player, 3, 1890 - timer.read(), evaluate(state, player.color).value)
+    const logic = new MTDf(state, available, player, 3, 1890 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!
