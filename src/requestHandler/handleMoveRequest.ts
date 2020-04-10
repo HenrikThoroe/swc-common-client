@@ -5,6 +5,8 @@ import Environment from "../utils/Environment"
 import handleSpecialCase from "../Logic/handleSpecialCase"
 import NegaScout from "../Logic/NegaScout"
 import globalState from "../globalState"
+import MTDf from "../Logic/MTDf"
+import evaluate from "../Rating/evaluate"
 
 let initiated = false
 
@@ -29,7 +31,7 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
 
     const fallback = available[0]
     const preRating = handleSpecialCase(state, player, available, undeployed)
-    const logic = new NegaScout(state, available, player, 3, 1890 - timer.read())
+    const logic = new MTDf(state, available, player, 3, 1890 - timer.read(), evaluate(state, player.color).value)
 
     if (preRating.isSpecialCase && preRating.success) {
         return preRating.selectedMove!

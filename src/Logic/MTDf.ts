@@ -14,16 +14,44 @@ export default class MTDf extends Logic {
 
     private firstGuess: number
 
+    private static addedDepths: number = 0
+
+    private static searches: number = 0
+
     constructor(state: State, moves: Move[], player: Player, horizon: number, timeout: number, firstGuess: number) {
         super(state, moves, player, horizon, timeout)
         this.firstGuess = firstGuess
     }
 
     find(): SearchResult {
-        const result = this.search(this.firstGuess)
-        const move = this.searchState.selectedMove
+        this.searchState.startTime = Date.now()
+
+        let result: number = NaN
+        let move: Move | null = null
+        let guess = this.firstGuess
+
+        do {
+            const r = this.search(guess, this.availableMoves)
+            const m = this.searchState.selectedMove
+
+            if (!this.didTimeOut()) {
+                this.horizon += 1
+                result = r
+            }
+
+            if (!this.didTimeOut() || r === 200) {
+                move = m
+            }
+
+            guess = r
+        } while (!this.didTimeOut())
 
         this.log()
+
+        MTDf.searches += 1
+        MTDf.addedDepths += this.horizon
+
+        Environment.debugPrint(`Average Search Depth: ${MTDf.addedDepths / MTDf.searches}, ${this.horizon}`)
 
         return {
             success: move !== null,
@@ -34,11 +62,11 @@ export default class MTDf extends Logic {
     }
 
     private compareFloat(a: number, b: number): boolean {
-        Environment.debugPrint("Is Equal: ", a, b, Math.abs(a - b) < 0.0000001)
+        // Environment.debugPrint("Is Equal: ", a, b, Math.abs(a - b) < 0.0000001)
         return Math.abs(a - b) < 0.0000001
     }
 
-    private search(firstGuess: number): number {
+    private search(firstGuess: number, moves: Move[]): number {
         let guess = firstGuess
         let lowerBound = -Infinity
         let upperBound = Infinity
@@ -63,7 +91,7 @@ export default class MTDf extends Logic {
         return guess
     }
 
-    private negamax(state: State, color: number, depth: number, alpha: number, beta: number) {
+    private negamax(state: State, color: number, depth: number, alpha: number, beta: number, availableMoves?: Move[]) {
         const entry = Logic.transpositionTable.read(state) 
         const originalAlpha = alpha
 
@@ -93,9 +121,10 @@ export default class MTDf extends Logic {
 
 
         const evaluation = evaluate(state, this.player.color)
-        const moves = generateMoves(state)
+        const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
+            // console.log("Return", depth, moves.length, evaluation.isGameOver, this.didTimeOut())
             return evaluation.value * color
         }
 
