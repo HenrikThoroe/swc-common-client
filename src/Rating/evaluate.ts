@@ -34,10 +34,13 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
     }
 
     const points = surroundingValue + mobilityValue
-    const maximumExtraPoints = Math.pow(2, surrounding.opponent + 1) - 1 + points
+    const maximumExtraPoints = Math.pow(2, surrounding.opponent)
 
-    beeValue += pinned.opponent ? maximumExtraPoints / 3 : 0
-    beeValue += isBeetleOnBee ? maximumExtraPoints / 3 * 2 : 0
+    if (isBeetleOnBee) {
+        beeValue += maximumExtraPoints
+    } else if (pinned.opponent) {
+        beeValue += maximumExtraPoints * 0.8
+    }
 
     return points + beeValue
 }
