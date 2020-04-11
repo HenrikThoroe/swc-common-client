@@ -43,7 +43,7 @@ export default class MTDf extends Logic {
             if (!this.didTimeOut() || r === 200) {
                 move = m
             }
-        } while (!this.didTimeOut())
+        } while (!this.didTimeOut() && this.horizon + this.initialState.turn < 60)
 
         this.log()
 
@@ -68,7 +68,7 @@ export default class MTDf extends Logic {
     }
 
     private compareFloat(a: number, b: number): boolean {
-        return Math.abs(a - b) < 0.0000001
+        return Math.abs(a - b) < 0.0000000001
     }
 
     private search(firstGuess: number, moves: Move[]): number {
@@ -84,7 +84,7 @@ export default class MTDf extends Logic {
                 beta = guess
             }
 
-            guess = this.negamax(this.initialState, 1, this.horizon, beta - 1, beta)
+            guess = this.negamax(this.initialState, 1, this.horizon, beta - 1, beta, moves)
 
             if (guess < beta) {
                 upperBound = guess

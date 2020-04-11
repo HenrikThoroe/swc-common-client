@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "bundle",
+			"problemMatcher": [],
+			"label": "npm: bundle",
+			"detail": "npm update && npm run build && npm run zip",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}
