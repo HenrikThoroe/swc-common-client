@@ -10,7 +10,6 @@ export default function isBeetleOnBee(state: State, color: Color, log: boolean =
         if (field.pieces.length === 2) {
             const down = field.pieces[0]
             const up = field.pieces[1]
-            if (log) console.log("two pieces", field.position, down, up, color, invertColor(color))
             if (down.type === Type.BEE && down.owner === invertColor(color) && up.type === Type.BEETLE && up.owner === color) {
                 res = true
             }

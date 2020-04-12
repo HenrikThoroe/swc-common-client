@@ -23,14 +23,6 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
     const timer = new Timer(elapsedTime)
     const available = generateMoves(state, true)
 
-    // console.log(evaluate(state, player.color))
-
-    // if (available.length < 400) {
-    //     console.log(available.filter(function(item, pos) {
-    //         return available.findIndex(m => comparePositions(m.end, item.end)) == pos;
-    //     }))
-    // }
-
     Environment.debugPrint(`Already elpased time: ${elapsedTime}`)
 
     if (available.length === 0) {
@@ -54,14 +46,10 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
     const result = logic.find()
 
     Environment.print(`Finished search after ${timer.read()}ms`)
-    Environment.debugPrint(`Result: `, result)
+    Environment.debugPrint(`Rating: ${result.rating}`)
     Environment.debugPrint(`Selected move:`, result.value)
 
     if (result.success) {
-        // simulateMove(state, result.value!, next => {
-        //     console.log(evaluate(next, player.color))
-        // })
-
         return result.value!
     } else {
         return fallback
