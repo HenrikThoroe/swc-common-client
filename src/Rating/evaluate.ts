@@ -11,10 +11,11 @@ import evaluateSurrounding from "./evaluateSurrounding";
 import isBeePinned from "../utils/isBeePinned";
 import ConcreteAspect, { substantiateAspect } from "./ConcreteAspect";
 import Aspect from "./Aspect";
+import isBeetleOnBee from "./Scanner/isBeetleOnBee";
 
 const evaluationTable = createEvaluationTable()
 
-function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>) {
+function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean) {
     if (Math.min(surrounding.own, surrounding.opponent) <= 0) {
         return mobility.own - mobility.opponent 
     }
@@ -32,10 +33,16 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
             mobilityValue *= 1
     }
 
-    beeValue += pinned.own ? -50 : 50
-    beeValue += pinned.opponent ? 50 : -50
+    const points = surroundingValue + mobilityValue
+    const maximumExtraPoints = Math.pow(2, surrounding.opponent)
 
-    return surroundingValue + mobilityValue + beeValue
+    if (isBeetleOnBee) {
+        beeValue += maximumExtraPoints
+    } else if (pinned.opponent) {
+        beeValue += maximumExtraPoints * 0.8
+    }
+
+    return points + beeValue
 }
 
 function calculateValue(state: State, player: Color, surrounding: Aspect<number>, mobility: Aspect<Mobility>): number {
@@ -43,7 +50,7 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const concreteMobility = substantiateAspect(player, mobility)
 
-    return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)))
+    return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player))
 }
 
 export default function evaluate(state: State, player: Color): Rating {
@@ -51,6 +58,7 @@ export default function evaluate(state: State, player: Color): Rating {
     const surrounding = scanSurrounding(state)
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const isGameOver = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
+    
 
     if (cached !== null) {
         return {
@@ -67,7 +75,7 @@ export default function evaluate(state: State, player: Color): Rating {
         // Environment.debugPrint("Expected end (good): ", state.turn)
         return {
             isGameOver: isGameOver,
-            value: 200,
+            value: 200 + (concreteSurrounding.opponent - concreteSurrounding.own),
             surrounding: concreteSurrounding
         }
     }
@@ -76,7 +84,7 @@ export default function evaluate(state: State, player: Color): Rating {
         // Environment.debugPrint("Expected end (bad): ", state.turn)
         return {
             isGameOver: isGameOver,
-            value: -200,
+            value: -200 - (concreteSurrounding.own - concreteSurrounding.opponent),
             surrounding: concreteSurrounding
         }
     }
