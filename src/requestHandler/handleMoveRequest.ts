@@ -5,6 +5,7 @@ import Environment from "../utils/Environment"
 import handleSpecialCase from "../Logic/handleSpecialCase"
 import NegaScout from "../Logic/NegaScout"
 import globalState from "../globalState"
+import scanRunaways from "../Rating/Scanner/scanRunaways"
 
 let initiated = false
 
@@ -18,6 +19,8 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
     const available = generateMoves(state, true)
 
     Environment.debugPrint(`Already elpased time: ${elapsedTime}`)
+
+    Environment.debugPrint(scanRunaways(state))
 
     if (available.length === 0) {
         throw new Error(`No Moves Available`)

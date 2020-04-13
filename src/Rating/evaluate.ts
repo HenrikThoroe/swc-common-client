@@ -12,10 +12,12 @@ import isBeePinned from "../utils/isBeePinned";
 import ConcreteAspect, { substantiateAspect } from "./ConcreteAspect";
 import Aspect from "./Aspect";
 import isBeetleOnBee from "./Scanner/isBeetleOnBee";
+import enumerateBoard from "../utils/enumerateBoard";
+import scanRunaways from "./Scanner/scanRunaways";
 
 const evaluationTable = createEvaluationTable()
 
-function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean) {
+function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean, runaways: ConcreteAspect<number>) {
     if (Math.min(surrounding.own, surrounding.opponent) <= 0) {
         return mobility.own - mobility.opponent 
     }
@@ -33,7 +35,7 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
             mobilityValue *= 1
     }
 
-    const points = surroundingValue + mobilityValue
+    let points = surroundingValue + mobilityValue
     const maximumExtraPoints = Math.pow(2, surrounding.opponent)
 
     if (isBeetleOnBee) {
@@ -41,6 +43,8 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
     } else if (pinned.opponent && surrounding.opponent > 2) {
         beeValue += maximumExtraPoints * 0.8
     }
+
+    points *= 1 - (0.1 * runaways.own)
 
     return points + beeValue
 }
@@ -50,7 +54,7 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const concreteMobility = substantiateAspect(player, mobility)
 
-    return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player))
+    return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)))
 }
 
 export default function evaluate(state: State, player: Color): Rating {
