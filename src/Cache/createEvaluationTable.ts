@@ -8,6 +8,6 @@ export type EvaluationTable = LookupTable<State, number>
  * Creates a `LookupTable` for storing the results of state evaluations.
  */
 export default function createEvaluationTable(): EvaluationTable {
-    // Estimated Size: ~100MB
-    return new LookupTable(537634, hashState)
+    // Estimated Size: ~500MB
+    return new LookupTable(2688170, hashState)
 }

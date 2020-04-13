@@ -8,6 +8,6 @@ export type MoveTable = LookupTable<State, Move[]>
  * Creates a lookup table for move calculation.
  */
 export default function createMoveTable(): MoveTable {
-    // Estimated Size: ~100MB
-    return new LookupTable(413223, hashState)
+    // Estimated Size: ~500MB
+    return new LookupTable(2066115, hashState)
 }
