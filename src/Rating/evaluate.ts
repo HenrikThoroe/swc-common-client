@@ -12,7 +12,6 @@ import isBeePinned from "../utils/isBeePinned";
 import ConcreteAspect, { substantiateAspect } from "./ConcreteAspect";
 import Aspect from "./Aspect";
 import isBeetleOnBee from "./Scanner/isBeetleOnBee";
-import enumerateBoard from "../utils/enumerateBoard";
 import scanRunaways from "./Scanner/scanRunaways";
 
 const evaluationTable = createEvaluationTable()
@@ -74,8 +73,18 @@ export default function evaluate(state: State, player: Color): Rating {
 
     
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
+    const  win = (isGameOver && concreteSurrounding.opponent === 6) || (isGameOver && concreteSurrounding.own < concreteSurrounding.opponent)
+    const loose = (isGameOver && concreteSurrounding.own === 6) || (isGameOver && concreteSurrounding.own > concreteSurrounding.opponent)
 
-    if ((isGameOver && concreteSurrounding.opponent === 6) || (isGameOver && concreteSurrounding.own < concreteSurrounding.opponent)) {
+    if (win && loose) {
+        return {
+            isGameOver: isGameOver,
+            value: 190,
+            surrounding: concreteSurrounding
+        }
+    }
+
+    if (win) {
         // Environment.debugPrint("Expected end (good): ", state.turn)
         return {
             isGameOver: isGameOver,
@@ -84,7 +93,7 @@ export default function evaluate(state: State, player: Color): Rating {
         }
     }
 
-    if ((isGameOver && concreteSurrounding.own === 6) || (isGameOver && concreteSurrounding.own > concreteSurrounding.opponent)) {
+    if (loose) {
         // Environment.debugPrint("Expected end (bad): ", state.turn)
         return {
             isGameOver: isGameOver,
