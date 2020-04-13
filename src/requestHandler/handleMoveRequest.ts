@@ -5,7 +5,6 @@ import Environment from "../utils/Environment"
 import handleSpecialCase from "../Logic/handleSpecialCase"
 import NegaScout from "../Logic/NegaScout"
 import globalState from "../globalState"
-import scanRunaways from "../Rating/Scanner/scanRunaways"
 
 let initiated = false
 
