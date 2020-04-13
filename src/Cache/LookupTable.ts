@@ -50,6 +50,7 @@ export default class LookupTable<Key, Value> {
         
         this.table.set(hash, value)
         this.keyStore.push(hash)
+        this.count += 1
     }
 
     read(key: Key): Value | null {
