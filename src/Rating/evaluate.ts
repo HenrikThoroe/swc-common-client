@@ -38,7 +38,7 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
 
     if (isBeetleOnBee) {
         beeValue += maximumExtraPoints
-    } else if (pinned.opponent) {
+    } else if (pinned.opponent && surrounding.opponent > 2) {
         beeValue += maximumExtraPoints * 0.8
     }
 

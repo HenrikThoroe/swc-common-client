@@ -5,12 +5,6 @@ import Environment from "../utils/Environment"
 import handleSpecialCase from "../Logic/handleSpecialCase"
 import NegaScout from "../Logic/NegaScout"
 import globalState from "../globalState"
-import MTDf from "../Logic/MTDf"
-import evaluate from "../Rating/evaluate"
-import isBeetleOnBee from "../Rating/Scanner/isBeetleOnBee"
-import invertColor from "../utils/invertColor"
-import { comparePositions } from "@henrikthoroe/swc-client/dist/client/Model/Position"
-import simulateMove from "../LookAhead/simulateMove"
 
 let initiated = false
 
@@ -34,7 +28,7 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
     }
 
     const fallback = available[0]
-    const preRating = handleSpecialCase(state, player, available, undeployed)
+    const preRating = handleSpecialCase(state, player, available, undeployed, 1890 - timer.read())
     const logic = new NegaScout(state, available, player, 3, 1890 - timer.read())
 
     if (preRating.isSpecialCase && preRating.success) {

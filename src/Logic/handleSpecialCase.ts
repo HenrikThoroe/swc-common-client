@@ -1,6 +1,8 @@
 import { Move, State, Piece, getNeighbours, Player, Color } from "@henrikthoroe/swc-client";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import { filter } from "@henrikthoroe/swc-client/dist/utils";
+import mapBoard from "../utils/mapBoard";
+import NegaScout from "./NegaScout";
 
 export interface SpecialCaseResult {
     isSpecialCase: boolean
@@ -50,7 +52,7 @@ function handleInitialMove(state: State, moves: Move[], player: Player): Move {
  * @param moves 
  * @param undeployed 
  */
-export default function handleSpecialCase(state: State, player: Player, moves: Move[], undeployed: Piece[]): SpecialCaseResult {
+export default function handleSpecialCase(state: State, player: Player, moves: Move[], undeployed: Piece[], timeout: number): SpecialCaseResult {
     const errorResult: SpecialCaseResult = {
         isSpecialCase: true,
         success: false,
@@ -66,6 +68,16 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
             }
         } catch (e) {
             return errorResult
+        }
+    }
+
+    // Oppoent deployed his bee => deploy own bee
+    if (undeployed.some(piece => piece.type === Type.BEE) && mapBoard(state.board, field => field.pieces.some(p => p.type === Type.BEE)).some(bee => bee)) {
+        const search = new NegaScout(state, moves.filter(m => m.piece.type === Type.BEE), player, 3, timeout).find()
+        return {
+            isSpecialCase: true,
+            success: search.success,
+            selectedMove: search.value
         }
     }
 
