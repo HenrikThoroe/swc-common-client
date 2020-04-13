@@ -20,8 +20,6 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
 
     Environment.debugPrint(`Already elpased time: ${elapsedTime}`)
 
-    Environment.debugPrint(scanRunaways(state))
-
     if (available.length === 0) {
         throw new Error(`No Moves Available`)
     }

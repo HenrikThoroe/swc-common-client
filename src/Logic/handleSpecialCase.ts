@@ -16,33 +16,34 @@ const Constants = {
     guaranteedWin: 200
 }
 
-function handleInitialMove(state: State, moves: Move[], player: Player): Move {
+function handleInitialMove(state: State, moves: Move[], player: Player, timeout: number): Move {
     if (moves.length !== Constants.initialMoveCount) {
         throw new Error(`Invalid Input`)
     }
 
+    const start = Date.now()
     const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
-    let min = Infinity
-    let selected: Move | null = null
+    const filteredMoves: Move[] = []
 
     for (const move of beeMoves) {
-        const pos = Math.abs(move.end.x) + Math.abs(move.end.y) + Math.abs(move.end.z)
         const neighbourFields = getNeighbours(state.board, move.end)
         const count = filter(neighbourFields, neighbour => neighbour.pieces.length > 0 || neighbour.isObstructed).length
         const border = 6 - neighbourFields.length
         const filled = count + border
         
-        if (pos < min && filled === 0) {
-            min = pos
-            selected = move
+        if (filled === 0) {
+            filteredMoves.push(move)
         }
     }
 
-    if (selected) {
-        return selected
+    const e = Date.now() - start
+    const move = new NegaScout(state, filteredMoves, player, 3, timeout - e).find()
+
+    if (move.success) {
+        return move.value!
     }
 
-    return beeMoves[Math.floor(Math.random() * beeMoves.length)]
+    return filteredMoves[Math.floor(Math.random() * filteredMoves.length)]
 }
 
 /**
@@ -64,7 +65,7 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
             return {
                 isSpecialCase: true,
                 success: true,
-                selectedMove: handleInitialMove(state, moves, player)
+                selectedMove: handleInitialMove(state, moves, player, timeout)
             }
         } catch (e) {
             return errorResult
