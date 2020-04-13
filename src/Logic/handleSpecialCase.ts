@@ -19,11 +19,11 @@ function handleInitialMove(state: State, moves: Move[], player: Player): Move {
         throw new Error(`Invalid Input`)
     }
 
-    const beetleMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
+    const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
     let min = Infinity
     let selected: Move | null = null
 
-    for (const move of beetleMoves) {
+    for (const move of beeMoves) {
         const pos = Math.abs(move.end.x) + Math.abs(move.end.y) + Math.abs(move.end.z)
         const neighbourFields = getNeighbours(state.board, move.end)
         const count = filter(neighbourFields, neighbour => neighbour.pieces.length > 0 || neighbour.isObstructed).length
@@ -40,7 +40,7 @@ function handleInitialMove(state: State, moves: Move[], player: Player): Move {
         return selected
     }
 
-    return beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
+    return beeMoves[Math.floor(Math.random() * beeMoves.length)]
 }
 
 /**
