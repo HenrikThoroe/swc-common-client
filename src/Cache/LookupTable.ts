@@ -44,6 +44,8 @@ export default class LookupTable<Key, Value> {
     push(key: Key, value: Value) {
         if (this.count >= this.capacity) {
             this.table.delete(this.keyStore.shift()!)
+        } else {
+            this.count += 1
         }
 
         const hash = this.hasher(key)

@@ -107,5 +107,6 @@ dist
 .DS_Store
 
 # Other
-archive
-packed
+/archive
+/packed
+/private/

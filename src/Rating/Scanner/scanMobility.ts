@@ -2,11 +2,36 @@ import { Color, State } from "@henrikthoroe/swc-client";
 import Mobility, { PieceCollection, emptyPieceCollection } from "../Mobility";
 import enumerateBoard from "../../utils/enumerateBoard";
 import Piece, { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
-import isDraggable from "@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable";
+import isDraggable from "../../LookAhead/isDraggable"
 
-export default function scanMobility(state: State, color: Color): Mobility {
-    const draggable = emptyPieceCollection()
-    const undeployed = emptyPieceCollection()
+function scanUndeployed(pieces: Piece[]): PieceCollection {
+    const collection = emptyPieceCollection()
+
+    for (const piece of pieces) {
+        switch (piece.type) {
+            case Type.BEE:
+                collection.bee += 1
+                break
+            case Type.BEETLE:
+                collection.beetle += 1
+                break
+            case Type.ANT:
+                collection.ant += 1
+                break
+            case Type.SPIDER:
+                collection.spider += 1
+                break
+            case Type.GRASSHOPPER:
+                collection.grasshopper += 1
+                break
+        }
+    }
+
+    return collection
+}
+
+function scanDeployed(state: State, color: Color): PieceCollection {
+    const collection = emptyPieceCollection()
 
     enumerateBoard(state.board, field => {
         const pieces = field.pieces
@@ -15,45 +40,31 @@ export default function scanMobility(state: State, color: Color): Mobility {
         if (topPiece !== undefined && topPiece.owner === color && isDraggable(state, field.position)) {
             switch (topPiece.type) {
                 case Type.BEE:
-                    draggable.bee += 1
+                    collection.bee += 1
                     break
                 case Type.BEETLE:
-                    draggable.beetle += 1
+                    collection.beetle += 1
                     break
                 case Type.ANT:
-                    draggable.ant += 1
+                    collection.ant += 1
                     break
                 case Type.SPIDER:
-                    draggable.spider += 1
+                    collection.spider += 1
                     break
                 case Type.GRASSHOPPER:
-                    draggable.grasshopper += 1
+                    collection.grasshopper += 1
                     break
             }
         }
     })
 
-    const _ = ((pieces: Piece[]) => {
-        for (const piece of pieces) {
-            switch (piece.type) {
-                case Type.BEE:
-                    undeployed.bee += 1
-                    break
-                case Type.BEETLE:
-                    undeployed.beetle += 1
-                    break
-                case Type.ANT:
-                    undeployed.ant += 1
-                    break
-                case Type.SPIDER:
-                    undeployed.spider += 1
-                    break
-                case Type.GRASSHOPPER:
-                    undeployed.grasshopper += 1
-                    break
-            }
-        }
-    })(color === Color.Blue ? state.undeployed.blue : state.undeployed.red)
+    return collection
+}
+
+export default function scanMobility(state: State, color: Color): Mobility {
+    const undeployedPieces = color === Color.Blue ? state.undeployed.blue : state.undeployed.red
+    const undeployed = scanUndeployed(undeployedPieces)
+    const draggable = undeployed.bee === 0 ? scanDeployed(state, color) : emptyPieceCollection()
 
     return {
         draggable: draggable,

@@ -39,7 +39,7 @@ function applyMove(state: State, move?: Move, positive: boolean = true) {
 
     if (move && !isPosition(move.start) && positive) {
         const undeployed = state.currentPlayer === Color.Red ? state.undeployed.blue : state.undeployed.red
-        const piece = copy(move.start)
+        const piece = move.start
         let removed = false
 
         addPiece(move.end.x, move.end.y, piece)
@@ -77,7 +77,7 @@ function applyMove(state: State, move?: Move, positive: boolean = true) {
         }
     } else if (move && !isPosition(move.start) && !positive) {
         const pieces = state.board.fields[move.end.x + 5][move.end.y + 5].pieces
-        const piece = copy(pieces.pop())!
+        const piece = pieces.pop()!
 
         if (state.currentPlayer === Color.Blue) {
             state.undeployed.blue.push(piece)
@@ -87,13 +87,13 @@ function applyMove(state: State, move?: Move, positive: boolean = true) {
     } else if (move && positive) {
         const start = move.start as Position
         const pieces = state.board.fields[start.x + 5][start.y + 5].pieces
-        const piece = copy(pieces.pop())!
+        const piece = pieces.pop()!
         
         addPiece(move.end.x, move.end.y, piece)
     } else if (move && isPosition(move.start) && !positive) {
         const start = move.end as Position
         const pieces = state.board.fields[start.x + 5][start.y + 5].pieces
-        const piece = copy(pieces.pop())!
+        const piece = pieces.pop()!
         
         addPiece(move.start.x, move.start.y, piece)
     }

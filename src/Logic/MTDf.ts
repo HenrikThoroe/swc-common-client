@@ -1,51 +1,187 @@
 import Logic, { SearchResult } from "./Logic"
 import Environment from "../utils/Environment"
+import { State, Move } from "@henrikthoroe/swc-client"
+import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable"
+import evaluate from "../Rating/evaluate"
+import generateMoves from "../LookAhead/generateMoves"
+import simulateMove from "../LookAhead/simulateMove"
 
+/**
+ * Not stable yet. Use negascout instead.
+ * @see NegaScout
+ */
 export default class MTDf extends Logic {
+
+    private static addedDepths: number = 0
+
+    private static searches: number = 0
 
     find(): SearchResult {
         this.searchState.startTime = Date.now()
 
-        const rating = this.search(0)
-        const move = this.searchState.selectedMove
+        let result: number = NaN
+        let move: Move | null = null
+        let guess = this.firstGuess()
+
+        do {
+            const r = this.search(guess, this.availableMoves)
+            const m = this.searchState.selectedMove
+
+            if (this.horizon % 2 === 0 && this.initialState.turn % 2 === 0) {
+                guess === r
+            } 
+
+            if (this.horizon % 2 !== 0 && this.initialState.turn % 2 !== 0) {
+                guess = r
+            }
+
+            if (!this.didTimeOut()) {
+                this.horizon += 1
+                result = r
+            }
+
+            if (!this.didTimeOut() || r === 200) {
+                move = m
+            }
+        } while (!this.didTimeOut() && this.horizon + this.initialState.turn < 60)
 
         this.log()
 
+        MTDf.searches += 1
+        MTDf.addedDepths += this.horizon
+
+        Environment.debugPrint(`Average Search Depth: ${MTDf.addedDepths / MTDf.searches}, ${this.horizon}`)
+
         return {
-            rating: rating,
             success: move !== null,
-            value: move, 
-            timedOut: this.searchState.timedOut
+            rating: result,
+            value: move,
+            timedOut: this.didTimeOut()
         }
     }
 
-    private search(firstGuess: number): number {
-        let guess = firstGuess
-        let upperBound = Infinity
-        let lowerBound = -Infinity
-        let beta: number
-        let rounds = 0
+    private firstGuess(): number {
+        const evaluation = evaluate(this.initialState, this.player.color)
+        const increase = Math.pow(2, evaluation.surrounding.opponent) / 2
 
-        while (lowerBound < upperBound) {
-            rounds += 1
-            beta = Math.max(guess, lowerBound + 1)
-            guess = this.negamax(this.initialState, this.horizon, beta - 1, beta, 1)
+        return evaluation.value + increase
+    }
+
+    private compareFloat(a: number, b: number): boolean {
+        return Math.abs(a - b) < 0.0000000001
+    }
+
+    private search(firstGuess: number, moves: Move[]): number {
+        let guess = firstGuess
+        let lowerBound = -Infinity
+        let upperBound = Infinity
+        let beta: number
+
+        do {
+            if (this.compareFloat(guess, lowerBound)) {
+                beta = guess + 1
+            } else {
+                beta = guess
+            }
+
+            guess = this.negamax(this.initialState, 1, this.horizon, beta - 1, beta, moves)
 
             if (guess < beta) {
                 upperBound = guess
             } else {
                 lowerBound = guess
             }
+        } while (lowerBound < upperBound && !this.didTimeOut())
+
+        return guess
+    }
+
+    private negamax(state: State, color: number, depth: number, alpha: number, beta: number, availableMoves?: Move[]) {
+        const entry = Logic.transpositionTable.read(state) 
+        const originalAlpha = alpha
+
+        if (entry && entry.depth >= depth) {
+            if (entry.flag === TranspositionTableFlag.Exact) {
+                let ignore = false
+
+                if (entry.depth === depth && depth === this.horizon) {
+                    if (typeof(entry.move) !== "number") {
+                        this.searchState.selectedMove = entry.move
+                    } else {
+                        ignore = true
+                    }   
+                    
+                }
+
+                if (!ignore) {
+                    return entry.value
+                }
+
+            } else if (entry.flag === TranspositionTableFlag.LowerBound) {
+                alpha = Math.max(alpha, entry.value)
+            } else if (entry.flag === TranspositionTableFlag.UpperBound) {
+                beta = Math.min(entry.value, beta)
+            }
+        }
+
+
+        const evaluation = evaluate(state, this.player.color)
+        const moves = availableMoves ? availableMoves : generateMoves(state)
+
+        if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
+            return evaluation.value * color
+        }
+
+        let score: number = 0
+
+        this.applyKillerHeuristic(state, moves)
+
+        for (let i = 0; i < moves.length; ++i) {
+            this.searchState.searchedNodes += 1
 
             if (this.didTimeOut()) {
+                if (depth === this.horizon) Environment.debugPrint(`Timed out after searching ${i + 1} of ${moves.length} nodes. Depth: ${this.horizon}`)
+                break
+            }
+
+            score = simulateMove(state, moves[i], next => -this.negamax(next, -color, depth - 1, -beta, -score))
+
+            if (score > alpha) {
+                alpha = score 
+                
+                if (depth === this.horizon) {
+                    this.searchState.selectedMove = moves[i]
+                }
+            }
+
+            if (alpha >= beta) {
+                Logic.killerTable.push([state, moves[i]], true)
                 break
             }
         }
 
-        this.log()
-        Environment.debugPrint(`MTDf made ${rounds} rounds`)
+        const newEntry: TranspositionTableEntry = {
+            depth: depth,
+            value: score,
+            flag: TranspositionTableFlag.Exact,
+            move: 0
+        }
 
-        return guess
+        if (score <= originalAlpha) {
+            newEntry.flag = TranspositionTableFlag.UpperBound
+        } else if (score >= beta) {
+            newEntry.flag = TranspositionTableFlag.LowerBound
+        } else {
+            if (depth === this.horizon) {
+                newEntry.move = this.searchState.selectedMove || 0
+            }
+
+            newEntry.flag = TranspositionTableFlag.Exact
+        }
+
+        Logic.transpositionTable.push(state, newEntry)
+
+        return alpha
     }
     
 }

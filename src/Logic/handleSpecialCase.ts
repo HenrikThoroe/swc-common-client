@@ -1,8 +1,7 @@
 import { Move, State, Piece, getNeighbours, Player, Color } from "@henrikthoroe/swc-client";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import { filter } from "@henrikthoroe/swc-client/dist/utils";
-import simulateMove from "../LookAhead/simulateMove";
-import evaluate from "../Rating/evaluate";
+import mapBoard from "../utils/mapBoard";
 import NegaScout from "./NegaScout";
 
 export interface SpecialCaseResult {
@@ -17,47 +16,34 @@ const Constants = {
     guaranteedWin: 200
 }
 
-function hasPiece(type: Type, collection: Piece[]): boolean {
-    for (const piece of collection) {
-        if (piece.type === type) {
-            return true
-        }
-    }
-
-    return false
-}
-
-function handleInitialMove(state: State, moves: Move[], player: Player): Move {
+function handleInitialMove(state: State, moves: Move[], player: Player, timeout: number): Move {
     if (moves.length !== Constants.initialMoveCount) {
         throw new Error(`Invalid Input`)
     }
 
-    const beetleMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
-    let min = Infinity
-    let selected: Move | null = null
+    const start = Date.now()
+    const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
+    const filteredMoves: Move[] = []
 
-    for (const move of beetleMoves) {
-        const pos = Math.abs(move.end.x) + Math.abs(move.end.y) + Math.abs(move.end.z)
+    for (const move of beeMoves) {
         const neighbourFields = getNeighbours(state.board, move.end)
         const count = filter(neighbourFields, neighbour => neighbour.pieces.length > 0 || neighbour.isObstructed).length
         const border = 6 - neighbourFields.length
         const filled = count + border
         
-        if (pos < min && filled === 0) {
-            min = pos
-            selected = move
+        if (filled === 0) {
+            filteredMoves.push(move)
         }
     }
 
-    if (selected) {
-        return selected
+    const e = Date.now() - start
+    const move = new NegaScout(state, filteredMoves, player, 3, timeout - e).find()
+
+    if (move.success) {
+        return move.value!
     }
 
-    return beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
-
-    // const computed = new NegaScout(state, beetleMoves, player, 3, 1800).find()
-
-    // return computed.success ? computed.value! : beetleMoves[Math.floor(Math.random() * beetleMoves.length)]
+    return filteredMoves[Math.floor(Math.random() * filteredMoves.length)]
 }
 
 /**
@@ -67,7 +53,7 @@ function handleInitialMove(state: State, moves: Move[], player: Player): Move {
  * @param moves 
  * @param undeployed 
  */
-export default function handleSpecialCase(state: State, player: Player, moves: Move[], undeployed: Piece[]): SpecialCaseResult {
+export default function handleSpecialCase(state: State, player: Player, moves: Move[], undeployed: Piece[], timeout: number): SpecialCaseResult {
     const errorResult: SpecialCaseResult = {
         isSpecialCase: true,
         success: false,
@@ -79,42 +65,22 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
             return {
                 isSpecialCase: true,
                 success: true,
-                selectedMove: handleInitialMove(state, moves, player)
+                selectedMove: handleInitialMove(state, moves, player, timeout)
             }
         } catch (e) {
             return errorResult
         }
     }
 
-    // if (undeployed.length === Constants.maximumUndeployed) {
-    //     if ((player.color === Color.Red && !hasPiece(Type.BEE, state.undeployed.blue)) || (player.color === Color.Blue && !hasPiece(Type.BEE, state.undeployed.red))) {
-    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEETLE)
-    //         return {
-    //             isSpecialCase: true,
-    //             success: true,
-    //             selectedMove: beeMoves[0]
-    //         }
-    //     }
-    // }
-
-    // if (undeployed.length === Constants.maximumUndeployed - 1) {
-    //     if ((player.color === Color.Red && hasPiece(Type.BEE, state.undeployed.red)) || (player.color === Color.Blue && hasPiece(Type.BEE, state.undeployed.blue))) {
-    //         const beeMoves = moves.filter(m => (m.start as Piece).type === Type.BEE)
-    //         return {
-    //             isSpecialCase: true,
-    //             success: true,
-    //             selectedMove: beeMoves[0]
-    //         }
-    //     }
-    // }
-
-    // if (simulateMove(state, moves[0], next => evaluate(next, player.color).value) === Constants.guaranteedWin) {
-    //     return {
-    //         isSpecialCase: true,
-    //         success: true,
-    //         selectedMove: moves[0]
-    //     }
-    // }
+    // Oppoent deployed his bee => deploy own bee
+    if (undeployed.some(piece => piece.type === Type.BEE) && mapBoard(state.board, field => field.pieces.some(p => p.type === Type.BEE)).some(bee => bee)) {
+        const search = new NegaScout(state, moves.filter(m => m.piece.type === Type.BEE), player, 3, timeout).find()
+        return {
+            isSpecialCase: true,
+            success: search.success,
+            selectedMove: search.value
+        }
+    }
 
     return {
         isSpecialCase: false,

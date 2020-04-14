@@ -1,8 +1,8 @@
-import { Aspect } from "../Rating";
 import enumerateBoard from "./enumerateBoard";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
-import isDraggable from "@henrikthoroe/swc-client/dist/client/Worker/Moves/isDraggable";
+import isDraggable from "../LookAhead/isDraggable"
 import { State, Color } from "@henrikthoroe/swc-client";
+import Aspect from "../Rating/Aspect";
 
 /**
  * Returns an aspect which contains whether the bees are pinned or not.

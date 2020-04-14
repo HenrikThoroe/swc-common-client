@@ -3,7 +3,7 @@ const base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123
 /**
  * Encodes a number to a base 64 string.
  * This method focuses on performance.
- * @param x The number to converted to base64 string
+ * @param x The number to be converted to base64 string
  */
 export default function encodeBase64(x: number): string {
     let result = ""
