@@ -34,6 +34,10 @@ export default class NegaScout extends Logic {
                 move = this.searchState.selectedMove
             }
 
+            if (rating >= 190) {
+                break
+            }
+
             this.horizon += 1
         } while (!this.didTimeOut())
 
