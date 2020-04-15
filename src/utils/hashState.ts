@@ -2,6 +2,7 @@ import { State } from "@henrikthoroe/swc-client";
 import enumerateBoard from "./enumerateBoard";
 import encodeBase64 from "./encodeBase64";
 import HashKey from "./HashKey";
+import indexPosition from "./indexPosition";
 
 type Storage = [[number[], number[]], [number[], number[]], [number[], number[]], [number[], number[]], [number[], number[]]]
 

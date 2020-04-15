@@ -10,7 +10,7 @@ function normalize(x: number, z: number): number {
     return x + items(z) - 6
 }
 
-function indexPosition(x: number, z: number): number {
+export default function indexPosition(x: number, z: number): number {
     var countOfFieldsAbove = 0
     
     for (let i = -5; i < z; ++i) {
