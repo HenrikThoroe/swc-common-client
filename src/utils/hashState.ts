@@ -1,6 +1,9 @@
 import { State } from "@henrikthoroe/swc-client";
 import enumerateBoard from "./enumerateBoard";
 import encodeBase64 from "./encodeBase64";
+import HashKey from "./HashKey";
+
+type Storage = [[number[], number[]], [number[], number[]], [number[], number[]], [number[], number[]], [number[], number[]]]
 
 /**
  * This function creates an unique hash value for a state. 
@@ -9,7 +12,7 @@ import encodeBase64 from "./encodeBase64";
  * @param state The state to hash
  * @returns A base64 encoded string containing information about the state's board's pieces and the current player.
  */
-export default function hashState(state: State): string {
+export function hashStateLegacy(state: State): string {
     let key = encodeBase64(state.currentPlayer)
 
     enumerateBoard(state.board, field => {
@@ -25,4 +28,46 @@ export default function hashState(state: State): string {
     })
 
     return key
+}
+
+/**
+ * This function creates an unique hash value for a state. 
+ * It calculates it's value from the current player and all deployed pieces.
+ * @param state 
+ */
+export default function hashState(state: State): string {
+    const undeployedFlag = 0b1111111
+    const key = new HashKey(5)
+    const storage: Storage = [[[], []], [[], []], [[], []], [[], []], [[], []]]
+
+    for (const piece of state.undeployed.red) {
+        storage[piece.type][piece.owner].push(undeployedFlag)
+    }
+
+    for (const piece of state.undeployed.blue) {
+        storage[piece.type][piece.owner].push(undeployedFlag)
+    }
+
+    enumerateBoard(state.board, field => {
+        if (field.pieces.length === 0) {
+            return
+        } 
+
+        const index = indexPosition(field.position.x, field.position.z)
+
+        for (let i = 0; i < field.pieces.length; ++i) {
+            storage[field.pieces[i].type][field.pieces[i].owner].push(index)
+        }
+    })
+
+
+    for (const type of storage) {
+        for (const owner of type) {
+            for (const piece of owner) {
+                key.push(piece, 7)
+            }
+        }
+    }
+
+    return key.encode()
 }
