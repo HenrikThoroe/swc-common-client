@@ -17,13 +17,10 @@ import isPosition from "../utils/isPosition";
 export default function simulateMove<T>(state: State, move: Move | null, action: (arg0: State) => T): T {
     let res: T
 
-    // console.log(move, state.undeployed.red.length, state.undeployed.blue.length)
     performMove(state, move || undefined)
-    // console.log(move, state.undeployed.red.length, state.undeployed.blue.length)
     res = action(state) 
     undoMove(state, move || undefined)
-    // console.log(move, state.undeployed.red.length, state.undeployed.blue.length)
-    // throw new Error("")
+    
     return res
 }
 function removeFromPieceStack(stack: Piece[], type: Type) {
@@ -58,13 +55,8 @@ function undoMove(state: State, move?: Move) {
         state.board.fields[move.end.x + 5][move.end.y + 5].pieces.pop()
     } else if (isPosition(move.start)) {
         state.turn -= 1
-        // console.log(state.board.fields[move.start.x + 5][move.start.y + 5])
-        // console.log(state.board.fields[move.end.x + 5][move.end.y + 5])
         state.board.fields[move.start.x + 5][move.start.y + 5].pieces.push(move.piece)
         state.board.fields[move.end.x + 5][move.end.y + 5].pieces.pop()
-        // console.log(state.board.fields[move.start.x + 5][move.start.y + 5])
-        // console.log(state.board.fields[move.end.x + 5][move.end.y + 5])
-        // throw ""
     }
 
     state.currentPlayer = invertColor(state.currentPlayer)
@@ -87,12 +79,8 @@ function performMove(state: State, move?: Move) {
         state.board.fields[move.end.x + 5][move.end.y + 5].pieces.push(move.start)
     } else if (isPosition(move.start)) {
         state.turn += 1
-        // console.log(state.board.fields[move.start.x + 5][move.start.y + 5])
-        // console.log(state.board.fields[move.end.x + 5][move.end.y + 5])
         state.board.fields[move.start.x + 5][move.start.y + 5].pieces.pop()
         state.board.fields[move.end.x + 5][move.end.y + 5].pieces.push(move.piece)
-        // console.log(state.board.fields[move.start.x + 5][move.start.y + 5])
-        // console.log(state.board.fields[move.end.x + 5][move.end.y + 5])
     }
 
     state.currentPlayer = invertColor(state.currentPlayer)
