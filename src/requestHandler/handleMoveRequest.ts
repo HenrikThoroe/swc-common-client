@@ -5,6 +5,9 @@ import Environment from "../utils/Environment"
 import handleSpecialCase from "../Logic/handleSpecialCase"
 import NegaScout from "../Logic/NegaScout"
 import globalState from "../globalState"
+import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece"
+import isPosition from "../utils/isPosition"
+import { comparePositions } from "@henrikthoroe/swc-client/dist/client/Model/Position"
 
 let initiated = false
 
@@ -44,6 +47,19 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
     Environment.debugPrint(`Selected move:`, result.value)
 
     if (result.success) {
+        const valid = available.some(move => {
+            if (isPosition(move.start) && isPosition(result.value!.start)) {
+                return comparePositions(move.end, result.value!.end) && comparePositions(move.start, result.value!.start)
+            } else {
+                return comparePositions(move.end, result.value!.end) && move.piece.type === result.value!.piece.type
+            }
+        })
+
+        if (!valid) {
+            Environment.print("Invalid Move", result.value, available)
+            return fallback
+        }
+
         return result.value!
     } else {
         return fallback

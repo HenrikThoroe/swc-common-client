@@ -80,7 +80,7 @@ export default function evaluate(state: State, player: Color): Rating {
     if (draw) {
         return {
             isGameOver: isGameOver,
-            value: 190,
+            value: 0,
             surrounding: concreteSurrounding
         }
     }

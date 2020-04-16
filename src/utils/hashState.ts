@@ -61,6 +61,7 @@ export default function hashState(state: State): string {
         }
     })
 
+    key.push(state.currentPlayer, 1)
 
     for (const type of storage) {
         for (const owner of type) {
