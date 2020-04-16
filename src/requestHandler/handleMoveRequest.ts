@@ -5,7 +5,6 @@ import Environment from "../utils/Environment"
 import handleSpecialCase from "../Logic/handleSpecialCase"
 import NegaScout from "../Logic/NegaScout"
 import globalState from "../globalState"
-import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece"
 import isPosition from "../utils/isPosition"
 import { comparePositions } from "@henrikthoroe/swc-client/dist/client/Model/Position"
 
