@@ -13,6 +13,7 @@ import ConcreteAspect, { substantiateAspect } from "./ConcreteAspect";
 import Aspect from "./Aspect";
 import isBeetleOnBee from "./Scanner/isBeetleOnBee";
 import scanRunaways from "./Scanner/scanRunaways";
+import globalState from "../globalState";
 
 const evaluationTable = createEvaluationTable()
 
@@ -56,7 +57,7 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
     return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)))
 }
 
-export default function evaluate(state: State, player: Color): Rating {
+export default function evaluate(state: State, player: Color, color: number = 1): Rating {
     const cached = evaluationTable.read(state)
     const surrounding = scanSurrounding(state)
     const concreteSurrounding = substantiateAspect(player, surrounding)
@@ -80,7 +81,7 @@ export default function evaluate(state: State, player: Color): Rating {
     if (draw) {
         return {
             isGameOver: isGameOver,
-            value: 0,
+            value: 190 * color,
             surrounding: concreteSurrounding
         }
     }
