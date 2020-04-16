@@ -26,7 +26,7 @@ export default class HashKey {
         let index = Math.floor(this.count / 32)                         // The current working index
         
         if (size == 0 && this.count > 0) {                              // The last UInt32 in data is empty and not the first item
-        this.data[index + 1] = chunk                                    // Append whole chunk to data
+            this.data[index + 1] = chunk                                // Append whole chunk to data
         } else {
             this.data[index] = chunk << size ^ this.data[index]         // Add as many bits to the last number as available
         }
@@ -42,12 +42,12 @@ export default class HashKey {
         let result = ""
         const x = this.data[index]
         const blockLength = 6
-        const bitesToShift = 32 - blockLength
+        const bitsToShift = 32 - blockLength
         
         for (let i = 0; i < 6; ++i) {
             const offset = i * blockLength                                  
             const shifted = x >>> offset                                    
-            const block = (shifted << bitesToShift) >>> bitesToShift        
+            const block = (shifted << bitsToShift) >>> bitsToShift        
             result += base64Alphabet[block]   
         }
 

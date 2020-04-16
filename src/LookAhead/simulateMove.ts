@@ -3,6 +3,7 @@ import copy from "../utils/copy";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import invertColor from "../utils/invertColor";
 import isPosition from "../utils/isPosition";
+import generateMoves from "./generateMoves";
 
 /**
  * This function simulates the state which results from appling the passed move to the passed state. 
@@ -20,9 +21,10 @@ export default function simulateMove<T>(state: State, move: Move | null, action:
     performMove(state, move || undefined)
     res = action(state) 
     undoMove(state, move || undefined)
-    
+
     return res
 }
+
 function removeFromPieceStack(stack: Piece[], type: Type) {
     let removed = false
 
@@ -51,12 +53,15 @@ function undoMove(state: State, move?: Move) {
         state.turn -= 1
     } else if (!isPosition(move.start)) {
         state.turn -= 1
-        undeployed.push(move.piece)
-        state.board.fields[move.end.x + 5][move.end.y + 5].pieces.pop()
+        const piece = state.board.fields[move.end.x + 5][move.end.y + 5].pieces.pop()!
+        undeployed.push(piece)
     } else if (isPosition(move.start)) {
         state.turn -= 1
-        state.board.fields[move.start.x + 5][move.start.y + 5].pieces.push(move.piece)
-        state.board.fields[move.end.x + 5][move.end.y + 5].pieces.pop()
+        const piece = state.board.fields[move.end.x + 5][move.end.y + 5].pieces.pop()!
+
+        if (piece === undefined) console.log("undo", state.board.fields[move.end.x + 5][move.end.y + 5], state.turn)
+
+        state.board.fields[move.start.x + 5][move.start.y + 5].pieces.push(piece)
     }
 
     state.currentPlayer = invertColor(state.currentPlayer)
@@ -79,8 +84,11 @@ function performMove(state: State, move?: Move) {
         state.board.fields[move.end.x + 5][move.end.y + 5].pieces.push(move.start)
     } else if (isPosition(move.start)) {
         state.turn += 1
-        state.board.fields[move.start.x + 5][move.start.y + 5].pieces.pop()
-        state.board.fields[move.end.x + 5][move.end.y + 5].pieces.push(move.piece)
+        const piece = state.board.fields[move.start.x + 5][move.start.y + 5].pieces.pop()!
+
+        if (piece === undefined) console.log(state.board.fields[move.start.x + 5][move.start.y + 5], state.turn, move, generateMoves(state))
+        
+        state.board.fields[move.end.x + 5][move.end.y + 5].pieces.push(piece)
     }
 
     state.currentPlayer = invertColor(state.currentPlayer)
