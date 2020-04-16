@@ -64,7 +64,7 @@ export default function evaluate(state: State, player: Color, color: number = 1)
     const isGameOver = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
     
 
-    if (cached !== null) {
+    if (cached !== null && !isGameOver) {
         return {
             isGameOver: isGameOver,
             value: cached,
