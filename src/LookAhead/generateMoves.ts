@@ -8,7 +8,7 @@ const moveTable = createMoveTable()
  * A wrapper for `fetchMoves` from '@henrikthoroe/swc-client'. This is used to handle the cache.
  * @returns An array of moves which the current player can perform on the passed state.
  */
-export default function generateMoves(state: State, sorted: boolean = false): Move[] {
+export default function generateMoves(state: State, sorted: boolean = true): Move[] {
     if (sorted) {
         return moveTable.get(state, () => sortMoves(state, fetchMoves(state), state.currentPlayer))
     } else {

@@ -34,6 +34,10 @@ export default class NegaScout extends Logic {
                 move = this.searchState.selectedMove
             }
 
+            if (rating >= 190 || rating <= -195 || rating === 0) {
+                break
+            }
+
             this.horizon += 1
         } while (!this.didTimeOut())
 
@@ -99,7 +103,7 @@ export default class NegaScout extends Logic {
         }
 
 
-        const evaluation = evaluate(state, this.player.color)
+        const evaluation = evaluate(state, this.player.color, color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {

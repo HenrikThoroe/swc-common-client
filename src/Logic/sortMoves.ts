@@ -10,6 +10,7 @@ import evaluateSurrounding from "../Rating/evaluateSurrounding"
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece"
 import Environment from "../utils/Environment"
 import { substantiateAspect } from "../Rating/ConcreteAspect"
+import globalState from "../globalState"
 
 interface EvaluationMap {
     move: Move
@@ -19,13 +20,15 @@ interface EvaluationMap {
 
 function mapMoves(state: State, color: Color, moves: Move[]): EvaluationMap[] {
     return moves.map(move => 
-        simulateMove(state, move, next => 
-            ({
+        simulateMove(state, move, next => {
+            const evaluation = evaluate(next, color, color === globalState.color ? 1 : -1)
+
+            return {
                 move: move,
-                eval: evaluate(next, color).value,
-                surrounding: evaluateSurrounding(substantiateAspect(color, scanSurrounding(next)))
-            })
-        )
+                eval: evaluation.value,
+                surrounding: evaluateSurrounding(evaluation.surrounding)
+            }
+        })
     )
 }
 
@@ -89,13 +92,13 @@ function sortMidGame(currentSurrounding: number, map: EvaluationMap[]): Move[] {
  * @todo Simplify and document the code. Improve heuristics to take the piece's type into account. Improve performance
  */
 export default function sortMoves(state: State, moves: Move[], player: Color, memory?: StateMemoryTable): Move[] {
-    const start = process.hrtime()[1]
+    // const start = process.hrtime()[1]
 
     /**
      * Wrapper to easily add debug output
      */
     const log = (res: Move[]) => {
-        Environment.debugPrint(`Sorting took ${((process.hrtime()[1] - start) / 1000).toFixed(4)} us`)
+        // Environment.debugPrint(`Sorting took ${((process.hrtime()[1] - start) / 1000).toFixed(4)} us`)
         return res
     }
     const map = mapMoves(state, player, moves)                              // Every move is mapped to an object with the move itself and it's rating and resulting surrounding

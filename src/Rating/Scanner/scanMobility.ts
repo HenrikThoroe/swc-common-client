@@ -1,5 +1,5 @@
 import { Color, State } from "@henrikthoroe/swc-client";
-import Mobility, { PieceCollection, emptyPieceCollection } from "../Mobility";
+import Mobility, { PieceCollection, emptyPieceCollection, sumPieceCollection } from "../Mobility";
 import enumerateBoard from "../../utils/enumerateBoard";
 import Piece, { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 import isDraggable from "../../LookAhead/isDraggable"

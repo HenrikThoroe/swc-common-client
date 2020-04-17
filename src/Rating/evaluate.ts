@@ -13,6 +13,7 @@ import ConcreteAspect, { substantiateAspect } from "./ConcreteAspect";
 import Aspect from "./Aspect";
 import isBeetleOnBee from "./Scanner/isBeetleOnBee";
 import scanRunaways from "./Scanner/scanRunaways";
+import globalState from "../globalState";
 
 const evaluationTable = createEvaluationTable()
 
@@ -56,14 +57,14 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
     return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)))
 }
 
-export default function evaluate(state: State, player: Color): Rating {
+export default function evaluate(state: State, player: Color, color: number = 1): Rating {
     const cached = evaluationTable.read(state)
     const surrounding = scanSurrounding(state)
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const isGameOver = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
     
 
-    if (cached !== null) {
+    if (cached !== null && !isGameOver) {
         return {
             isGameOver: isGameOver,
             value: cached,
@@ -73,13 +74,14 @@ export default function evaluate(state: State, player: Color): Rating {
 
     
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
-    const  win = (isGameOver && concreteSurrounding.opponent === 6) || (isGameOver && concreteSurrounding.own < concreteSurrounding.opponent)
+    const win = (isGameOver && concreteSurrounding.opponent === 6) || (isGameOver && concreteSurrounding.own < concreteSurrounding.opponent)
     const loose = (isGameOver && concreteSurrounding.own === 6) || (isGameOver && concreteSurrounding.own > concreteSurrounding.opponent)
+    const draw = (!win && !loose && isGameOver) || (win && loose)
 
-    if (win && loose) {
+    if (draw) {
         return {
             isGameOver: isGameOver,
-            value: 190,
+            value: color === 0 ? 0 : 190 * color,
             surrounding: concreteSurrounding
         }
     }
