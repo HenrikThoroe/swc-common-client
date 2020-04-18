@@ -72,6 +72,7 @@ export function hashState(state: State): string {
 
     let c = 0
     key.push(state.currentPlayer, 1)
+    key.push(state.turn >= 60 ? 1 : 0, 1)
 
     for (const type of storage) {
         for (const owner of type) {
