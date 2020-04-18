@@ -7,6 +7,7 @@ import { loadPartialConfig } from "@babel/core";
 import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/createTranspositonTable";
 import Rating from "../Rating";
 import Environment from "../utils/Environment";
+import Aspect from "../Rating/Aspect";
 
 /**
  * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.

@@ -20,7 +20,7 @@ type Storage = [
  * @returns A base64 encoded string containing information about the state's board's pieces and the current player.
  */
 export default function hashStateLegacy(state: State): string {
-    let key = encodeBase64(state.currentPlayer)
+    let key = encodeBase64(((state.turn >= 60 ? 1 : 0) << 1) ^ state.currentPlayer)
 
     enumerateBoard(state.board, field => {
         const x = field.position.x + 5
