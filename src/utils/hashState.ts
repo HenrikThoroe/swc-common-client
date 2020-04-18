@@ -44,7 +44,8 @@ export default function hashStateLegacy(state: State): string {
  * @param state 
  */
 export function hashState(state: State): string {
-    const undeployedFlag = 100
+    // const start = process.hrtime()
+    const undeployedFlag = 127
     const key = new HashKey(5)
     const storage: Storage = [[[], []], [[], []], [[], []], [[], []], [[], []]]
 
@@ -70,18 +71,28 @@ export function hashState(state: State): string {
         }
     })
 
-    let c = 0
     key.push(state.currentPlayer, 1)
     key.push(state.turn >= 60 ? 1 : 0, 1)
 
     for (const type of storage) {
         for (const owner of type) {
             for (const piece of owner) {
-                c += 1
                 key.push(piece, 7)
             }
         }
     }
 
-    return key.encode()
+    // console.log(process.hrtime(start)[1])
+
+    const res = key.encode()
+
+    // console.log(process.hrtime(start)[1])
+
+    // console.log(storage.map(a => a.map(b => b.map(c => `${c} - ${c.toString(2)}`))))
+
+    // console.log(Array.from(key.data).map(n => n.toString(2)))
+    // console.log(key.encode())
+
+
+    return res
 }

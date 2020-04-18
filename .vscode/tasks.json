@@ -11,6 +11,13 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"type": "npm",
+			"script": "bundle-no-update",
+			"problemMatcher": [],
+			"label": "bundle-no-update",
+			"detail": "npm run build && npm run zip"
 		}
 	]
 }
