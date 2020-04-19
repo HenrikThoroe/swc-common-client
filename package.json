@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@henrikthoroe/swc-client": "^1.1.7",
-    "@types/node": "^13.11.1",
+    "@types/node": "^13.13.0",
     "@types/node-persist": "^3.0.0",
     "@types/yargs": "^15.0.4",
     "level": "^6.0.1",
