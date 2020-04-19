@@ -39,19 +39,27 @@ export default class HashKey {
     }
 
     encodeChunk(index: number): string {
-        let result = ""
-        const x = this.data[index]
-        const blockLength = 6
-        const bitsToShift = 32 - blockLength
-        
-        for (let i = 0; i < 6; ++i) {
-            const offset = i * blockLength                                  
-            const shifted = x >>> offset                                    
-            const block = (shifted << bitsToShift) >>> bitsToShift        
-            result += base64Alphabet[block]   
+        let result = this.data[index].toString(2)
+
+        while (result.length < 32) {
+            result = "0" + result
         }
 
         return result
+
+        // let result = ""
+        // const x = this.data[index]
+        // const blockLength = 6
+        // const bitsToShift = 32 - blockLength
+        
+        // for (let i = 0; i < 6; ++i) {
+        //     const offset = i * blockLength                                  
+        //     const shifted = x >>> offset                                    
+        //     const block = (shifted << bitsToShift) >>> bitsToShift        
+        //     result += base64Alphabet[block]   
+        // }
+
+        // return result
     }
 
     encode(): string {
