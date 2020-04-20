@@ -19,7 +19,7 @@ type Storage = [
  * @param state The state to hash
  * @returns A base64 encoded string containing information about the state's board's pieces and the current player.
  */
-export default function hashStateLegacy(state: State): string {
+export function hashStateLegacy(state: State): string {
     let key = encodeBase64(((state.turn >= 60 ? 1 : 0) << 1) ^ state.currentPlayer)
 
     enumerateBoard(state.board, field => {
@@ -43,8 +43,7 @@ export default function hashStateLegacy(state: State): string {
  * It calculates it's value from the current player and all deployed pieces.
  * @param state 
  */
-export function hashState(state: State): string {
-    // const start = process.hrtime()
+export default function hashState(state: State): string {
     const undeployedFlag = 127
     const key = new HashKey(5)
     const storage: Storage = [[[], []], [[], []], [[], []], [[], []], [[], []]]
@@ -82,17 +81,5 @@ export function hashState(state: State): string {
         }
     }
 
-    // console.log(process.hrtime(start)[1])
-
-    const res = key.encode()
-
-    // console.log(process.hrtime(start)[1])
-
-    // console.log(storage.map(a => a.map(b => b.map(c => `${c} - ${c.toString(2)}`))))
-
-    // console.log(Array.from(key.data).map(n => n.toString(2)))
-    // console.log(key.encode())
-
-
-    return res
+    return key.encode()
 }

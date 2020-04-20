@@ -25,11 +25,7 @@ export default class HashKey {
         let availableBits = 32 - size                                   // The bits available in the last number
         let index = Math.floor(this.count / 32)                         // The current working index
         
-        if (size == 0 && this.count > 0) {                              // The last UInt32 in data is empty and not the first item
-            this.data[index + 1] = chunk                                // Append whole chunk to data
-        } else {
-            this.data[index] = chunk << size ^ this.data[index]         // Add as many bits to the last number as available
-        }
+        this.data[index] = chunk << size ^ this.data[index]             // Append chunk to data
         
         if (effectiveLength > availableBits) {                          // If chunk is bigger than the available space in the last number
             this.data[index + 1] = chunk >>> availableBits              // Create a new number with the remaining bits and add it to data
@@ -39,27 +35,19 @@ export default class HashKey {
     }
 
     encodeChunk(index: number): string {
-        let result = this.data[index].toString(2)
-
-        while (result.length < 32) {
-            result = "0" + result
+        let result = ""
+        const x = this.data[index]
+        const blockLength = 6
+        const bitsToShift = 32 - blockLength
+        
+        for (let i = 0; i < 6; ++i) {
+            const offset = i * blockLength                                  
+            const shifted = x >>> offset                                    
+            const block = (shifted << bitsToShift) >>> bitsToShift        
+            result += base64Alphabet[block]   
         }
 
         return result
-
-        // let result = ""
-        // const x = this.data[index]
-        // const blockLength = 6
-        // const bitsToShift = 32 - blockLength
-        
-        // for (let i = 0; i < 6; ++i) {
-        //     const offset = i * blockLength                                  
-        //     const shifted = x >>> offset                                    
-        //     const block = (shifted << bitsToShift) >>> bitsToShift        
-        //     result += base64Alphabet[block]   
-        // }
-
-        // return result
     }
 
     encode(): string {

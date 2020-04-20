@@ -152,11 +152,7 @@ class HashKey {
         let size = count % 32                                   // The effective size of the last number in data
         let availableBits = 32 - size                           // The bits available in the last number
         
-        if size == 0 && count > 0 {                             // The last UInt32 in data is empty and not the first item
-            data += [chunk]                                     // Append whole chunk to data
-        } else {
-            data[lastIndex] = chunk << size ^ data[lastIndex]   // Add as many bits to the last number as available
-        }
+        data[lastIndex] = chunk << size ^ data[lastIndex]       // Add as many bits to the last number as available
         
         if effectiveLength > availableBits {                    // If chunk is bigger than the available space in the last number
             data += [chunk >> availableBits]                    // Create a new number with the remaining bits and add it to data
