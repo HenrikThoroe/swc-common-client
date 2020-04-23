@@ -75,18 +75,18 @@ export default function evaluate(state: State, player: Color, color: number = 1)
     
     const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
     const win = (isGameOver && concreteSurrounding.opponent === 6) || (isGameOver && concreteSurrounding.own < concreteSurrounding.opponent)
-    const loose = (isGameOver && concreteSurrounding.own === 6) || (isGameOver && concreteSurrounding.own > concreteSurrounding.opponent) || win
+    const loose = (isGameOver && concreteSurrounding.own === 6) || (isGameOver && concreteSurrounding.own > concreteSurrounding.opponent)
     const draw = (!win && !loose && isGameOver) || (win && loose)
 
-    // if (draw) {
-    //     return {
-    //         isGameOver: isGameOver,
-    //         value: color === 0 ? 0 : 190 * color,
-    //         surrounding: concreteSurrounding
-    //     }
-    // }
+    if (draw) {
+        return {
+            isGameOver: isGameOver,
+            value: color === 0 ? 0 : 190 * color,
+            surrounding: concreteSurrounding
+        }
+    }
 
-    if (concreteSurrounding.own === concreteSurrounding.opponent) {
+    if (win) {
         // Environment.debugPrint("Expected end (good): ", state.turn)
         return {
             isGameOver: isGameOver,
