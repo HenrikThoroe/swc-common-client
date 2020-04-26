@@ -84,7 +84,7 @@ export default class MTDf extends Logic {
                 beta = guess
             }
 
-            guess = this.negamax(this.initialState, 1, this.horizon, beta - 1, beta, moves)
+            guess = this.negamax(this.initialState, this.horizon, beta - 1, beta, 1, moves)
 
             if (guess < beta) {
                 upperBound = guess
@@ -96,7 +96,7 @@ export default class MTDf extends Logic {
         return guess
     }
 
-    private negamax(state: State, color: number, depth: number, alpha: number, beta: number, availableMoves?: Move[]) {
+    private negamax(state: State, depth: number, alpha: number, beta: number, color: number, availableMoves?: Move[]) {
         const entry = Logic.transpositionTable.read(state) 
         const originalAlpha = alpha
 
@@ -105,7 +105,7 @@ export default class MTDf extends Logic {
                 let ignore = false
 
                 if (entry.depth === depth && depth === this.horizon) {
-                    if (typeof(entry.move) !== "number") {
+                    if (typeof(entry.move) !== "number" && entry.move !== null) {
                         this.searchState.selectedMove = entry.move
                     } else {
                         ignore = true
@@ -125,12 +125,24 @@ export default class MTDf extends Logic {
         }
 
 
-        const evaluation = evaluate(state, this.player.color)
+        const evaluation = evaluate(state, this.player.color, color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
             return evaluation.value * color
         }
+
+        // if (depth === 0) {
+        //     // Move is not quiet
+        //     if (!quiescene && !this.isQuiet(previous, evaluation)) {
+        //         // Environment.debugPrint("Searching Deeper")
+        //         quiescene = true
+        //         depth += 2
+        //     } else {
+        //         return evaluation.value * color
+        //     }
+        //     // return evaluation.value * color
+        // }
 
         let score: number = 0
 
@@ -140,11 +152,24 @@ export default class MTDf extends Logic {
             this.searchState.searchedNodes += 1
 
             if (this.didTimeOut()) {
-                if (depth === this.horizon) Environment.debugPrint(`Timed out after searching ${i + 1} of ${moves.length} nodes. Depth: ${this.horizon}`)
                 break
             }
 
-            score = simulateMove(state, moves[i], next => -this.negamax(next, -color, depth - 1, -beta, -score))
+            score = simulateMove(state, moves[i], next => -this.negamax(next, depth - 1, -beta, -alpha, -color))
+
+            // if (i === 0) {
+            //     // NegaScout assumes that the first move is the best one
+            //     // So it searches it with full with alpha beta window
+            //     score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color, evaluation, quiescene))
+            // } else {
+            //     // To create as many cutoffs as possible the following moves are searched with a null window
+            //     score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color, evaluation, quiescene))
+
+            //     // If the actual score is not within the assumed window a full alpha beta search is committed
+            //     if (alpha < score && score < beta) {
+            //         score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color, evaluation, quiescene))
+            //     }
+            // }
 
             if (score > alpha) {
                 alpha = score 
@@ -156,6 +181,7 @@ export default class MTDf extends Logic {
 
             if (alpha >= beta) {
                 Logic.killerTable.push([state, moves[i]], true)
+                // this.cutoffs += 1
                 break
             }
         }

@@ -35,7 +35,7 @@ export default class NegaScout extends Logic {
                 move = this.searchState.selectedMove
             }
 
-            if (rating >= 190 || rating <= -195 || rating === 0) {
+            if (rating >= 190 || rating <= -195 || rating === 190) {
                 break
             }
 
