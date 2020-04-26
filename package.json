@@ -13,7 +13,8 @@
     "bundle-no-update": "npm run build && npm run zip",
     "buildAssets": "ts-node ./src/Cache/build.ts",
     "performanceTest": "tsc --project ./performance_tests/tsconfig.json && node ./performance_tests/dist/index.js",
-    "export": "npm run build && ts-node export.ts"
+    "export": "npm run build && ts-node export.ts",
+    "compile": "mkdir -p bin && pkg ./dist/bundle.js --out-path ./bin"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
     "babel-jest": "^25.4.0",
     "bestzip": "^2.1.5",
     "jest": "^25.4.0",
+    "pkg": "^4.4.7",
     "ts-loader": "^6.2.2",
     "ts-node": "^8.9.1",
     "tsc": "^1.20150623.0",
