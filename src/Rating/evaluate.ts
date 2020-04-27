@@ -87,6 +87,20 @@ export default function evaluate(state: State, player: Color, color: number = 1)
     // }
 
     if (concreteSurrounding.own === concreteSurrounding.opponent) {
+        return {
+            isGameOver: isGameOver,
+            value: 200,
+            surrounding: concreteSurrounding
+        }
+    } else {
+        return {
+            isGameOver: isGameOver,
+            value: -200,
+            surrounding: concreteSurrounding
+        }
+    }
+
+    if (concreteSurrounding.own === concreteSurrounding.opponent) {
         // Environment.debugPrint("Expected end (good): ", state.turn)
         return {
             isGameOver: isGameOver,
