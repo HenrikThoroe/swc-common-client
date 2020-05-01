@@ -8,6 +8,9 @@ import globalState from "../globalState"
 import isPosition from "../utils/isPosition"
 import { comparePositions } from "@henrikthoroe/swc-client/dist/client/Model/Position"
 import MTDf from "../Logic/MTDf"
+import simulateMove from "../LookAhead/simulateMove"
+import evaluate from "../Rating/evaluate"
+import scanSurrounding from "../Rating/Scanner/scanSurrounding"
 
 let initiated = false
 
@@ -33,7 +36,7 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
     
         const fallback = available[0]
         const preRating = handleSpecialCase(state, player, available, undeployed, 1890 - timer.read())
-        const logic = new NegaScout(state, available, player, 3, 1890 - timer.read())
+        const logic = new NegaScout(state, available, player, 3, 1850 - timer.read())
     
         if (preRating.isSpecialCase && preRating.success) {
             return preRating.selectedMove!
@@ -62,6 +65,19 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
                 Environment.print("Invalid Move", result.value, available)
                 return fallback
             }
+
+            setTimeout(() => {
+                for (const move of available) {
+                    simulateMove(state, move, next => {
+                        console.log(move.end)
+                        console.log(evaluate(next, player.color))
+                        console.log(scanSurrounding(next))
+                        console.log()
+                        console.log()
+                        console.log()
+                    })
+                }
+            }, 1000)
     
             return result.value!
         } else {

@@ -28,7 +28,7 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
 
     switch (phase) {
         case "early":
-            mobilityValue *= 20
+            mobilityValue *= 10
         case "mid":
             mobilityValue *= 1
         case "late":
@@ -57,6 +57,13 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
     return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)))
 }
 
+function applyTimeFactor(turn: number, value: number, surrounding: number): number {
+    const factor = 1 + (1 - ((turn / 60) * 1))
+    const diff = value - surrounding
+
+    return surrounding * factor + diff
+}
+
 export default function evaluate(state: State, player: Color, color: number = 1): Rating {
     const cached = evaluationTable.read(state)
     const surrounding = scanSurrounding(state)
@@ -67,7 +74,7 @@ export default function evaluate(state: State, player: Color, color: number = 1)
     if (cached !== null && !isGameOver) {
         return {
             isGameOver: isGameOver,
-            value: cached,
+            value: applyTimeFactor(state.turn, cached, evaluateSurrounding(concreteSurrounding)),
             surrounding: concreteSurrounding
         }
     }
@@ -110,7 +117,7 @@ export default function evaluate(state: State, player: Color, color: number = 1)
 
     return {
         isGameOver: isGameOver,
-        value: value,
+        value: applyTimeFactor(state.turn, value, evaluateSurrounding(concreteSurrounding)),
         surrounding: concreteSurrounding
     }
 }
