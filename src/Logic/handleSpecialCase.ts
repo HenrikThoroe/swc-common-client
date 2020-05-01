@@ -4,6 +4,7 @@ import { filter } from "@henrikthoroe/swc-client/dist/utils";
 import mapBoard from "../utils/mapBoard";
 import NegaScout from "./NegaScout";
 import isPosition from "../utils/isPosition";
+import globalState from "../globalState";
 
 export interface SpecialCaseResult {
     isSpecialCase: boolean
@@ -40,7 +41,7 @@ function handleInitialMove(state: State, moves: Move[], player: Player, timeout:
     }
 
     const e = Date.now() - start
-    const move = new NegaScout(state, filteredMoves, player, 3, timeout - e).find()
+    const move = new NegaScout(state, filteredMoves, player, globalState.depth, timeout - e).find()
 
     if (move.success) {
         return move.value!
@@ -66,7 +67,7 @@ function handlePossibleBeeDeployment(state: State, moves: Move[], player: Player
     })
 
     const e = Date.now() - start 
-    const move = new NegaScout(state, !exhaustive ? moves : filtered, player, 3, timeout - e).find()
+    const move = new NegaScout(state, !exhaustive ? moves : filtered, player, globalState.depth, timeout - e).find()
 
     if (move.success) {
         return move.value!

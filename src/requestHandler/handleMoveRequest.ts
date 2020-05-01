@@ -36,7 +36,7 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
     
         const fallback = available[0]
         const preRating = handleSpecialCase(state, player, available, undeployed, 1890 - timer.read())
-        const logic = new NegaScout(state, available, player, 3, 1850 - timer.read())
+        const logic = new NegaScout(state, available, player, globalState.depth, 1890 - timer.read())
     
         if (preRating.isSpecialCase && preRating.success) {
             return preRating.selectedMove!
@@ -66,18 +66,20 @@ export default function handleMoveRequest(state: State, undeployed: Piece[], pla
                 return fallback
             }
 
-            setTimeout(() => {
-                for (const move of available) {
-                    simulateMove(state, move, next => {
-                        console.log(move.end)
-                        console.log(evaluate(next, player.color))
-                        console.log(scanSurrounding(next))
-                        console.log()
-                        console.log()
-                        console.log()
-                    })
-                }
-            }, 1000)
+            if (globalState.printAvailableMoves) {
+                setTimeout(() => {
+                    for (const move of available) {
+                        simulateMove(state, move, next => {
+                            console.log(move.end)
+                            console.log(evaluate(next, player.color))
+                            console.log(scanSurrounding(next))
+                            console.log()
+                            console.log()
+                            console.log()
+                        })
+                    }
+                }, 1000)
+            }
     
             return result.value!
         } else {

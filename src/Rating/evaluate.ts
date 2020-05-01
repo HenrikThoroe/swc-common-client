@@ -28,7 +28,7 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
 
     switch (phase) {
         case "early":
-            mobilityValue *= 10
+            mobilityValue *= 20
         case "mid":
             mobilityValue *= 1
         case "late":
@@ -58,10 +58,10 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
 }
 
 function applyTimeFactor(turn: number, value: number, surrounding: number): number {
-    const factor = 1 + (1 - ((turn / 60) * 1))
+    const factor = 1 + (0.5 - ((turn / 60) * 0.5))
     const diff = value - surrounding
 
-    return surrounding * factor + diff
+    return (surrounding * factor) + diff
 }
 
 export default function evaluate(state: State, player: Color, color: number = 1): Rating {

@@ -9,6 +9,8 @@ export interface State {
     simpleClient: boolean,
     productionMode: boolean,
     color: Color
+    printAvailableMoves: boolean
+    depth: number
 }
 
 class GlobalState implements State {
@@ -25,6 +27,10 @@ class GlobalState implements State {
 
     readonly productionMode: boolean
 
+    readonly printAvailableMoves: boolean
+
+    readonly depth: number
+
     constructor(state: State) {
         this.host = state.host
         this.port = state.port
@@ -32,6 +38,8 @@ class GlobalState implements State {
         this.productionMode = state.productionMode
         this.reservation = state.reservation
         this.color = state.color
+        this.printAvailableMoves = state.printAvailableMoves
+        this.depth = state.depth
         this.prepareEnvironment()
     }
 
@@ -73,6 +81,13 @@ class GlobalState implements State {
             .options("production", {
                 type: "boolean"
             })
+            .option("printAvailableMoves", {
+                type: "boolean"
+            })
+            .option("depth", {
+                type: "number",
+                alias: "d"
+            })
             .parse()
         
         const state: State = {
@@ -81,7 +96,9 @@ class GlobalState implements State {
             reservation: args.reservation,
             simpleClient: args.stupid || false,
             productionMode: args.production || false,
-            color: Color.Red
+            color: Color.Red,
+            printAvailableMoves: args.printAvailableMoves || false,
+            depth: args.depth || 3
         }
 
         return new GlobalState(state)
