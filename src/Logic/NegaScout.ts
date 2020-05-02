@@ -33,7 +33,7 @@ export default class NegaScout extends Logic {
         do {
             rating = this.search(this.initialState, this.horizon, alpha, beta, 1, initialRating, false, this.availableMoves)
             
-            if (!this.didTimeOut() || rating >= 200 || move === null) {
+            if (!this.didTimeOut() || rating >= 195 || move === null) {
                 move = this.searchState.selectedMove
             }
 
@@ -78,12 +78,19 @@ export default class NegaScout extends Logic {
     }
 
     private search(state: State, depth: number, alpha: number, beta: number, color: number, previous: Rating, quiescene: boolean, availableMoves?: Move[]): number {
-        const evaluation = evaluate(state, this.player.color, color)
-        const entry = Logic.transpositionTable.read(state, (key, entry) => {
-            entry.value = appendTurnValue(key, entry.value, { surrounding: evaluation.surrounding })
-            return entry
-        }) 
+        const entry = Logic.transpositionTable.read(state)
         const originalAlpha = alpha
+
+        // , (key, entry) => {
+        //     // entry.value = appendTurnValue(key, entry.value, { surrounding: evaluation.surrounding })
+        //     // return entry
+        //     return {
+        //         flag: entry.flag,
+        //         value: appendTurnValue(key, entry.value, { surrounding: evaluation.surrounding }),
+        //         depth: entry.depth,
+        //         move: entry.move
+        //     }
+        // }) 
 
         if (entry && entry.depth >= depth) {
             if (entry.flag === TranspositionTableFlag.Exact) {
@@ -109,6 +116,7 @@ export default class NegaScout extends Logic {
             }
         }
 
+        const evaluation = evaluate(state, this.player.color, color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
@@ -186,10 +194,18 @@ export default class NegaScout extends Logic {
             newEntry.flag = TranspositionTableFlag.Exact
         }
 
-        Logic.transpositionTable.push(state, newEntry, (key, entry) => {
-            entry.value = removeTurnValue(key, entry.value, { surrounding: evaluation.surrounding })
-            return entry
-        })
+        Logic.transpositionTable.push(state, newEntry)
+
+        // , (key, entry) => {
+        //     // entry.value = removeTurnValue(key, entry.value, { surrounding: evaluation.surrounding })
+        //     // return entry
+        //     return {
+        //         flag: entry.flag,
+        //         value: entry.value,//removeTurnValue(key, entry.value, { surrounding: evaluation.surrounding }),
+        //         depth: entry.depth,
+        //         move: entry.move
+        //     }
+        // }
 
         return alpha
     }

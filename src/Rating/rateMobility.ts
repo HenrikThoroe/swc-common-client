@@ -8,8 +8,8 @@ const pieceTable = {
     ant:            [0.9,     1,      1],
     beetle:         [0.9,     0.7,    0.6],
     bee:            [1,     1,      1],
-    spider:         [0.7,   0.9,    0.6],
-    grasshopper:    [0.4,   0.9,    1]
+    spider:         [0.5,   0.9,    0.6],
+    grasshopper:    [0.7,   0.9,    1]
 }
 
 function pieceValue(phase: GamePhase, type: Type) {

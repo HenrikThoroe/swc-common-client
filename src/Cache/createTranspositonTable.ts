@@ -21,14 +21,15 @@ export interface TranspositionTableEntry {
 export type TranspositionTable = LookupTable<State, TranspositionTableEntry>
 
 export default function createTranspositionTable(): TranspositionTable {
-    return new LookupTable(500000, hashState, 
-        (state, entry) => {
-            entry.value = appendTurnValue(state, entry.value, { color: globalState.color })
-            return entry
-        },
-        (state, entry) => {
-            entry.value = removeTurnValue(state, entry.value, { color: globalState.color })
-            return entry
-        }
-    )
+    return new LookupTable(500000, hashState)
+    // return new LookupTable(500000, hashState, 
+    //     (state, entry) => {
+    //         entry.value = appendTurnValue(state, entry.value, { color: globalState.color })
+    //         return entry
+    //     },
+    //     (state, entry) => {
+    //         entry.value = removeTurnValue(state, entry.value, { color: globalState.color })
+    //         return entry
+    //     }
+    // )
 }

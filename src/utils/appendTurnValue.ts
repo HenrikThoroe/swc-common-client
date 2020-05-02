@@ -9,6 +9,7 @@ interface Opts {
 }
 
 export default function appendTurnValue(state: State, value: number, options: Opts): number {
-    const s = options.surrounding || substantiateAspect(options.color!, scanSurrounding(state))
-    return value + turnValues[state.turn][s.opponent]
+    // const s = options.surrounding || substantiateAspect(options.color!, scanSurrounding(state))
+    // return value + turnValues[state.turn][s.opponent]
+    return value
 }

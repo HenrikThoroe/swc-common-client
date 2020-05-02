@@ -12,10 +12,11 @@ export type EvaluationTable = LookupTable<State, number>
  */
 export default function createEvaluationTable(): EvaluationTable {
     // Estimated Size: ~500MB
-    return new LookupTable(
-        2688170, 
-        hashState, 
-        (state, value) => appendTurnValue(state, value, { color: globalState.color }),
-        (state, value) => removeTurnValue(state, value, { color: globalState.color })
-    )
+    return new LookupTable(2688170, hashState)
+    // return new LookupTable(
+    //     2688170, 
+    //     hashState, 
+    //     (state, value) => appendTurnValue(state, value, { color: globalState.color }),
+    //     (state, value) => removeTurnValue(state, value, { color: globalState.color })
+    // )
 }

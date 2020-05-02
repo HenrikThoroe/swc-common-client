@@ -31,7 +31,7 @@ function handleInitialMove(state: State, moves: Move[], player: Player, timeout:
     }
 
     const start = Date.now()
-    const beeMoves = moves.filter(m => (m.start as Piece).type !== Type.BEE)
+    const beeMoves = moves.filter(m => ((m.start as Piece).type !== Type.BEE) && (m.start as Piece).type !== Type.ANT)
     const filteredMoves: Move[] = []
 
     for (const move of beeMoves) {
