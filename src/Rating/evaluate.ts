@@ -19,11 +19,12 @@ import generateMoves from "../LookAhead/generateMoves";
 
 const evaluationTable = createEvaluationTable()
 
-function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean, runaways: ConcreteAspect<number>, undeployed: ConcreteAspect<number>) {
+function conclude(surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean, runaways: ConcreteAspect<number>, undeployed: ConcreteAspect<number>) {
     let surroundingValue: number = evaluateSurrounding(surrounding) 
+    let mobilityValue: number = mobility.own - mobility.opponent 
     let beeValue = 0
 
-    let points = surroundingValue 
+    let points = surroundingValue + mobilityValue
     const maximumExtraPoints = Math.pow(2, surrounding.opponent)
 
     if (isBeetleOnBee) {
@@ -32,17 +33,22 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, pinned:
         beeValue += maximumExtraPoints * 0.8
     }
 
-    // points *= 1 - (0.1 * runaways.own)
+    points *= 1 - (0.1 * runaways.own)
 
     // if (phase !== "early") {
     //     points += (1 - (undeployed.own / 11)) * 10
     // }
 
+    points += ((undeployed.own / 11)) * 10
+
     return points + beeValue
 }
 
-function calculateValue(state: State, player: Color, surrounding: Aspect<number>, mobility: Aspect<Mobility>): number {
+function calculateValue(state: State, player: Color, surrounding: Aspect<number>): number {
+    // const phase = chooseGamePhase(player, surrounding, mobility)
+    const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
     const phase = chooseGamePhase(player, surrounding, mobility)
+    const concreteMobility = rateMobility(state, phase, substantiateAspect(player, mobility))
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const undeployed = substantiateAspect(player, {
         red: state.undeployed.red.length,
@@ -50,11 +56,10 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
     })
 
     if (Math.min(concreteSurrounding.own, concreteSurrounding.opponent) <= 0) {
-        const concreteMobility = rateMobility(state, phase, substantiateAspect(player, mobility))
         return concreteMobility.own - concreteMobility.opponent 
     }
 
-    return conclude(phase, concreteSurrounding, substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)), undeployed)
+    return conclude(concreteSurrounding, concreteMobility, substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)), undeployed)
 }
 
 function applyTimeFactor(turn: number, value: number, surrounding: number): number {
@@ -79,7 +84,7 @@ export default function evaluate(state: State, player: Color, color: number = 1,
     }
 
     
-    const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
+    // const mobility = { red: scanMobility(state, Color.Red), blue: scanMobility(state, Color.Blue) }
     const win = (isGameOver && concreteSurrounding.opponent === 6) || (isGameOver && concreteSurrounding.own < concreteSurrounding.opponent)
     const loose = (isGameOver && concreteSurrounding.own === 6) || (isGameOver && concreteSurrounding.own > concreteSurrounding.opponent)
     const draw = (!win && !loose && isGameOver) || (win && loose)
@@ -110,7 +115,7 @@ export default function evaluate(state: State, player: Color, color: number = 1,
         }
     }
 
-    const value = calculateValue(state, player, surrounding, mobility)
+    const value = calculateValue(state, player, surrounding)
 
     evaluationTable.push(state, value)
 
