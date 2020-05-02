@@ -14,6 +14,7 @@ import Aspect from "./Aspect";
 import isBeetleOnBee from "./Scanner/isBeetleOnBee";
 import scanRunaways from "./Scanner/scanRunaways";
 import globalState from "../globalState";
+import appendTurnValue from "../utils/appendTurnValue";
 
 const evaluationTable = createEvaluationTable()
 
@@ -65,16 +66,15 @@ function applyTimeFactor(turn: number, value: number, surrounding: number): numb
 }
 
 export default function evaluate(state: State, player: Color, color: number = 1): Rating {
-    const cached = evaluationTable.read(state)
     const surrounding = scanSurrounding(state)
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const isGameOver = (Math.max(surrounding.blue, surrounding.red) >= 6 && state.currentPlayer === Color.Red) || state.turn >= 60
-    
+    const cached = evaluationTable.read(state, (state, value) => appendTurnValue(state, value, { surrounding: concreteSurrounding }))
 
     if (cached !== null && !isGameOver) {
         return {
             isGameOver: isGameOver,
-            value: applyTimeFactor(state.turn, cached, evaluateSurrounding(concreteSurrounding)),
+            value: cached,
             surrounding: concreteSurrounding
         }
     }
@@ -113,11 +113,11 @@ export default function evaluate(state: State, player: Color, color: number = 1)
 
     const value = calculateValue(state, player, surrounding, mobility)
 
-    evaluationTable.push(state, value)
+    evaluationTable.push(state, value, (_, value) => value)
 
     return {
         isGameOver: isGameOver,
-        value: applyTimeFactor(state.turn, value, evaluateSurrounding(concreteSurrounding)),
+        value: appendTurnValue(state, value, { surrounding: concreteSurrounding }),
         surrounding: concreteSurrounding
     }
 }

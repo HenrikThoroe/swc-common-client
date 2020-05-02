@@ -8,6 +8,8 @@ import { TranspositionTableFlag, TranspositionTableEntry } from "../Cache/create
 import Rating from "../Rating";
 import Environment from "../utils/Environment";
 import Aspect from "../Rating/Aspect";
+import removeTurnValue from "../utils/removeTurnValue";
+import appendTurnValue from "../utils/appendTurnValue";
 
 /**
  * NegaScout is an algorythm based on Alpha Beta search, but with advanced tactics to produce more cutoffs.
@@ -76,7 +78,11 @@ export default class NegaScout extends Logic {
     }
 
     private search(state: State, depth: number, alpha: number, beta: number, color: number, previous: Rating, quiescene: boolean, availableMoves?: Move[]): number {
-        const entry = Logic.transpositionTable.read(state) 
+        const evaluation = evaluate(state, this.player.color, color)
+        const entry = Logic.transpositionTable.read(state, (key, entry) => {
+            entry.value = appendTurnValue(key, entry.value, { surrounding: evaluation.surrounding })
+            return entry
+        }) 
         const originalAlpha = alpha
 
         if (entry && entry.depth >= depth) {
@@ -103,8 +109,6 @@ export default class NegaScout extends Logic {
             }
         }
 
-
-        const evaluation = evaluate(state, this.player.color, color)
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
@@ -182,7 +186,10 @@ export default class NegaScout extends Logic {
             newEntry.flag = TranspositionTableFlag.Exact
         }
 
-        Logic.transpositionTable.push(state, newEntry)
+        Logic.transpositionTable.push(state, newEntry, (key, entry) => {
+            entry.value = removeTurnValue(key, entry.value, { surrounding: evaluation.surrounding })
+            return entry
+        })
 
         return alpha
     }

@@ -8,6 +8,10 @@ interface Table<T> {
     [key: string]: T | undefined
 }
 
+interface Transformer<K, V> {
+    (arg0: K, arg1: V): V
+}
+
 /**
  * A general purpose hashtable with restricted capacity.
  */
@@ -35,13 +39,19 @@ export default class LookupTable<Key, Value> {
 
     private readonly id: number
 
-    constructor(capacity: number, hasher: HashFunction<Key>) {
+    private defaultReadTransformer: Transformer<Key, Value> 
+
+    private defaultWriteTransformer: Transformer<Key, Value> 
+
+    constructor(capacity: number, hasher: HashFunction<Key>, readTransformer?: Transformer<Key, Value>,  writeTransformer?: Transformer<Key, Value>) {
         this.capacity = capacity
         this.hasher = hasher
         this.id = LookupTable.counter++
+        this.defaultReadTransformer = readTransformer || ((_k, v) => v)
+        this.defaultWriteTransformer = writeTransformer || ((_k, v) => v)
     }
 
-    push(key: Key, value: Value) {
+    push(key: Key, value: Value, transformer?: Transformer<Key, Value>) {
         if (this.count >= this.capacity) {
             this.table.delete(this.keyStore.shift()!)
         } else {
@@ -49,12 +59,13 @@ export default class LookupTable<Key, Value> {
         }
 
         const hash = this.hasher(key)
+        const transformedValue = transformer ? transformer(key, value) : this.defaultWriteTransformer(key, value)
         
-        this.table.set(hash, value)
+        this.table.set(hash, transformedValue)
         this.keyStore.push(hash)
     }
 
-    read(key: Key): Value | null {
+    read(key: Key, transformer?: Transformer<Key, Value>): Value | null {
         const value = this.table.get(this.hasher(key))
 
         if (value !== undefined) {
@@ -65,7 +76,9 @@ export default class LookupTable<Key, Value> {
                 Environment.debugPrint(`Successfully cached ${this.positiveReads} items [id: ${this.id}][cached: ${(ratio * 100).toFixed(2)}%]`)
             }
 
-            return value
+            const transformedValue = transformer ? transformer(key, value) : this.defaultReadTransformer(key, value)
+
+            return transformedValue
         }
 
         this.negativeReads += 1
@@ -73,13 +86,13 @@ export default class LookupTable<Key, Value> {
         return null
     }
 
-    get(key: Key, fallback: () => Value): Value {
-        const c = this.read(key)
+    get(key: Key, fallback: () => Value, transformer?: Transformer<Key, Value>): Value {
+        const c = this.read(key, transformer)
 
         if (c !== null) {
             return c
         } else {
-            const value = fallback()
+            const value = fallback() // TODO should fallback be transformed?
             this.push(key, value)
             return value
         }
