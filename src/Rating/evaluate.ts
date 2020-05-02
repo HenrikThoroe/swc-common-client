@@ -16,10 +16,12 @@ import scanRunaways from "./Scanner/scanRunaways";
 import globalState from "../globalState";
 import appendTurnValue from "../utils/appendTurnValue";
 import generateMoves from "../LookAhead/generateMoves";
+import enumerateBoard from "../utils/enumerateBoard";
+import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 
 const evaluationTable = createEvaluationTable()
 
-function conclude(surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean, runaways: ConcreteAspect<number>, undeployed: ConcreteAspect<number>) {
+function conclude(state: State, color: Color, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean, runaways: ConcreteAspect<number>, undeployed: ConcreteAspect<number>) {
     let surroundingValue: number = evaluateSurrounding(surrounding) 
     let mobilityValue: number = mobility.own - mobility.opponent 
     let beeValue = 0
@@ -41,6 +43,14 @@ function conclude(surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<
 
     points += ((undeployed.own / 11)) * 10
 
+    enumerateBoard(state.board, field => {
+        if (field.pieces.length > 0 && field.pieces.some(piece => piece.type === Type.BEE && piece.owner === color)) {
+            if (Math.abs(field.position.x) + Math.abs(field.position.y) + Math.abs(field.position.z) === 10) {
+                points *= 0.5
+            }
+        }
+    })
+
     return points + beeValue
 }
 
@@ -59,7 +69,7 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
         return concreteMobility.own - concreteMobility.opponent 
     }
 
-    return conclude(concreteSurrounding, concreteMobility, substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)), undeployed)
+    return conclude(state, player, concreteSurrounding, concreteMobility, substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)), undeployed)
 }
 
 function applyTimeFactor(turn: number, value: number, surrounding: number): number {
@@ -106,7 +116,7 @@ export default function evaluate(state: State, player: Color, color: number = 1,
         }
     }
 
-    if (loose || generateMoves(state, false).length === 0) {
+    if (loose) {
         // Environment.debugPrint("Expected end (bad): ", state.turn)
         return {
             isGameOver: isGameOver,
