@@ -19,6 +19,8 @@ export default class NegaScout extends Logic {
 
     private cutoffs = 0
 
+    private nullCutoffs = 0
+
     find(): SearchResult {
         this.searchState.startTime = Date.now()
 
@@ -51,7 +53,9 @@ export default class NegaScout extends Logic {
         // If somebody is interested just change the flag to true
         if (false) {
             Environment.debugPrint(`Cutoff Ratio: ${this.cutoffs / this.searchState.searchedNodes}`)
+            Environment.debugPrint(`Null Move Cutoffs: ${this.nullCutoffs}`)
         }
+
 
         return {
             rating: rating,
@@ -75,7 +79,7 @@ export default class NegaScout extends Logic {
         return false
     }
 
-    private search(state: State, depth: number, alpha: number, beta: number, color: number, previous: Rating, quiescene: boolean, availableMoves?: Move[]): number {
+    private search(state: State, depth: number, alpha: number, beta: number, color: number, previous: Rating, quiescene: boolean, availableMoves?: Move[], allowNullMove: boolean = true): number {
         const entry = Logic.transpositionTable.read(state) 
         const originalAlpha = alpha
 
@@ -107,6 +111,7 @@ export default class NegaScout extends Logic {
             }
 
             if (alpha >= beta && isEntryValid(entry)) {
+                this.cutoffs += 1
                 return entry.value
             }
         }
@@ -120,17 +125,26 @@ export default class NegaScout extends Logic {
             return evaluation.value * color
         }
 
-        // if (depth === 0) {
-        //     // Move is not quiet
-        //     if (!quiescene && !this.isQuiet(previous, evaluation)) {
-        //         // Environment.debugPrint("Searching Deeper")
-        //         quiescene = true
-        //         depth += 2
-        //     } else {
-        //         return evaluation.value * color
-        //     }
-        //     // return evaluation.value * color
-        // }
+        if (allowNullMove && depth > 2 && state.turn < 46 && state.turn > 5) {
+            let r = 1
+
+            if (depth > 4) {
+                r = 2
+            }
+
+            const nEval = simulateMove(state, null, next => {
+                const nullEval = -this.search(next, depth - r - 1, -beta, -beta + 1, -color, evaluation, false, undefined, false)
+
+                if (nullEval >= beta) {
+                    return nullEval
+                }
+            })
+
+            if (nEval && depth !== this.horizon && alpha > -Infinity) {
+                this.nullCutoffs += 1
+                return nEval
+            }
+        }
 
         let score: number = 0
 
@@ -145,16 +159,16 @@ export default class NegaScout extends Logic {
             if (i === 0) {
                 // NegaScout assumes that the first move is the best one
                 // So it searches it with full with alpha beta window
-                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color, evaluation, quiescene))
+                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color, evaluation, quiescene, undefined, allowNullMove))
                 this.searchState.searchedNodes += 1
             } else {
                 // To create as many cutoffs as possible the following moves are searched with a null window
-                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color, evaluation, quiescene))
+                score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color, evaluation, quiescene, undefined, allowNullMove))
                 this.searchState.searchedNodes += 1
 
                 // If the actual score is not within the assumed window a full alpha beta search is committed
                 if (alpha < score && score < beta) {
-                    score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color, evaluation, quiescene))
+                    score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color, evaluation, quiescene, undefined, allowNullMove))
                     this.searchState.searchedNodes += 1
                 }
             }
@@ -213,27 +227,6 @@ export default class NegaScout extends Logic {
 
             Logic.transpositionTable.push(state, newEntry)
         }
-
-        // const newEntry: TranspositionTableEntry = {
-        //     depth: depth,
-        //     value: score,
-        //     flag: TranspositionTableFlag.Exact,
-        //     move: 0
-        // }
-
-        // if (score <= originalAlpha) {
-        //     newEntry.flag = TranspositionTableFlag.UpperBound
-        // } else if (score >= beta) {
-        //     newEntry.flag = TranspositionTableFlag.LowerBound
-        // } else {
-        //     if (depth === this.horizon) {
-        //         newEntry.move = this.searchState.selectedMove || 0
-        //     }
-
-        //     newEntry.flag = TranspositionTableFlag.Exact
-        // }
-
-        // Logic.transpositionTable.push(state, newEntry)
 
         return alpha
     }
