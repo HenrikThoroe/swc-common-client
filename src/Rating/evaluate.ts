@@ -1,4 +1,4 @@
-import { State } from "@henrikthoroe/swc-client";
+import { State, getNeighbours } from "@henrikthoroe/swc-client";
 import Rating from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
@@ -14,10 +14,12 @@ import Aspect from "./Aspect";
 import isBeetleOnBee from "./Scanner/isBeetleOnBee";
 import scanRunaways from "./Scanner/scanRunaways";
 import globalState from "../globalState";
+import enumerateBoard from "../utils/enumerateBoard";
+import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
 
 const evaluationTable = createEvaluationTable()
 
-function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean, runaways: ConcreteAspect<number>) {
+function conclude(state: State, color: Color, phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean, runaways: ConcreteAspect<number>, undeployed: ConcreteAspect<number>) {
     if (Math.min(surrounding.own, surrounding.opponent) <= 0) {
         return mobility.own - mobility.opponent 
     }
@@ -26,25 +28,35 @@ function conclude(phase: GamePhase, surrounding: ConcreteAspect<number>, mobilit
     let mobilityValue: number = mobility.own - mobility.opponent 
     let beeValue = 0
 
-    switch (phase) {
-        case "early":
-            mobilityValue *= 20
-        case "mid":
-            mobilityValue *= 1
-        case "late":
-            mobilityValue *= 1
-    }
+    // switch (phase) {
+    //     case "early":
+    //         mobilityValue *= 20
+    //     case "mid":
+    //         mobilityValue *= 1
+    //     case "late":
+    //         mobilityValue *= 1
+    // }
 
     let points = surroundingValue + mobilityValue
     const maximumExtraPoints = Math.pow(2, surrounding.opponent)
 
     if (isBeetleOnBee) {
         beeValue += maximumExtraPoints
-    } else if (pinned.opponent && surrounding.opponent > 2) {
+    } else if (pinned.opponent && surrounding.opponent > 1) {
         beeValue += maximumExtraPoints * 0.8
     }
 
     points *= 1 - (0.1 * runaways.own)
+    points += (points / 200) * ((undeployed.own / 11)) 
+
+    enumerateBoard(state.board, field => {
+        if (field.pieces.length > 0 && field.pieces.some(piece => piece.type === Type.BEE && piece.owner === color)) {
+            if (Math.abs(field.position.x) + Math.abs(field.position.y) + Math.abs(field.position.z) === 10 || getNeighbours(state.board, field.position).some(f => f.isObstructed)) {
+                points *= 0.5
+            }
+        }
+    })
+
 
     return points + beeValue
 }
@@ -54,14 +66,12 @@ function calculateValue(state: State, player: Color, surrounding: Aspect<number>
     const concreteSurrounding = substantiateAspect(player, surrounding)
     const concreteMobility = substantiateAspect(player, mobility)
 
-    return conclude(phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)))
-}
+    const undeployed = substantiateAspect(player, {
+        red: state.undeployed.red.length,
+        blue: state.undeployed.blue.length
+    })
 
-function applyTimeFactor(turn: number, value: number, surrounding: number): number {
-    const factor = 1 + (0.5 - ((turn / 60) * 0.5))
-    const diff = value - surrounding
-
-    return (surrounding * factor) + diff
+    return conclude(state, player, phase, concreteSurrounding, rateMobility(state, phase, concreteMobility), substantiateAspect(player, isBeePinned(state)), isBeetleOnBee(state, player), substantiateAspect(player, scanRunaways(state)), undeployed)
 }
 
 export default function evaluate(state: State, player: Color, color: number = 1): Rating {
@@ -74,7 +84,7 @@ export default function evaluate(state: State, player: Color, color: number = 1)
     if (cached !== null && !isGameOver) {
         return {
             isGameOver: isGameOver,
-            value: applyTimeFactor(state.turn, cached, evaluateSurrounding(concreteSurrounding)),
+            value: cached,
             surrounding: concreteSurrounding
         }
     }
@@ -117,7 +127,7 @@ export default function evaluate(state: State, player: Color, color: number = 1)
 
     return {
         isGameOver: isGameOver,
-        value: applyTimeFactor(state.turn, value, evaluateSurrounding(concreteSurrounding)),
+        value: value,
         surrounding: concreteSurrounding
     }
 }

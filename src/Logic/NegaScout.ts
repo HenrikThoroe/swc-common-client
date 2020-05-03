@@ -108,6 +108,7 @@ export default class NegaScout extends Logic {
         const moves = availableMoves ? availableMoves : generateMoves(state)
 
         if (evaluation.isGameOver || this.didTimeOut() || moves.length === 0 || depth === 0) {
+            if (moves.length === 0) return -200 * color
             return evaluation.value * color
         }
 

@@ -26,7 +26,7 @@ function beeSurrounding(board: Board, position: Position) {
 }
 
 function handleInitialMove(state: State, moves: Move[], player: Player, timeout: number): Move {
-    if (moves.length !== Constants.initialMoveCount) {
+    if (!(state.undeployed.red.length === 11 && state.undeployed.blue.length === 11)) {
         throw new Error(`Invalid Input`)
     }
 
@@ -90,7 +90,7 @@ export default function handleSpecialCase(state: State, player: Player, moves: M
         selectedMove: null
     }
 
-    if (moves.length === Constants.initialMoveCount) {
+    if (state.undeployed.red.length === 11 && state.undeployed.blue.length === 11) {
         try {
             return {
                 isSpecialCase: true,
