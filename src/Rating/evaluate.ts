@@ -1,4 +1,4 @@
-import { State, getNeighbours } from "@henrikthoroe/swc-client";
+import { State, getNeighbours, Position } from "@henrikthoroe/swc-client";
 import Rating from ".";
 import rateMobility from "./rateMobility";
 import Color from "@henrikthoroe/swc-client/dist/client/Model/Color";
@@ -16,8 +16,53 @@ import scanRunaways from "./Scanner/scanRunaways";
 import globalState from "../globalState";
 import enumerateBoard from "../utils/enumerateBoard";
 import { Type } from "@henrikthoroe/swc-client/dist/client/Model/Piece";
+import distance from "../utils/distance";
+import invertColor from "../utils/invertColor";
 
 const evaluationTable = createEvaluationTable()
+
+interface PositionMap {
+    bee: Position | undefined,
+    beetle: Position[]
+}
+
+interface BoardScan {
+    beeOnRim: boolean
+    beeNextToObstacle: boolean
+    positions: PositionMap
+}
+
+function scanBoard(state: State, color: Color): BoardScan {
+    const positions: PositionMap = {
+        bee: undefined,
+        beetle: []
+    }
+    const result: BoardScan = { beeNextToObstacle: false, beeOnRim: false, positions }
+
+    enumerateBoard(state.board, field => {
+        if (field.pieces.length > 0) {
+            for (const piece of field.pieces) {
+                if (piece.type === Type.BEETLE && piece.owner === color) {
+                    positions.beetle.push(field.position)
+                }
+
+                if (piece.type === Type.BEE && piece.owner === invertColor(color)) {
+                    positions.bee = field.position
+                }
+
+                if (piece.type === Type.BEE && piece.owner === color) {
+                    if (Math.abs(field.position.x) + Math.abs(field.position.y) + Math.abs(field.position.z) === 10) {
+                        result.beeOnRim = true
+                    } else if (getNeighbours(state.board, field.position).some(f => f.isObstructed)) {
+                        result.beeNextToObstacle = true
+                    }
+                }
+            }
+        }
+    })
+
+    return result
+}
 
 function conclude(state: State, color: Color, phase: GamePhase, surrounding: ConcreteAspect<number>, mobility: ConcreteAspect<number>, pinned: ConcreteAspect<boolean>, isBeetleOnBee: boolean, runaways: ConcreteAspect<number>, undeployed: ConcreteAspect<number>) {
     if (Math.min(surrounding.own, surrounding.opponent) <= 0) {
@@ -25,7 +70,7 @@ function conclude(state: State, color: Color, phase: GamePhase, surrounding: Con
     }
 
     let surroundingValue: number = evaluateSurrounding(surrounding) 
-    let mobilityValue: number = mobility.own - mobility.opponent 
+    let mobilityValue: number = mobility.own
     let beeValue = 0
 
     // switch (phase) {
@@ -47,15 +92,24 @@ function conclude(state: State, color: Color, phase: GamePhase, surrounding: Con
     }
 
     points *= 1 - (0.1 * runaways.own)
-    points += (points / 200) * ((undeployed.own / 11)) 
+    points += 0.1 * ((undeployed.own / 11)) + mobilityValue
 
-    enumerateBoard(state.board, field => {
-        if (field.pieces.length > 0 && field.pieces.some(piece => piece.type === Type.BEE && piece.owner === color)) {
-            if (Math.abs(field.position.x) + Math.abs(field.position.y) + Math.abs(field.position.z) === 10 || getNeighbours(state.board, field.position).some(f => f.isObstructed)) {
-                points *= 0.5
-            }
+    const boardScan = scanBoard(state, color)
+
+    if (boardScan.beeNextToObstacle) {
+        points *= 0.75
+    } else if (boardScan.beeOnRim) {
+        points *= 0.5
+    }
+
+    if (boardScan.positions.bee) {
+        for (const beetle of boardScan.positions.beetle) {
+            const dist = distance(beetle, boardScan.positions.bee)
+            const fact = (1 - dist / 10) * (mobilityValue / 2)
+
+            points += fact
         }
-    })
+    }
 
 
     return points + beeValue
