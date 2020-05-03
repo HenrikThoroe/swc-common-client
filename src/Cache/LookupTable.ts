@@ -41,6 +41,11 @@ export default class LookupTable<Key, Value> {
         this.id = LookupTable.counter++
     }
 
+    has(key: Key) {
+        const hash = this.hasher(key)
+        return this.table.has(hash)
+    }
+
     push(key: Key, value: Value) {
         if (this.count >= this.capacity) {
             this.table.delete(this.keyStore.shift()!)

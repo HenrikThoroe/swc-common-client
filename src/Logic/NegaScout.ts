@@ -79,20 +79,24 @@ export default class NegaScout extends Logic {
         const entry = Logic.transpositionTable.read(state) 
         const originalAlpha = alpha
 
+        const isEntryValid = (entry: TranspositionTableEntry) => {
+            let ignore = false
+
+            if (entry.depth === depth && depth === this.horizon) {
+                if (typeof(entry.move) !== "number" && entry.move !== null) {
+                    this.searchState.selectedMove = entry.move
+                } else {
+                    ignore = true
+                }  
+            }
+
+            return !ignore
+        }
+
         if (entry && entry.depth >= depth) {
             if (entry.flag === TranspositionTableFlag.Exact) {
-                let ignore = false
 
-                if (entry.depth === depth && depth === this.horizon) {
-                    if (typeof(entry.move) !== "number" && entry.move !== null) {
-                        this.searchState.selectedMove = entry.move
-                    } else {
-                        ignore = true
-                    }   
-                    
-                }
-
-                if (!ignore) {
+                if (isEntryValid(entry)) {
                     return entry.value
                 }
 
@@ -100,6 +104,10 @@ export default class NegaScout extends Logic {
                 alpha = Math.max(alpha, entry.value)
             } else if (entry.flag === TranspositionTableFlag.UpperBound) {
                 beta = Math.min(entry.value, beta)
+            }
+
+            if (alpha >= beta && isEntryValid(entry)) {
+                return entry.value
             }
         }
 
@@ -129,7 +137,6 @@ export default class NegaScout extends Logic {
         this.applyKillerHeuristic(state, moves)
 
         for (let i = 0; i < moves.length; ++i) {
-            this.searchState.searchedNodes += 1
 
             if (this.didTimeOut()) {
                 break
@@ -139,13 +146,16 @@ export default class NegaScout extends Logic {
                 // NegaScout assumes that the first move is the best one
                 // So it searches it with full with alpha beta window
                 score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -alpha, -color, evaluation, quiescene))
+                this.searchState.searchedNodes += 1
             } else {
                 // To create as many cutoffs as possible the following moves are searched with a null window
                 score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -alpha - 1, -alpha, -color, evaluation, quiescene))
+                this.searchState.searchedNodes += 1
 
                 // If the actual score is not within the assumed window a full alpha beta search is committed
                 if (alpha < score && score < beta) {
                     score = simulateMove(state, moves[i], next => -this.search(next, depth - 1, -beta, -score, -color, evaluation, quiescene))
+                    this.searchState.searchedNodes += 1
                 }
             }
 
@@ -164,26 +174,66 @@ export default class NegaScout extends Logic {
             }
         }
 
-        const newEntry: TranspositionTableEntry = {
-            depth: depth,
-            value: score,
-            flag: TranspositionTableFlag.Exact,
-            move: 0
-        }
+        if (Logic.transpositionTable.has(state)) {
+            const entry = Logic.transpositionTable.read(state)!
 
-        if (score <= originalAlpha) {
-            newEntry.flag = TranspositionTableFlag.UpperBound
-        } else if (score >= beta) {
-            newEntry.flag = TranspositionTableFlag.LowerBound
+            entry.value = alpha
+            entry.depth = depth
+
+            if (depth === this.horizon) {
+                entry.move = this.searchState.selectedMove || 0
+            }
+
+            if (alpha <= originalAlpha) {
+                entry.flag = TranspositionTableFlag.UpperBound
+            } else if (alpha >= beta) {
+                entry.flag = TranspositionTableFlag.LowerBound
+            } else {
+                entry.flag = TranspositionTableFlag.Exact
+            }
         } else {
+            const newEntry: TranspositionTableEntry = {
+                depth: depth,
+                value: alpha,
+                flag: TranspositionTableFlag.Exact,
+                move: 0
+            }
+
             if (depth === this.horizon) {
                 newEntry.move = this.searchState.selectedMove || 0
             }
 
-            newEntry.flag = TranspositionTableFlag.Exact
+            if (alpha <= originalAlpha) {
+                newEntry.flag = TranspositionTableFlag.UpperBound
+            } else if (alpha >= beta) {
+                newEntry.flag = TranspositionTableFlag.LowerBound
+            } else {
+                newEntry.flag = TranspositionTableFlag.Exact
+            }
+
+            Logic.transpositionTable.push(state, newEntry)
         }
 
-        Logic.transpositionTable.push(state, newEntry)
+        // const newEntry: TranspositionTableEntry = {
+        //     depth: depth,
+        //     value: score,
+        //     flag: TranspositionTableFlag.Exact,
+        //     move: 0
+        // }
+
+        // if (score <= originalAlpha) {
+        //     newEntry.flag = TranspositionTableFlag.UpperBound
+        // } else if (score >= beta) {
+        //     newEntry.flag = TranspositionTableFlag.LowerBound
+        // } else {
+        //     if (depth === this.horizon) {
+        //         newEntry.move = this.searchState.selectedMove || 0
+        //     }
+
+        //     newEntry.flag = TranspositionTableFlag.Exact
+        // }
+
+        // Logic.transpositionTable.push(state, newEntry)
 
         return alpha
     }
