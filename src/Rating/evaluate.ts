@@ -152,7 +152,7 @@ export default function evaluate(state: State, player: Color, color: number = 1)
     if (draw) {
         return {
             isGameOver: isGameOver,
-            value: color === 0 ? 0 : 190 * color,
+            value: 190,
             surrounding: concreteSurrounding
         }
     }

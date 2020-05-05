@@ -86,7 +86,7 @@ export default class NegaScout extends Logic {
         const isEntryValid = (entry: TranspositionTableEntry) => {
             let ignore = false
 
-            if (entry.depth === depth && depth === this.horizon) {
+            if (depth === this.horizon) {
                 if (typeof(entry.move) !== "number" && entry.move !== null) {
                     this.searchState.selectedMove = entry.move
                 } else {
@@ -97,7 +97,7 @@ export default class NegaScout extends Logic {
             return !ignore
         }
 
-        if (entry && entry.depth >= depth) {
+        if (entry && entry.depth >= depth && state.turn < 54) {
             if (entry.flag === TranspositionTableFlag.Exact) {
 
                 if (isEntryValid(entry)) {
