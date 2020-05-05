@@ -86,13 +86,13 @@ function conclude(state: State, color: Color, phase: GamePhase, surrounding: Con
     const maximumExtraPoints = Math.pow(2, surrounding.opponent)
 
     if (isBeetleOnBee) {
-        beeValue += maximumExtraPoints * 0.9
+        beeValue += maximumExtraPoints
     } else if (pinned.opponent) {
         beeValue += maximumExtraPoints * 0.8
     }
 
     points *= 1 - (0.1 * runaways.own)
-    points += 0.1 * ((undeployed.own / 11)) + mobilityValue
+    // points += 0.1 * ((undeployed.own / 11)) + mobilityValue
 
     const boardScan = scanBoard(state, color)
 
@@ -102,14 +102,14 @@ function conclude(state: State, color: Color, phase: GamePhase, surrounding: Con
         points *= 0.5
     }
 
-    if (boardScan.positions.bee) {
-        for (const beetle of boardScan.positions.beetle) {
-            const dist = distance(beetle, boardScan.positions.bee)
-            const fact = (1 - dist / 10) * (mobilityValue / 3)
+    // if (boardScan.positions.bee) {
+    //     for (const beetle of boardScan.positions.beetle) {
+    //         const dist = distance(beetle, boardScan.positions.bee)
+    //         const fact = (1 - dist / 10) * (mobilityValue / 3)
 
-            points += fact
-        }
-    }
+    //         points += fact
+    //     }
+    // }
 
 
     return points + beeValue

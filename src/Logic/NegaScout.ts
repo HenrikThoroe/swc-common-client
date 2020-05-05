@@ -125,26 +125,26 @@ export default class NegaScout extends Logic {
             return evaluation.value * color
         }
 
-        if (allowNullMove && depth > 2 && state.turn < 46 && state.turn > 5) {
-            let r = 1
+        // if (allowNullMove && depth > 2 && state.turn < 46 && state.turn > 5) {
+        //     let r = 1
 
-            if (depth > 4) {
-                r = 2
-            }
+        //     if (depth > 4) {
+        //         r = 2
+        //     }
 
-            const nEval = simulateMove(state, null, next => {
-                const nullEval = -this.search(next, depth - r - 1, -beta, -beta + 1, -color, evaluation, false, undefined, false)
+        //     const nEval = simulateMove(state, null, next => {
+        //         const nullEval = -this.search(next, depth - r - 1, -beta, -beta + 1, -color, evaluation, false, undefined, false)
 
-                if (nullEval >= beta) {
-                    return nullEval
-                }
-            })
+        //         if (nullEval >= beta) {
+        //             return nullEval
+        //         }
+        //     })
 
-            if (nEval && depth !== this.horizon && alpha > -Infinity) {
-                this.nullCutoffs += 1
-                return nEval
-            }
-        }
+        //     if (nEval && depth !== this.horizon && alpha > -Infinity) {
+        //         this.nullCutoffs += 1
+        //         return nEval
+        //     }
+        // }
 
         let score: number = 0
 
@@ -205,6 +205,8 @@ export default class NegaScout extends Logic {
             } else {
                 entry.flag = TranspositionTableFlag.Exact
             }
+
+            Logic.transpositionTable.push(state, entry)
         } else {
             const newEntry: TranspositionTableEntry = {
                 depth: depth,
