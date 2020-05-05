@@ -110,9 +110,9 @@ export default class NegaScout extends Logic {
                 beta = Math.min(entry.value, beta)
             }
 
-            if (alpha >= beta && isEntryValid(entry)) {
+            if (alpha >= beta) {
                 this.cutoffs += 1
-                return entry.value
+                return alpha
             }
         }
 
